@@ -24,7 +24,7 @@ async def create_first_superuser() -> None:
     password_helper = PasswordHelper()
 
     # Используем async for для асинхронного генератора
-    async for session in get_async_session():  # type: AsyncSession
+    async for session in get_async_session():
         result = await session.execute(
             select(User).where(User.email == settings.first_superuser_email),
         )
