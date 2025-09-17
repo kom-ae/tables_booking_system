@@ -35,7 +35,8 @@ bearer_transport: BearerTransport = BearerTransport(tokenUrl="auth/jwt/login")
 def get_jwt_strategy() -> JWTStrategy:
     """Создать стратегию JWT с секретом и временем жизни токена."""
     return JWTStrategy(
-        secret=settings.secret, lifetime_seconds=constants.JWT_LIFETIME_SECONDS
+        secret=settings.secret,
+        lifetime_seconds=constants.JWT_LIFETIME_SECONDS,
     )
 
 
@@ -60,15 +61,15 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                 reason=(
                     f"Password should be at least "
                     f"{constants.THREE} characters"
-                )
+                ),
             )
         if user.email in password:
             raise InvalidPasswordException(
-                reason="Password should not contain e-mail"
+                reason="Password should not contain e-mail",
             )
 
     async def on_after_register(
-        self, user: User, request: Optional[Request] = None
+        self, user: User, request: Optional[Request] = None,
     ) -> None:
         """Действия после успешной регистрации пользователя."""
         print(f"Пользователь {user.email} зарегистрирован.")

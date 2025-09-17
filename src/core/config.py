@@ -1,6 +1,7 @@
 from typing import Optional
 
-from pydantic import BaseSettings, EmailStr
+from pydantic import EmailStr
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -14,6 +15,8 @@ class Settings(BaseSettings):
     first_superuser_password: Optional[str] = None
 
     class Config:
+        """Класс настройки поведения модели."""
+
         env_file: str = ".env"
 
 
