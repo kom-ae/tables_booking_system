@@ -39,14 +39,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType]):
     async def get_multi(
             self,
             session: AsyncSession,
-            active: Optional[bool] = True,
     ) -> list[ModelType]:
-        """Корутина для получения объектов."""
+        """Корутина для получения всех объектов."""
         response = select(self.model)
-
-        if active is not None:
-            response = response.where(self.model.active == active)
-
         db_objects = await session.execute(response)
         return db_objects.scalars().all()
 
