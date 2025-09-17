@@ -39,3 +39,4 @@ typing_extensions==4.15.0
 uvicorn==0.17.6
 watchgod==0.8.2
 websockets==15.0.1
+pydantic-settings==2.10.1
