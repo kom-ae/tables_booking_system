@@ -26,7 +26,7 @@ class UserBase(BaseModel):
     tg_id: Optional[str] = Field(None, description='Telegram ID пользователя')
     phone: Optional[str] = Field(
         None,
-        description='Телефон пользователя в формате +7XXXXXXXXXX',
+        description='Телефон пользователя в формате +7/8XXXXXXXXXX',
     )
 
     @field_validator('phone')
