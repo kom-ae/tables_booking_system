@@ -11,12 +11,12 @@ from alembic import context
 
 from src.core.base import Base  # Мета-данные моделей
 
-load_dotenv('.env')
+load_dotenv(".env")
 
 # Alembic config object
 config = context.config
 
-config.set_main_option('sqlalchemy.url', os.environ['DATABASE_URI'])
+config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URI"])
 
 # Logging setup
 if config.config_file_name is not None:
@@ -28,12 +28,12 @@ target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode (no DB connection required)."""
-    url = config.get_main_option('sqlalchemy.url')
+    url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={'paramstyle': 'named'},
+        dialect_opts={"paramstyle": "named"},
     )
 
     with context.begin_transaction():
@@ -57,7 +57,7 @@ async def run_migrations_online() -> None:
     connectable: AsyncEngine = AsyncEngine(
         engine_from_config(
             config.get_section(config.config_ini_section),
-            prefix='sqlalchemy.',
+            prefix="sqlalchemy.",
             poolclass=pool.NullPool,
             future=True,
         ),
