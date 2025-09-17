@@ -23,7 +23,7 @@ get_user_manager_context: contextlib.AbstractAsyncContextManager[
 async def create_user(
     email: EmailStr,
     password: str,
-    is_superuser: bool = False
+    is_superuser: bool = False,
 ) -> None:
     """Создать пользователя с указанными email и паролем."""
     try:
@@ -34,8 +34,8 @@ async def create_user(
                         UserCreate(
                             email=email,
                             password=password,
-                            is_superuser=is_superuser
-                        )
+                            is_superuser=is_superuser,
+                        ),
                     )
     except UserAlreadyExists:
         pass

@@ -11,7 +11,7 @@ class PreBase:
     """Базовый класс с автоматическим именованием таблиц и полем id."""
 
     @declared_attr
-    def __tablename__(cls) -> str:
+    def __tablename__(cls) -> str:  # noqa: N805
         return cls.__name__.lower()
 
     id: Column = Column(Integer, primary_key=True)
@@ -23,7 +23,7 @@ engine = create_async_engine(settings.database_uri, echo=True)
 AsyncSessionLocal = sessionmaker(
     engine,
     class_=AsyncSession,
-    expire_on_commit=False
+    expire_on_commit=False,
 )
 
 

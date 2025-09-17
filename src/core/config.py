@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     first_superuser_password: Optional[str] = None
 
     class Config:
+        """Конфиг класса."""
 
         env_file: str = ".env"
 
