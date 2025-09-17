@@ -21,7 +21,9 @@ Base = declarative_base(cls=PreBase)
 
 engine = create_async_engine(settings.database_uri, echo=True)
 AsyncSessionLocal = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
 )
 
 

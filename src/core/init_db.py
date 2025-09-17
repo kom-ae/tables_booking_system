@@ -9,7 +9,6 @@ from src.core.db import get_async_session
 from src.core.user import get_user_db, get_user_manager
 from src.schemas.user import UserCreate
 
-
 get_async_session_context: contextlib.AbstractAsyncContextManager[
     AsyncGenerator
 ] = contextlib.asynccontextmanager(get_async_session)
@@ -22,7 +21,9 @@ get_user_manager_context: contextlib.AbstractAsyncContextManager[
 
 
 async def create_user(
-    email: EmailStr, password: str, is_superuser: bool = False
+    email: EmailStr,
+    password: str,
+    is_superuser: bool = False
 ) -> None:
     """Создать пользователя с указанными email и паролем."""
     try:
@@ -33,7 +34,7 @@ async def create_user(
                         UserCreate(
                             email=email,
                             password=password,
-                            is_superuser=is_superuser,
+                            is_superuser=is_superuser
                         )
                     )
     except UserAlreadyExists:
