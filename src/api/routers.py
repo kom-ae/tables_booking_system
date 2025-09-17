@@ -1,4 +1,4 @@
-from app.api.endpoints import users  # Импорты ендпоинтов
+from src.api.endpoints import users  # Импорты ендпоинтов
 from fastapi import APIRouter
 
 main_router = APIRouter()
