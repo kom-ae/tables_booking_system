@@ -1,8 +1,14 @@
 from typing import AsyncGenerator
 
-from sqlalchemy import Column, Integer
+from sqlalchemy import Integer
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import declarative_base, declared_attr, sessionmaker
+from sqlalchemy.orm import (
+    Mapped,
+    declarative_base,
+    declared_attr,
+    mapped_column,
+    sessionmaker,
+)
 
 from src.core.config import settings
 
@@ -11,17 +17,19 @@ class PreBase:
     """Базовый класс с автоматическим именованием таблиц и полем id."""
 
     @declared_attr
-    def __tablename__(cls) -> str:
-        return cls.__name__.lower()
+    def __tablename__(self) -> str:
+        return self.__name__.lower()
 
-    id: Column = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
 
 Base = declarative_base(cls=PreBase)
 
 engine = create_async_engine(settings.database_uri, echo=True)
 AsyncSessionLocal = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
 )
 
 
