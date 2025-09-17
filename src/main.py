@@ -10,7 +10,7 @@ app: FastAPI = FastAPI(
 
 app.include_router(main_router)
 
-
+# В разработке
 """ @app.on_event("startup")
 async def startup() -> None:
     await create_first_superuser()

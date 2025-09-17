@@ -4,7 +4,7 @@ from src.core.db import Base
 
 
 class BaseModel(Base):
-    """Базовая SQLAlchemy модель с общими полями."""
+    """Базовая модель."""
 
     __abstract__ = True
     created_at = Column(DateTime(timezone=True), server_default=func.now())

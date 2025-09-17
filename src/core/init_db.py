@@ -1,5 +1,4 @@
 import contextlib
-from typing import AsyncGenerator
 
 from fastapi_users.exceptions import UserAlreadyExists
 from pydantic import EmailStr
@@ -9,22 +8,10 @@ from src.core.db import get_async_session
 from src.core.user import get_user_db, get_user_manager
 from src.schemas.user import UserCreate
 
-# Контексты для асинхронного управления сессиями, UserDB и UserManager
-get_async_session_context: contextlib.AbstractAsyncContextManager[
-    AsyncGenerator
-] = contextlib.asynccontextmanager(
-    get_async_session,
-)  # Async context for DB session
-
-get_user_db_context: contextlib.AbstractAsyncContextManager[AsyncGenerator] = (
-    contextlib.asynccontextmanager(get_user_db)
-)  # Async context for User DB
-
-get_user_manager_context: contextlib.AbstractAsyncContextManager[
-    AsyncGenerator
-] = contextlib.asynccontextmanager(
-    get_user_manager,
-)  # Async context for UserManager
+# Async context managers
+get_async_session_context = contextlib.asynccontextmanager(get_async_session)
+get_user_db_context = contextlib.asynccontextmanager(get_user_db)
+get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
 
 
 async def create_user(
@@ -39,17 +26,14 @@ async def create_user(
         async with get_async_session_context() as session:
             async with get_user_db_context(session) as user_db:
                 async with get_user_manager_context(user_db) as user_manager:
-                    user_create = UserCreate(
-                        email=email,
-                        password=password,
-                        username=username,
-                        phone=phone,
-                    )
                     await user_manager.create(
-                        user_create,
-                        safe=False,
-                        is_superuser=is_superuser,
-                        is_active=True,
+                        UserCreate(
+                            email=email,
+                            password=password,
+                            username=username,
+                            phone=phone,
+                            is_superuser=is_superuser,
+                        ),
                     )
     except UserAlreadyExists:
         pass  # Игнорируем, если пользователь уже существует
