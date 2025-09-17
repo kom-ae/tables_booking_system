@@ -23,7 +23,8 @@ async def create_first_superuser() -> None:
     """Создаёт суперпользователя, если его нет."""
     password_helper = PasswordHelper()
 
-    async with get_async_session() as session:  # type: AsyncSession
+    # Используем async for для асинхронного генератора
+    async for session in get_async_session():  # type: AsyncSession
         result = await session.execute(
             select(User).where(User.email == settings.first_superuser_email),
         )
@@ -33,7 +34,6 @@ async def create_first_superuser() -> None:
             hashed_password = password_helper.hash(
                 settings.first_superuser_password,
             )
-
             superuser = User(
                 email=settings.first_superuser_email,
                 hashed_password=hashed_password,
@@ -44,7 +44,7 @@ async def create_first_superuser() -> None:
             session.add(superuser)
             await session.commit()
             logger.info(
-                f'Суперпользователь {settings.first_superuser_email} создан.',
+                f'Суперпользователь {settings.first_superuser_email}создан.',
             )
         else:
             logger.info(
