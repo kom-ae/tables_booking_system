@@ -6,14 +6,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.db import Base
-from src.models import User
 
-ModelType = TypeVar('ModelType', bound=Base)
+ModelType = TypeVar('ModelType', bound=Base)  # type: ignore
 CreateSchemaType = TypeVar('CreateSchemaType', bound=BaseModel)
 UpdateSchemaType = TypeVar('UpdateSchemaType', bound=BaseModel)
 
 
-class CRUDBase(Generic[ModelType, CreateSchemaType]):
+class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     """Базовый класс для CRUD-логики."""
 
     def __init__(self, model: ModelType) -> None:
@@ -49,12 +48,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType]):
             self,
             obj_in: CreateSchemaType,
             session: AsyncSession,
-            user: Optional[User] = None,
+            user_id: Optional[int] = None,
     ) -> ModelType:
         """Корутина для создания объекта."""
         obj_in_data = obj_in.model_dump()
-        if user is not None:
-            obj_in_data['user_id'] = user.id
+        if user_id is not None:
+            obj_in_data['user_id'] = user_id
         db_obj = self.model(**obj_in_data)
         session.add(db_obj)
         await session.commit()
