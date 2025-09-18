@@ -45,10 +45,10 @@ async def create_first_superuser() -> None:
             session.add(superuser)
             await session.commit()
             logger.info(
-                f'Суперпользователь {settings.first_superuser_email}создан.',
+                f'Суперпользователь {settings.first_superuser_email} создан.',
             )
         else:
             logger.info(
                 f'Суперпользователь {settings.first_superuser_email}'
-                'уже существует.',
+                ' уже существует.',
             )
