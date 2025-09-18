@@ -35,6 +35,7 @@ async def create_first_superuser() -> None:
                 settings.first_superuser_password,
             )
             superuser = User(
+                username='admin',
                 email=settings.first_superuser_email,
                 hashed_password=hashed_password,
                 phone='+79991234567',
@@ -49,5 +50,5 @@ async def create_first_superuser() -> None:
         else:
             logger.info(
                 f'Суперпользователь {settings.first_superuser_email}'
-                'уже существует.',
+                ' уже существует.',
             )
