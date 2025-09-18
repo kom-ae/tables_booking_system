@@ -23,9 +23,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
 
     async def get(
-            self,
-            obj_id: int,
-            session: AsyncSession,
+        self,
+        obj_id: int,
+        session: AsyncSession,
     ) -> Optional[ModelType]:
         """Корутина для получения объекта."""
         db_obj = await session.execute(
@@ -36,8 +36,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj.scalars().first()
 
     async def get_multi(
-            self,
-            session: AsyncSession,
+        self,
+        session: AsyncSession,
     ) -> list[ModelType]:
         """Корутина для получения всех объектов."""
         response = select(self.model)
@@ -45,10 +45,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_objects.scalars().all()
 
     async def create(
-            self,
-            obj_in: CreateSchemaType,
-            session: AsyncSession,
-            user_id: Optional[int] = None,
+        self,
+        obj_in: CreateSchemaType,
+        session: AsyncSession,
+        user_id: Optional[int] = None,
     ) -> ModelType:
         """Корутина для создания объекта."""
         obj_in_data = obj_in.model_dump()
@@ -61,10 +61,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj
 
     async def update(
-            self,
-            db_obj: ModelType,
-            obj_in: UpdateSchemaType,
-            session: AsyncSession,
+        self,
+        db_obj: ModelType,
+        obj_in: UpdateSchemaType,
+        session: AsyncSession,
     ) -> ModelType:
         """Корутина для изменения объекта."""
         obj_data = jsonable_encoder(db_obj)
