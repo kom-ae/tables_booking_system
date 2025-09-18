@@ -16,7 +16,7 @@ class BaseSchema(BaseModel):
     class Config:
         """Настройки Pydantic для ORM совместимости."""
 
-        orm_mode = True
+        from_attributes = True
 
 
 class UserBase(BaseModel):

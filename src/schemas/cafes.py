@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-from src.constants import MAX_ADDRESS, MAX_NAME_CAFE, MAX_TEL
+from src.constants import MAX_ADDRESS, MAX_NAME_CAFE, MAX_TEL, MIN_TEL
 from src.schemas.user import UserRead
 
 
@@ -25,7 +25,7 @@ class CafeBase(BaseModel):
     phone: str = Field(
         ...,
         title='Телефон кафе',
-        min_length=1,
+        min_length=MIN_TEL,
         max_length=MAX_TEL,
     )
     description: Optional[str] = Field(None, title='Описание кафе')
@@ -49,7 +49,7 @@ class CafeDB(CafeBase):
     class Config:
         """Конфиг класса."""
 
-        orm_mode = True
+        from_attributes = True
 
 
 class CafeCreate(CafeBase):
@@ -74,7 +74,7 @@ class CafeUpdate(BaseModel):
     phone: Optional[str] = Field(
         None,
         title='Телефон кафе',
-        min_length=1,
+        min_length=MIN_TEL,
         max_length=MAX_TEL,
     )
     description: Optional[str] = Field(None, title='Описание кафе')
@@ -87,6 +87,16 @@ class CafeUpdate(BaseModel):
 
         extra = 'forbid'
 
+# Проверить работу валидатора
+    @field_validator('name', 'address', 'phone', 'active', mode='before')
+    @classmethod
+    def is_not_null(cls, value: Optional[str]) -> str:
+        """Проверка полей на null."""
+        if value is None:
+            raise ValueError(
+                'Поля name, address, phone, active не могут быть null.')
+        return value
+
 
 class CafeShortDB(CafeBase):
     """Возвращаемая укороченная схема кафе."""
@@ -97,4 +107,4 @@ class CafeShortDB(CafeBase):
     class Config:
         """Конфиг класса."""
 
-        orm_mode = True
+        from_attributes = True
