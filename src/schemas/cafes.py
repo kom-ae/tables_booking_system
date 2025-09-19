@@ -39,19 +39,19 @@ class CafeCreate(CafeBase):
 class CafeUpdate(BaseModel):
     """Схема для обновления кафе."""
 
-    name: Optional[str] = Field(
+    name: str = Field(
         None,
         title='Название кафе',
         min_length=MIN_NAME_CAFE,
         max_length=MAX_NAME_CAFE,
     )
-    address: Optional[str] = Field(
+    address: str = Field(
         None,
         title='Адрес кафе',
         min_length=MIN_ADDRESS,
         max_length=MAX_ADDRESS,
     )
-    phone: Optional[str] = Field(
+    phone: str = Field(
         None,
         title='Телефон кафе',
         min_length=MIN_TEL,
