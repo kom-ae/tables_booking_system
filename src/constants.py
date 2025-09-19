@@ -1,9 +1,6 @@
 # Время жизни токена
 JWT_LIFETIME_SECONDS = 1600
 
-# Числовые константы
-THREE = 3
-
 # Максимальная длинна телефона
 MAX_TEL = 256
 
@@ -23,4 +20,4 @@ MIN_LENGTH_USERNAME = 1
 MAX_LENGTH_USERNAME = 40
 
 # Регулярка для проверки телефонного номера
-PHONE_REGEX = r'^\+?\d{9,15}$'
+PHONE_REGEX = r'^(\+[1-9]\d{0,2})\d{6,15}$'

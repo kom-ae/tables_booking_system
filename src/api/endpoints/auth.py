@@ -35,6 +35,6 @@ async def login(
     responses=logout_responses,
     summary='Выход из аккаунта',
 )
-async def logout() -> dict[str, str]:
+async def logout() -> None:
     """Выход пользователя (информативно, JWT статический)."""
-    return {'message': 'Успешный выход'}
+    return {'message': 'Вы вышли из системы.'}

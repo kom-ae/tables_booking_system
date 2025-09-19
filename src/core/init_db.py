@@ -1,5 +1,6 @@
 import logging
 
+from sqlalchemy import text
 from sqlalchemy.future import select
 
 from src.api.utils.auth import get_password_hash
@@ -13,13 +14,22 @@ logger = logging.getLogger(__name__)
 
 
 async def init_db() -> None:
-    """Создаёт все таблицы в базе."""
+    """Инициализация базы."""
     async with engine.begin() as conn:
-        await conn.run_sync(BaseModel.metadata.create_all)
+        if settings.debug:
+            await conn.run_sync(BaseModel.metadata.create_all)
+            logger.info('✅ Таблицы созданы (dev mode)')
+        else:
+            await conn.execute(text('SELECT 1'))
+            logger.info('✅ Подключение к БД успешно (prod mode)')
 
 
 async def create_first_superuser() -> None:
-    """Создаёт суперпользователя, если его нет."""
+    """Создаёт суперпользователя (только в dev-режиме)."""
+    if not settings.debug:
+        logger.info('⏩ Пропуск создания суперпользователя (prod mode)')
+        return
+
     async for session in get_async_session():
         result = await session.execute(
             select(User).where(User.email == settings.first_superuser_email),
@@ -27,22 +37,25 @@ async def create_first_superuser() -> None:
         user = result.scalar_one_or_none()
 
         if not user:
-            password = get_password_hash(settings.first_superuser_password)
+            first_superuser_password = get_password_hash(
+                settings.first_superuser_password,
+            )
             superuser = User(
-                username='admin',
+                username=settings.first_superuser_username,
                 email=settings.first_superuser_email,
-                password=password,
-                phone='+79991234567',
+                password=first_superuser_password,
+                phone=settings.first_superuser_phone_number,
                 is_superuser=True,
-                role='admin',
+                role=settings.first_superuser_role,
             )
             session.add(superuser)
             await session.commit()
             logger.info(
-                f'Суперпользователь {settings.first_superuser_email} создан.',
+                f'✅ Суперпользователь {settings.first_superuser_email}'
+                'создан.',
             )
         else:
             logger.info(
-                f'Суперпользователь {settings.first_superuser_email}'
-                ' уже существует.',
+                f'ℹ️ Суперпользователь {settings.first_superuser_email}'
+                'уже существует.',
             )

@@ -10,8 +10,8 @@ from src.api.exceptions.auth import (
     ExpiredTokenException,
     InvalidTokenException,
     PermissionDeniedException,
-    UserNotFoundException,
 )
+from src.api.exceptions.user import UserNotFoundException
 from src.constants import SECONDS_IN_MINUTE
 from src.core.config import settings
 from src.core.db import get_async_session
