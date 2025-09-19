@@ -12,3 +12,15 @@ MAX_NAME_CAFE = 256
 
 # Максимальная длинна адреса кафе
 MAX_ADDRESS = 256
+
+# Константа для расчёта времени истечения токена
+SECONDS_IN_MINUTE = 60
+
+# Минимальная длина username
+MIN_LENGTH_USERNAME = 1
+
+# Максимальная длина длина username
+MAX_LENGTH_USERNAME = 40
+
+# Регулярка для проверки телефонного номера
+PHONE_REGEX = r'^\+?\d{9,15}$'

@@ -18,7 +18,7 @@ class User(BaseModel):
         unique=True,
         nullable=False,
     )
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_superuser: Mapped[bool] = mapped_column(default=False, nullable=False)
     phone: Mapped[Optional[str]] = mapped_column(
         String(20),

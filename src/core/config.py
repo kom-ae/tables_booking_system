@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     description: str = 'API для управления сервисом бронирования столиков'
     database_uri: str = 'sqlite+aiosqlite:///./fastapi.db'
     secret: str = 'SECRET'
+    jwt_algorithm: str = 'HS256'
+    access_token_expire_minutes: int = 120
     first_superuser_email: Optional[EmailStr] = None
     first_superuser_password: Optional[str] = None
 
