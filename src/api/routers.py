@@ -1,16 +1,13 @@
 from fastapi import APIRouter
 
-from src.api.endpoints import cafes_fouter, user_router  # Импорты ендпоинтов
+from src.api.endpoints import cafes_router, user_router  # Импорты ендпоинтов
 
 main_router = APIRouter()
-
-# Подключение роутеров
-# main_router.include_router(user_router)
 
 main_router.include_router(user_router, prefix='/users', tags=['Пользователи'])
 
 main_router.include_router(
-    cafes_fouter,
+    cafes_router,
     prefix='/cafes',
     tags=['Кафе'],
 )

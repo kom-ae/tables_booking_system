@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from src.constants import MAX_ADDRESS, MAX_NAME_CAFE, MAX_TEL, MIN_TEL
+from src.constants import MAX_ADDRESS, MAX_NAME_CAFE, MAX_TEL, MIN_TEL, MIN_ADDRESS, MIN_NAME_CAFE
 from src.schemas.user import UserRead
 
 
@@ -13,13 +13,13 @@ class CafeBase(BaseModel):
     name: str = Field(
         ...,
         title='Название кафе',
-        min_length=1,
+        min_length=MIN_NAME_CAFE,
         max_length=MAX_NAME_CAFE,
     )
     address: str = Field(
         ...,
         title='Адрес кафе',
-        min_length=1,
+        min_length=MIN_ADDRESS,
         max_length=MAX_ADDRESS,
     )
     phone: str = Field(
@@ -43,8 +43,8 @@ class CafeDB(CafeBase):
 
     id: int = Field(..., title='ID записи')
     active: bool = Field(..., title='Объект активен?')
-    created_at: datetime = Field(..., 'Дата создания')
-    updated_at: datetime = Field(..., 'Дата обновления')
+    created_at: datetime = Field(..., title='Дата создания')
+    updated_at: datetime = Field(..., title='Дата обновления')
 
     class Config:
         """Конфиг класса."""
@@ -62,13 +62,13 @@ class CafeUpdate(BaseModel):
     name: Optional[str] = Field(
         None,
         title='Название кафе',
-        min_length=1,
+        min_length=MIN_NAME_CAFE,
         max_length=MAX_NAME_CAFE,
     )
     address: Optional[str] = Field(
         None,
         title='Адрес кафе',
-        min_length=1,
+        min_length=MIN_ADDRESS,
         max_length=MAX_ADDRESS,
     )
     phone: Optional[str] = Field(
