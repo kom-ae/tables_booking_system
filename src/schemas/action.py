@@ -1,31 +1,39 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
 
 from src.schemas.base import BaseSchema
-from src.schemas.cafes import CafeBase, CafeUpdate
+from src.schemas.cafes import CafeBase, CafeUpdate, CafeDB, CafeCreate
 
 
 class ActionsBase(BaseModel):
     """Базовая схема для акций."""
-
-    cafe: CafeBase = Field(..., title='Кафе')
-    description: str = Field(..., title='Описание акции')
-
-
-class ActionsCreate(ActionsBase):
-    """Схема для создания акций"""
-    pass
+    id: int = Field(...)
+    cafe: CafeDB = Field(..., description='Кафе')
+    description: str = Field(..., description='Описание акции')
+    active: bool = Field(..., description='Объект активен?')
+    created_at: datetime = Field(..., description='Дата создания')
+    updated_at: datetime = Field(..., description='Дата обновления')
 
 
-class ActionsUpdate(ActionsBase):
-    """Схема для изменения акций"""
-    cafe: Optional[CafeUpdate] = Field(None, title='Кафе')
-    description: Optional[str] = Field(None, title='Описание акции')
+class ActionsCreate(BaseModel):
+
+    cafe: CafeCreate = Field(..., description='Кафе')
+    description: str = Field(..., description='Описание акции')
 
 
-class ActionsDB(ActionsBase, BaseSchema):
+class ActionsUpdate(ActionsCreate):
+    """Схема для изменения акций."""
+
+    cafe: CafeBase = Field(None, description='Кафе')
+    description: str = Field(None, description='Описание акции')
+    is_active: bool = Field(None, description='Объект активен?')
+
+
+class Actions(ActionsBase):
     """Возвращаемая схема акций."""
+
     pass
 
     class Config:
