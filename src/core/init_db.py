@@ -44,5 +44,5 @@ async def create_first_superuser() -> None:
         else:
             logger.info(
                 f'Суперпользователь {settings.first_superuser_email}'
-                'уже существует.',
+                ' уже существует.',
             )
