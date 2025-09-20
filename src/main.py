@@ -22,7 +22,7 @@ from src.core.init_db import create_first_superuser, init_db
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Инициализация БД и создание суперпользователя при старте приложения."""
-    await init_db()
+    # await init_db()
     await create_first_superuser()
     yield
 
