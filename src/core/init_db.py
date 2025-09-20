@@ -1,9 +1,9 @@
 import logging
-from typing import Optional
 
-from fastapi_users.password import PasswordHelper
-from sqlalchemy import select
+from sqlalchemy import text
+from sqlalchemy.future import select
 
+from src.api.utils.auth import get_password_hash
 from src.core.config import settings
 from src.core.db import engine, get_async_session
 from src.models.base import BaseModel
@@ -14,41 +14,48 @@ logger = logging.getLogger(__name__)
 
 
 async def init_db() -> None:
-    """Создаёт все таблицы в базе."""
+    """Инициализация базы."""
     async with engine.begin() as conn:
-        await conn.run_sync(BaseModel.metadata.create_all)
+        if settings.debug:
+            await conn.run_sync(BaseModel.metadata.create_all)
+            logger.info('✅ Таблицы созданы (dev mode)')
+        else:
+            await conn.execute(text('SELECT 1'))
+            logger.info('✅ Подключение к БД успешно (prod mode)')
 
 
 async def create_first_superuser() -> None:
-    """Создаёт суперпользователя, если его нет."""
-    password_helper = PasswordHelper()
+    """Создаёт суперпользователя (только в dev-режиме)."""
+    if not settings.debug:
+        logger.info('⏩ Пропуск создания суперпользователя (prod mode)')
+        return
 
-    # Используем async for для асинхронного генератора
     async for session in get_async_session():
         result = await session.execute(
             select(User).where(User.email == settings.first_superuser_email),
         )
-        user: Optional[User] = result.scalar_one_or_none()
+        user = result.scalar_one_or_none()
 
         if not user:
-            hashed_password = password_helper.hash(
+            first_superuser_password = get_password_hash(
                 settings.first_superuser_password,
             )
             superuser = User(
-                username='admin',
+                username=settings.first_superuser_username,
                 email=settings.first_superuser_email,
-                hashed_password=hashed_password,
-                phone='+79991234567',
+                password=first_superuser_password,
+                phone=settings.first_superuser_phone_number,
                 is_superuser=True,
-                role='admin',
+                role=settings.first_superuser_role,
             )
             session.add(superuser)
             await session.commit()
             logger.info(
-                f'Суперпользователь {settings.first_superuser_email} создан.',
+                f'✅ Суперпользователь {settings.first_superuser_email}'
+                'создан.',
             )
         else:
             logger.info(
-                f'Суперпользователь {settings.first_superuser_email}'
-                ' уже существует.',
+                f'ℹ️ Суперпользователь {settings.first_superuser_email}'
+                'уже существует.',
             )
