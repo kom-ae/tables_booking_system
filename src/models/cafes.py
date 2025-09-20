@@ -12,8 +12,8 @@ from src.models.base import BaseModel
 cafe_manager = Table(
     'cafe_manager',
     Base.metadata,
-    Column('case_id', ForeignKey('cafes.id')),
-    Column('user_id', ForeignKey('user.id')),
+    Column('cafe_id', ForeignKey('cafes.id'), primary_key=True),
+    Column('user_id', ForeignKey('user.id'), primary_key=True),
 )
 
 
@@ -26,6 +26,8 @@ class Cafes(BaseModel):
     description: Mapped[str] = mapped_column(Text)
     photo: Mapped[str] = mapped_column(String)
     users: Mapped[List[User]] = relationship(
+        'User',
         secondary='cafe_manager',
+        # С этим параметром падает при запуске приложения
         # back_populates='cafes',
     )

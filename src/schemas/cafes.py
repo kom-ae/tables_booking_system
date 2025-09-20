@@ -3,7 +3,14 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from src.constants import MAX_ADDRESS, MAX_NAME_CAFE, MAX_TEL, MIN_TEL, MIN_ADDRESS, MIN_NAME_CAFE
+from src.constants import (
+    MAX_ADDRESS,
+    MAX_NAME_CAFE,
+    MAX_TEL,
+    MIN_ADDRESS,
+    MIN_NAME_CAFE,
+    MIN_TEL,
+)
 from src.schemas.user import UserRead
 
 
@@ -42,7 +49,7 @@ class CafeDB(CafeBase):
     """Возвращаемая схема кафе."""
 
     id: int = Field(..., title='ID записи')
-    active: bool = Field(..., title='Объект активен?')
+    is_active: bool = Field(..., title='Объект активен?')
     created_at: datetime = Field(..., title='Дата создания')
     updated_at: datetime = Field(..., title='Дата обновления')
 
@@ -80,7 +87,7 @@ class CafeUpdate(BaseModel):
     description: Optional[str] = Field(None, title='Описание кафе')
     photo: Optional[str] = Field(None, title='Ссылка на фото кафе')
     managers: Optional[List[UserRead]] = Field(None)
-    active: Optional[bool] = Field(None, title='Объект активен?')
+    is_active: Optional[bool] = Field(None, title='Объект активен?')
 
     class Config:
         """Конфиг класса."""
@@ -88,13 +95,13 @@ class CafeUpdate(BaseModel):
         extra = 'forbid'
 
 # Проверить работу валидатора
-    @field_validator('name', 'address', 'phone', 'active', mode='before')
+    @field_validator('name', 'address', 'phone', 'is_active', mode='before')
     @classmethod
     def is_not_null(cls, value: Optional[str]) -> str:
         """Проверка полей на null."""
         if value is None:
             raise ValueError(
-                'Поля name, address, phone, active не могут быть null.')
+                'Поля name, address, phone, is_active не могут быть null.')
         return value
 
 
@@ -102,7 +109,7 @@ class CafeShortDB(CafeBase):
     """Возвращаемая укороченная схема кафе."""
 
     id: int = Field(..., title='ID записи')
-    active: bool = Field(..., title='Объект активен?')
+    is_active: bool = Field(..., title='Объект активен?')
 
     class Config:
         """Конфиг класса."""

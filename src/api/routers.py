@@ -1,7 +1,10 @@
 from fastapi import APIRouter
-from src.api.endpoints import cafes_router, user_router, auth_router  # noqa
 
-from src.api.endpoints import user_router  # Импорты ендпоинтов
+from src.api.endpoints import (  # noqa
+    auth_router,
+    cafes_router,
+    user_router,  # Импорты ендпоинтов
+)
 
 main_router = APIRouter()
 

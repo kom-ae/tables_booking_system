@@ -1,7 +1,7 @@
 from typing import Optional
 
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import (
     BaseModel,
@@ -30,6 +30,11 @@ class User(BaseModel):
         String(50),
         default='user',
         nullable=False,
+    )
+    cafes = relationship(
+        'Cafes',
+        secondary='cafe_manager',
+        # back_populates='cafes'
     )
     # cafe_id: Mapped[Optional[int]] = mapped_column(
     # Integer, ForeignKey("cafe.id"), nullable=True)

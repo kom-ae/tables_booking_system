@@ -16,7 +16,7 @@ from src.api.exceptions.handlers import (
 from src.api.exceptions.user import UserException
 from src.constants import TAGS_METADATA
 from src.core.config import settings
-from src.core.init_db import create_first_superuser, init_db
+from src.core.init_db import create_first_superuser
 
 
 @asynccontextmanager
