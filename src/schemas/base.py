@@ -1,8 +1,7 @@
-import re
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field
 
 
 class BaseSchema(BaseModel):
@@ -29,13 +28,8 @@ class UserBase(BaseModel):
         description='Телефон пользователя в формате +7/8XXXXXXXXXX',
     )
 
-    @field_validator('phone')
-    @classmethod
-    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
-        """Валидатор телефона, проверяет формат номера."""
-        if v is None:
-            return v
-        pattern = r'^(\+7|8)\d{10}$'
-        if not re.fullmatch(pattern, v):
-            raise ValueError('Некорректный номер телефона')
-        return v
+
+class BaseError(BaseModel):
+    """Базовая схема ошибки."""
+
+    message: str
