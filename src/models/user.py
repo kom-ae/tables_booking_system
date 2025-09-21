@@ -31,10 +31,5 @@ class User(BaseModel):
         default='user',
         nullable=False,
     )
-    cafes = relationship(
-        'Cafes',
-        secondary='cafe_manager',
-        # back_populates='cafes'
-    )
     # cafe_id: Mapped[Optional[int]] = mapped_column(
     # Integer, ForeignKey("cafe.id"), nullable=True)

@@ -36,8 +36,8 @@ class CafeBase(BaseModel):
         max_length=MAX_TEL,
     )
     description: Optional[str] = Field(None, title='Описание кафе')
-    photo: Optional[str] = Field(None, title='Ссылка на фото кафе')
-    managers: Optional[List[UserRead]] = Field(None)
+    photo: Optional[str] = Field(None, title='Фото кафе в формате base64')
+    managers: Optional[List[UserRead]] = Field(None, title='ID менеджера')
 
     class Config:
         """Конфиг класса."""
@@ -62,6 +62,8 @@ class CafeDB(CafeBase):
 class CafeCreate(CafeBase):
     """Схема для создания кафе."""
 
+    managers: Optional[List[int]] = Field(None, title='ID менеджера')
+
 
 class CafeUpdate(BaseModel):
     """Схема для обновления кафе."""
@@ -85,8 +87,8 @@ class CafeUpdate(BaseModel):
         max_length=MAX_TEL,
     )
     description: Optional[str] = Field(None, title='Описание кафе')
-    photo: Optional[str] = Field(None, title='Ссылка на фото кафе')
-    managers: Optional[List[UserRead]] = Field(None)
+    photo: Optional[str] = Field(None, title='Фото кафе в формате base64')
+    managers: Optional[List[int]] = Field(None, title='ID менеджера')
     is_active: Optional[bool] = Field(None, title='Объект активен?')
 
     class Config:

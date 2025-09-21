@@ -25,9 +25,7 @@ class Cafes(BaseModel):
     phone: Mapped[str] = mapped_column(String(MAX_TEL), nullable=False)
     description: Mapped[str] = mapped_column(Text)
     photo: Mapped[str] = mapped_column(String)
-    users: Mapped[List[User]] = relationship(
-        'User',
-        secondary='cafe_manager',
-        # С этим параметром падает при запуске приложения
-        # back_populates='cafes',
+    managers: Mapped[List[User]] = relationship(
+        secondary=cafe_manager,
+        lazy='selectin',
     )

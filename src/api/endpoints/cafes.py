@@ -47,11 +47,4 @@ async def create_cafe(
     session: AsyncSession = Depends(get_async_session),
 ) -> Cafes:
     """Создание кафе (только для администратора)."""
-    managers: list[dict] = cafe.model_dump(include='managers')['managers']
-    cafe: Cafes = await cafes_crud.create_cafe(cafe, session)
-    # Пока без добавления связи кафе-менеджер
-    if managers:
-        pass
-        # не могу добиться записи в ассоциативную таблицу
-        # await cafes_crud.create_cafe_manager(cafe, managers, session)
-    return cafe
+    return await cafes_crud.create_cafe(cafe, session)
