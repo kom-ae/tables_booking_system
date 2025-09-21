@@ -3,8 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from src.schemas.base import BaseSchema, UserBase
-from src.schemas.validators import password_validator, phone_validator
+from src.schemas.base import UserBase
+from src.schemas.validators import password_validator
 
 
 class UserCreate(UserBase):
@@ -15,10 +15,9 @@ class UserCreate(UserBase):
     _validate_password = field_validator('password', mode='before')(
         password_validator,
     )
-    _validate_phone = field_validator('phone', mode='before')(phone_validator)
 
 
-class UserRead(UserBase, BaseSchema):
+class UserRead(UserBase):
     """Полная информация о пользователе (для ответа API)."""
 
     id: int = Field(..., description='ID')
@@ -37,8 +36,6 @@ class UserUpdate(UserBase):
         None,
         description='Активен ли пользователь',
     )
-
-    _validate_phone = field_validator('phone', mode='before')(phone_validator)
     _validate_password = field_validator('password', mode='before')(
         password_validator,
     )
