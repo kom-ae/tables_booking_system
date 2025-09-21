@@ -11,8 +11,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import BaseModel
-from models.cafes import Cafes
+from src.models.base import BaseModel
+from src.models.cafes import Cafes
 
 from src.constants import (
     DISH_PRICE_PRECISION,
