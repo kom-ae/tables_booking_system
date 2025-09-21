@@ -14,6 +14,8 @@ from src.schemas.auth import Auth
 from src.schemas.user import UserCreate
 
 user_crud = get_user_crud()
+
+
 VALID_PASSWORD = 'Vx9!rT#4qLp$2mZ'
 PHONE_ONE = '+70000000001'
 PHONE_TWO = '+70000000002'
@@ -23,11 +25,11 @@ EMAIL_ONE = 'user1@test.com'
 EMAIL_TWO = 'user2@test.com'
 USER_UPDATED_ONE = 'user_updated'
 USER_UPDATED_TWO = 'user_updated'
+
+
 # -----------------------
 # Сессия и очистка БД
 # -----------------------
-
-
 @pytest_asyncio.fixture
 async def session_fixture() -> AsyncGenerator[AsyncSession, None]:
     """Асинхронная сессия для тестов."""
