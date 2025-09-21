@@ -45,5 +45,5 @@ max-doc-length = 79
 # E501 reports lines that exceed the length of 79.
 max-line-length = 79
 
-`[lint.pep8-naming]
+[lint.pep8-naming]
 classmethod-decorators = ["declared_attr",]
