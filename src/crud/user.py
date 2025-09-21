@@ -57,15 +57,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         session: AsyncSession,
         email: Optional[str],
         phone: Optional[str],
+        tg_id: Optional[str] = None,
         current_user: Optional[User] = None,
     ) -> None:
-        """Проверка уникальности email и телефона с логированием попытки."""
+        """Проверка уникальности email, телефона и tg_id с лог-ием попытки."""
         if email:
             existing: Optional[User] = await self.get_by_name(session, email)
             if existing and existing.id != getattr(current_user, 'id', None):
                 log_event(
                     'warning',
-                    'Попытка создать/обновить пользователя '
+                    'Попытка создать/обновить пользователя'
                     f'с уже существующим email: {email}',
                     username=getattr(
                         current_user,
@@ -77,12 +78,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                 raise UserAlreadyExistsException(
                     f'Email {email} уже существует',
                 )
+
         if phone:
             existing: Optional[User] = await self.get_by_name(session, phone)
             if existing and existing.id != getattr(current_user, 'id', None):
                 log_event(
                     'warning',
-                    'Попытка создать/обновить пользователя '
+                    'Попытка создать/обновить пользователя'
                     f'с уже существующим телефоном: {phone}',
                     username=getattr(
                         current_user,
@@ -95,6 +97,27 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                     f'Телефон {phone} уже существует',
                 )
 
+        if tg_id:
+            result = await session.execute(
+                select(User).where(User.tg_id == tg_id),
+            )
+            existing: Optional[User] = result.scalars().first()
+            if existing and existing.id != getattr(current_user, 'id', None):
+                log_event(
+                    'warning',
+                    'Попытка создать/обновить пользователя'
+                    f'с уже существующим tg_id: {tg_id}',
+                    username=getattr(
+                        current_user,
+                        'username',
+                        SYSTEM_USERNAME,
+                    ),
+                    user_id=getattr(current_user, 'id', ZERO_DEFAULT_USER_ID),
+                )
+                raise UserAlreadyExistsException(
+                    f'tg_id {tg_id} уже существует',
+                )
+
     async def create(
         self,
         obj_in: UserCreate,
@@ -102,7 +125,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         user_id: Optional[int] = None,
     ) -> User:
         """Создаёт нового пользователя с хэш-ем пароля и проверкой unique."""
-        await self._check_unique(session, obj_in.email, obj_in.phone)
+        await self._check_unique(
+            session,
+            obj_in.email,
+            obj_in.phone,
+            obj_in.tg_id,
+        )
 
         hashed_password = PasswordService.hash_password(obj_in.password)
         obj_in_data = obj_in.model_copy(update={'password': hashed_password})
@@ -125,6 +153,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             session,
             obj_in.email,
             obj_in.phone,
+            tg_id=obj_in.tg_id,
             current_user=db_obj,
         )
 
