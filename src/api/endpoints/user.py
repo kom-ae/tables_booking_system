@@ -1,138 +1,195 @@
-from typing import List
-
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, Path, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.db import get_async_session
-from src.core.user import (
-    UserManager,
-    auth_backend,
-    current_admin,
-    current_user,
-    fastapi_users,
+from src.api.responses.user import (
+    current_user_get_responses,
+    current_user_update_responses,
+    user_create_responses,
+    user_update_responses,
+    users_list_responses,
 )
+from src.core.db import get_async_session
+from src.core.logger import log_endpoint, log_event
+from src.core.user import current_admin, current_user
+from src.crud.factory import get_user_crud
 from src.models.user import User
 from src.schemas.user import UserCreate, UserRead, UserUpdate
 
+user_crud = get_user_crud()
+
 router = APIRouter()
 
-# -------------------
-# Auth routes
-# -------------------
-auth_router = fastapi_users.get_auth_router(auth_backend)
-router.include_router(auth_router, prefix='/auth/jwt', tags=['Аутентификация'])
-
-for route in router.routes:
-    if route.path == '/auth/jwt/login' and route.methods == {'POST'}:
-        route.summary = 'Аутентификация пользователя'
-    elif route.path == '/auth/jwt/logout' and route.methods == {'POST'}:
-        route.summary = 'Выход из аккаунта'
-
 
 # -------------------
-# Пользователи
+# Текущий пользователь
 # -------------------
 @router.get(
-    '/users',
-    response_model=List[UserRead],
-    tags=['Пользователи'],
-    summary='Список пользователей (только админ)',
+    '/me',
+    response_model=UserRead,
+    summary='Получение данных текущего пользователя'
+    ' (доступно только текущему пользователю)',
+    responses=current_user_get_responses,
 )
+@log_endpoint('info')
+async def get_current_user_endpoint(
+    user: User = Depends(current_user),
+) -> UserRead:
+    """Возвращает текущего пользователя."""
+    log_event(
+        'info',
+        'Получены данные текущего пользователя',
+        username=user.username,
+        user_id=user.id,
+    )
+    return user
+
+
+@router.patch(
+    '/me',
+    response_model=UserRead,
+    summary='Обновление данных текущего пользователя'
+    ' (доступно только текущему пользователю)',
+    responses=current_user_update_responses,
+)
+@log_endpoint('info')
+async def update_current_user(
+    user_update: UserUpdate,
+    user: User = Depends(current_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> UserRead:
+    """Обновляет данные текущего пользователя."""
+    updated_user = await user_crud.update(
+        db_obj=user,
+        obj_in=user_update,
+        session=session,
+        user_id=user.id,
+    )
+
+    log_event(
+        'info',
+        f'Обновлены данные пользователя {user.id}',
+        username=user.username,
+        user_id=user.id,
+    )
+    return updated_user
+
+
+# -------------------
+# Список пользователей (только админ)
+# -------------------
+@router.get(
+    '',
+    response_model=list[UserRead],
+    summary='Получение списка пользователей (только для администратора)',
+    responses=users_list_responses,
+)
+@log_endpoint('info')
 async def get_users(
     show_all: bool = Query(
-        default=None,
-        description='Все или только активные',
+        False,
+        description='Показать всех пользователей; False — только активные',
     ),
     session: AsyncSession = Depends(get_async_session),
     admin: User = Depends(current_admin),
-) -> List[UserRead]:
-    """Возвращает пользователей."""
-    stmt = select(User)
-    if not show_all:
-        stmt = stmt.where(User.is_active)
-    result = await session.execute(stmt)
-    return result.scalars().all()
+) -> list[UserRead]:
+    """Возвращает список пользователей с фильтром по активности."""
+    users = await user_crud.get_users(
+        session=session,
+        show_all=show_all,
+        current_user=admin,
+    )
+    log_event(
+        'info',
+        f'Получен список пользователей, show_all={show_all}',
+        username=admin.username,
+        user_id=admin.id,
+    )
+    return users
 
 
+# -------------------
+# Создание пользователя (публичная регистрация)
+# -------------------
 @router.post(
-    '/users',
+    '',
     response_model=UserRead,
-    tags=['Пользователи'],
     summary='Создание пользователя',
+    responses=user_create_responses,
+    status_code=status.HTTP_201_CREATED,
 )
+@log_endpoint('info')
 async def create_user(
     user_create: UserCreate,
-    user_manager: UserManager = Depends(fastapi_users.get_user_manager),
+    session: AsyncSession = Depends(get_async_session),
 ) -> UserRead:
-    """Создает нового пользователя."""
-    return await user_manager.create(user_create)
+    """Создает нового пользователя (хэширование пароля выполняется в CRUD)."""
+    new_user = await user_crud.create(obj_in=user_create, session=session)
+
+    log_event(
+        'info',
+        f'Создан новый пользователь {new_user.id}',
+        username=new_user.username,
+        user_id=new_user.id,
+    )
+    return new_user
 
 
+# -------------------
+# Пользователь по ID (только админ)
+# -------------------
 @router.get(
-    '/users/{user_id}',
+    '/{user_id}',
     response_model=UserRead,
-    tags=['Пользователи'],
-    summary='Пользователь по ID (только админ)',
+    summary='Получение пользователя по ID (только для администратора)',
+    responses=current_user_get_responses,
 )
+@log_endpoint('info')
 async def get_user_by_id(
-    user_id: int = Path(...),
-    user_manager: UserManager = Depends(fastapi_users.get_user_manager),
+    user_id: int = Path(..., title='ID пользователя'),
+    session: AsyncSession = Depends(get_async_session),
     admin: User = Depends(current_admin),
 ) -> UserRead:
-    """Возвращает пользователя по ID."""
-    user = await user_manager.get(user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='Не найден',
-        )
+    """Возвращает пользователя по ID или 404."""
+    user = await user_crud.get_or_404(user_id, session)
+    log_event(
+        'info',
+        f'Получен пользователь {user.id}',
+        username=admin.username,
+        user_id=admin.id,
+    )
     return user
 
 
+# -------------------
+# Обновление пользователя по ID (только админ)
+# -------------------
 @router.patch(
-    '/users/{user_id}',
+    '/{user_id}',
     response_model=UserRead,
-    tags=['Пользователи'],
-    summary='Обновление пользователя по ID (только админ)',
+    summary='Обновление данных пользователя по ID (только для администратора)',
+    responses=user_update_responses,
 )
+@log_endpoint('info')
 async def update_user_by_id(
-    user_id: int,
     user_update: UserUpdate,
-    user_manager: UserManager = Depends(fastapi_users.get_user_manager),
+    user_id: int = Path(..., description='ID пользователя'),
+    session: AsyncSession = Depends(get_async_session),
     admin: User = Depends(current_admin),
 ) -> UserRead:
-    """Обновляет данные пользователя."""
-    user = await user_manager.get(user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='Не найден',
-        )
-    return await user_manager.update(user_update, user)
+    """Обновляет данные пользователя по ID."""
+    user = await user_crud.get_or_404(user_id, session)
 
+    updated_user = await user_crud.update(
+        db_obj=user,
+        obj_in=user_update,
+        session=session,
+        user_id=admin.id,
+    )
 
-@router.get(
-    '/users/me',
-    response_model=UserRead,
-    tags=['Пользователи'],
-    summary='Текущий пользователь',
-)
-async def get_current_user(user: User = Depends(current_user)) -> UserRead:
-    """Данные текущего пользователя."""
-    return user
-
-
-@router.patch(
-    '/users/me',
-    response_model=UserRead,
-    tags=['Пользователи'],
-    summary='Обновление текущего пользователя',
-)
-async def update_current_user(
-    user_update: UserUpdate,
-    user_manager: UserManager = Depends(fastapi_users.get_user_manager),
-    user: User = Depends(current_user),
-) -> UserRead:
-    """Обновляет данные текущего пользователя."""
-    return await user_manager.update(user_update, user)
+    log_event(
+        'info',
+        f'Обновлены данные пользователя {user.id}',
+        username=admin.username,
+        user_id=admin.id,
+    )
+    return updated_user

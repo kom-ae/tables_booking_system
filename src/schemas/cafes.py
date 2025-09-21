@@ -36,6 +36,7 @@ class CafeBase(BaseModel):
         """Конфиг класса."""
 
         extra = 'forbid'
+        from_attributes = True
 
 
 class CafeDB(CafeBase):
@@ -43,13 +44,13 @@ class CafeDB(CafeBase):
 
     id: int = Field(..., title='ID записи')
     active: bool = Field(..., title='Объект активен?')
-    created_at: datetime = Field(..., 'Дата создания')
-    updated_at: datetime = Field(..., 'Дата обновления')
+    created_at: datetime = Field(..., title='Дата создания')
+    updated_at: datetime = Field(..., title='Дата обновления')
 
     class Config:
         """Конфиг класса."""
 
-        orm_mode = True
+        from_attributes = True
 
 
 class CafeCreate(CafeBase):
