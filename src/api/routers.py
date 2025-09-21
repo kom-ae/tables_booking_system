@@ -1,5 +1,6 @@
-from src.api.endpoints import user_router, auth_router  # noqa
 from fastapi import APIRouter
+
+from src.api.endpoints import auth_router, user_router  # noqa
 
 main_router = APIRouter()
 
