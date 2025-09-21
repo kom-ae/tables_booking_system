@@ -24,7 +24,6 @@ USERNAME_TWO = 'user2'
 EMAIL_ONE = 'user1@test.com'
 EMAIL_TWO = 'user2@test.com'
 USER_UPDATED_ONE = 'user_updated'
-USER_UPDATED_TWO = 'user_updated'
 
 
 # -----------------------
