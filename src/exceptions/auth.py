@@ -1,5 +1,4 @@
-from fastapi import HTTPException, Request, status
-from fastapi.exceptions import RequestValidationError
+from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 
 
@@ -9,8 +8,10 @@ class BaseAPIException(HTTPException):
     error_code: str = 'Error'
 
     def __init__(self, detail: str, status_code: int) -> None:
-        """Инициализация с сообщением и HTTP-статусом."""
-        super().__init__(status_code=status_code, detail=detail)
+        """Инициализация исключения с сообщением и HTTP-статусом."""
+        self.status_code = int(status_code)
+        self.detail = detail
+        super().__init__(status_code=self.status_code, detail=self.detail)
 
     def to_response(self) -> JSONResponse:
         """Возвращает JSON с ошибкой."""
@@ -26,8 +27,8 @@ class InvalidTokenException(BaseAPIException):
     error_code: str = 'InvalidToken'
 
     def __init__(self, detail: str = 'Недействительный токен') -> None:
-        """Инициализация InvalidTokenException."""
-        super().__init__(status.HTTP_401_UNAUTHORIZED, detail)
+        """Инициализация исключения InvalidTokenException."""
+        super().__init__(detail, status.HTTP_401_UNAUTHORIZED)
 
 
 class ExpiredTokenException(BaseAPIException):
@@ -36,8 +37,8 @@ class ExpiredTokenException(BaseAPIException):
     error_code: str = 'ExpiredToken'
 
     def __init__(self, detail: str = 'Токен истёк') -> None:
-        """Инициализация ExpiredTokenException."""
-        super().__init__(status.HTTP_401_UNAUTHORIZED, detail)
+        """Инициализация исключения ExpiredTokenException."""
+        super().__init__(detail, status.HTTP_401_UNAUTHORIZED)
 
 
 class InvalidCredentialsException(BaseAPIException):
@@ -46,8 +47,8 @@ class InvalidCredentialsException(BaseAPIException):
     error_code: str = 'InvalidCredentials'
 
     def __init__(self, detail: str = 'Неверный логин или пароль') -> None:
-        """Инициализация InvalidCredentialsException."""
-        super().__init__(status.HTTP_401_UNAUTHORIZED, detail)
+        """Инициализация исключения InvalidCredentialsException."""
+        super().__init__(detail, status.HTTP_401_UNAUTHORIZED)
 
 
 class PermissionDeniedException(BaseAPIException):
@@ -56,20 +57,5 @@ class PermissionDeniedException(BaseAPIException):
     error_code: str = 'PermissionDenied'
 
     def __init__(self, detail: str = 'Недостаточно прав') -> None:
-        """Инициализация PermissionDeniedException."""
-        super().__init__(status.HTTP_403_FORBIDDEN, detail)
-
-
-async def validation_exception_handler(
-    request: Request,
-    exc: RequestValidationError,
-) -> JSONResponse:
-    """Обработка ошибок валидации запроса (422 → 400)."""
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content={
-            'error': 'ValidationError',
-            'message': 'Некорректные данные запроса',
-            'details': exc.errors(),
-        },
-    )
+        """Инициализация исключения PermissionDeniedException."""
+        super().__init__(detail, status.HTTP_403_FORBIDDEN)
