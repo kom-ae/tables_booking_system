@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: af759633d998
+Revision ID: fb007cb03630
 Revises: 
-Create Date: 2025-09-21 22:30:30.879087
+Create Date: 2025-09-22 01:10:19.510997
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'af759633d998'
+revision = 'fb007cb03630'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -24,27 +24,29 @@ def upgrade():
     sa.Column('phone', sa.String(length=15), nullable=False),
     sa.Column('description', sa.Text(), nullable=False),
     sa.Column('photo', sa.String(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
-    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('user',
     sa.Column('username', sa.String(length=255), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
-    sa.Column('password', sa.String(length=255), nullable=False),
+    sa.Column('password', sa.String(length=128), nullable=False),
     sa.Column('is_superuser', sa.Boolean(), nullable=False),
-    sa.Column('phone', sa.String(length=20), nullable=True),
+    sa.Column('phone', sa.String(length=20), nullable=False),
     sa.Column('tg_id', sa.String(length=50), nullable=True),
     sa.Column('role', sa.String(length=50), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
-    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('last_used', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
-    sa.UniqueConstraint('phone')
+    sa.UniqueConstraint('phone'),
+    sa.UniqueConstraint('tg_id')
     )
     op.create_table('cafe_manager',
     sa.Column('cafe_id', sa.Integer(), nullable=False),

@@ -29,7 +29,7 @@ async def get_all_cafes(
     session: AsyncSession = Depends(get_async_session),
 ) -> List[CafeDB]:
     """Список с данными о кафе."""
-    if user.role == 'admin' and show_all:
+    if user.is_admin() and show_all:
         return await cafes_crud.get_multi_all(session)
     return await cafes_crud.get_multi_active(session)
 

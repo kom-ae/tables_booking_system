@@ -11,7 +11,7 @@ from src.constants import (
     MIN_NAME_CAFE,
     MIN_TEL,
 )
-from src.schemas.user import UserRead
+from src.schemas.user import UserShort
 
 
 class CafeBase(BaseModel):
@@ -37,7 +37,7 @@ class CafeBase(BaseModel):
     )
     description: Optional[str] = Field(None, title='Описание кафе')
     photo: Optional[str] = Field(None, title='Фото кафе в формате base64')
-    managers: Optional[List[UserRead]] = Field(None, title='ID менеджера')
+    managers: Optional[List[UserShort]] = Field(None, title='ID менеджера')
 
     class Config:
         """Конфиг класса."""

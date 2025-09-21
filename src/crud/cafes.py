@@ -14,14 +14,14 @@ class CRUDCafe(CRUDBase):
         obj_in: CafeCreate,
         session: AsyncSession,
     ) -> CafeDB:
-        """Корутина для создания кафе."""
+        """Создание кафе."""
         in_managers = obj_in.model_dump(include='managers')['managers']
         in_managers = in_managers if in_managers else []
         obj_in_data = obj_in.model_dump(exclude='managers')
         obj_in_data['updated_at'] = func.now()
 
         db_obj_managers = await session.scalars(
-            select(User).where(User.id.in_(in_managers))
+            select(User).where(User.id.in_(in_managers)),
         )
         db_obj_managers = db_obj_managers.all()
         db_obj = Cafes(**obj_in_data)
