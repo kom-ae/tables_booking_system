@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, Path, Query, status
-from passlib.hash import bcrypt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.user import (
@@ -59,13 +58,9 @@ async def update_current_user(
     session: AsyncSession = Depends(get_async_session),
 ) -> UserRead:
     """Обновляет данные текущего пользователя."""
-    update_data = user_update.model_copy()
-    if update_data.password:
-        update_data.password = bcrypt.hash(update_data.password)
-
     updated_user = await user_crud.update(
         db_obj=user,
-        obj_in=update_data,
+        obj_in=user_update,
         session=session,
         user_id=user.id,
     )
@@ -127,11 +122,8 @@ async def create_user(
     user_create: UserCreate,
     session: AsyncSession = Depends(get_async_session),
 ) -> UserRead:
-    """Создает нового пользователя с хэшированием пароля."""
-    hashed_password = bcrypt.hash(user_create.password)
-    user_data = user_create.model_copy(update={'password': hashed_password})
-
-    new_user = await user_crud.create(obj_in=user_data, session=session)
+    """Создает нового пользователя (хэширование пароля выполняется в CRUD)."""
+    new_user = await user_crud.create(obj_in=user_create, session=session)
 
     log_event(
         'info',
@@ -187,13 +179,9 @@ async def update_user_by_id(
     """Обновляет данные пользователя по ID."""
     user = await user_crud.get_or_404(user_id, session)
 
-    update_data = user_update.model_copy()
-    if update_data.password:
-        update_data.password = bcrypt.hash(update_data.password)
-
     updated_user = await user_crud.update(
         db_obj=user,
-        obj_in=update_data,
+        obj_in=user_update,
         session=session,
         user_id=admin.id,
     )

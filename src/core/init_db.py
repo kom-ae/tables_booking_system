@@ -1,11 +1,11 @@
 from sqlalchemy.future import select
 
-from src.api.utils.auth import get_password_hash
 from src.core.config import settings
 from src.core.db import engine, get_async_session
 from src.core.logger import log_event
 from src.models.base import BaseModel
 from src.models.user import User
+from src.services.auth import PasswordService
 
 
 async def init_db_and_superuser() -> None:
@@ -25,7 +25,7 @@ async def init_db_and_superuser() -> None:
         user = result.scalar_one_or_none()
 
         if not user:
-            password_hashed = get_password_hash(
+            password_hashed = PasswordService.hash_password(
                 settings.first_superuser_password,
             )
             superuser = User(

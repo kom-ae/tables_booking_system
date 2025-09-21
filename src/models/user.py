@@ -1,12 +1,11 @@
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import Float, String
+from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.constants import (
-    DEFAULT_LAST_USED,
-    DEFAULT_ROLE,
     EMAIL_MAX_LENGTH,
     PASSWORD_MAX_LENGTH,
     PHONE_MAX_LENGTH,
@@ -44,7 +43,7 @@ class User(BaseModel):
         nullable=False,
     )
     is_superuser: Mapped[bool] = mapped_column(default=False, nullable=False)
-    phone: Mapped[Optional[str]] = mapped_column(
+    phone: Mapped[str] = mapped_column(
         String(PHONE_MAX_LENGTH),
         unique=True,
         nullable=False,
@@ -52,13 +51,17 @@ class User(BaseModel):
     tg_id: Mapped[Optional[str]] = mapped_column(
         String(TG_ID_MAX_LENGTH),
         nullable=True,
+        unique=True,
     )
     role: Mapped[str] = mapped_column(
         String(ROLE_MAX_LENGTH),
-        default=DEFAULT_ROLE,
+        default=UserRole.USER,
         nullable=False,
     )
-    last_used: Mapped[float] = mapped_column(Float, default=DEFAULT_LAST_USED)
+    last_used: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
     # cafe_id: Mapped[Optional[int]] = mapped_column(
     #    Integer, ForeignKey('cafe.id'), nullable=True)
 

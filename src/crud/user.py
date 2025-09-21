@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from passlib.hash import bcrypt
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +13,7 @@ from src.exceptions.user import (
 )
 from src.models.user import User
 from src.schemas.user import UserCreate, UserUpdate
+from src.services.auth import PasswordService
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
@@ -33,8 +33,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return obj
 
     async def update_last_used(self, db: AsyncSession, user: User) -> User:
-        """Обновить last_used UTC и залогировать."""
-        user.last_used = datetime.now(timezone.utc).timestamp()
+        """Обновляет поле last_used для пользователя."""
+        user.last_used = datetime.now(timezone.utc)
         db.add(user)
         await db.commit()
         await db.refresh(user)
@@ -45,6 +45,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             user_id=user.id,
         )
         return user
+
+    async def touch_last_used(self, db: AsyncSession, user: User) -> None:
+        """Обновляет поле last_used при активности пользователя."""
+        user.last_used = datetime.now(timezone.utc)
+        db.add(user)
+        await db.commit()
 
     async def _check_unique(
         self,
@@ -98,7 +104,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         """Создаёт нового пользователя с хэш-ем пароля и проверкой unique."""
         await self._check_unique(session, obj_in.email, obj_in.phone)
 
-        hashed_password = bcrypt.hash(obj_in.password)
+        hashed_password = PasswordService.hash_password(obj_in.password)
         obj_in_data = obj_in.model_copy(update={'password': hashed_password})
 
         return await super().create(
@@ -124,7 +130,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
         update_data = obj_in.model_dump(exclude_unset=True)
         if 'password' in update_data and update_data['password']:
-            update_data['password'] = bcrypt.hash(update_data['password'])
+            update_data['password'] = PasswordService.hash_password(
+                update_data['password'],
+            )
 
         return await super().update(
             db_obj=db_obj,

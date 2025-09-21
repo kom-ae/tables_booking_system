@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
@@ -24,7 +24,6 @@ from src.exceptions.user import UserNotFoundException
 from src.models.user import User
 
 user_crud = get_user_crud()
-
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
@@ -56,13 +55,19 @@ async def get_current_user(
             algorithms=[settings.jwt_algorithm],
         )
         user_id = int(payload.get('sub'))
-        last_used = payload.get('last_used')
-        if not user_id or last_used is None:
+        token_last_used_ts = payload.get('last_used')
+        if not user_id or token_last_used_ts is None:
             log_event('warning', 'Недействительный токен', username, user_id)
             raise InvalidTokenException()
 
-        now_ts = datetime.now(timezone.utc).timestamp()
-        if now_ts - last_used > settings.access_token_expire_minutes * 60:
+        now = datetime.now(timezone.utc)
+        token_last_used = datetime.fromtimestamp(
+            token_last_used_ts,
+            timezone.utc,
+        )
+        if now - token_last_used > timedelta(
+            minutes=settings.access_token_expire_minutes,
+        ):
             log_event('warning', 'Токен просрочен', username, user_id)
             raise ExpiredTokenException()
     except (jwt.JWTError, ValueError):
@@ -89,7 +94,14 @@ async def get_current_user(
     request.state.username = username
     request.state.user_id = user_id
 
-    if now_ts - user.last_used > MIN_UPDATE_INTERVAL_SECONDS:
+    # Преобразуем last_used в aware datetime, если вдруг она naive
+    last_used = user.last_used
+    if last_used.tzinfo is None:
+        last_used = last_used.replace(tzinfo=timezone.utc)
+
+    if datetime.now(timezone.utc) - last_used > timedelta(
+        seconds=MIN_UPDATE_INTERVAL_SECONDS,
+    ):
         await user_crud.update_last_used(db, user)
         log_event(
             'info',

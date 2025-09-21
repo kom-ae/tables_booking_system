@@ -13,7 +13,7 @@ class BaseSchema(BaseModel):
     id: Optional[int] = Field(None, description='ID')
     created_at: Optional[datetime] = Field(None, description='Дата создания')
     updated_at: Optional[datetime] = Field(None, description='Дата обновления')
-    is_active: bool = Field(True, description='Активен ли пользователь.')
+    is_active: bool = Field(None, description='Активен ли пользователь.')
 
     class Config:
         """Конфигурация Pydantic."""
