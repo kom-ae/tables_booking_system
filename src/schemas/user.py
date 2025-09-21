@@ -10,10 +10,12 @@ from src.schemas.validators import password_validator, phone_validator
 class UserCreate(UserBase):
     """Создание нового пользователя."""
 
+    phone: str = Field(..., description='Телефон')
     password: str = Field(..., description='Пароль')
     _validate_password = field_validator('password', mode='before')(
         password_validator,
     )
+    _validate_phone = field_validator('phone', mode='before')(phone_validator)
 
 
 class UserRead(UserBase, BaseSchema):
@@ -21,19 +23,15 @@ class UserRead(UserBase, BaseSchema):
 
     id: int = Field(..., description='ID')
     phone: str = Field(..., description='Телефон')
-    email: EmailStr = Field(..., description='Email пользователя')
     is_active: bool = Field(..., description='Активен ли пользователь')
     created_at: datetime = Field(..., description='Дата создания')
     updated_at: datetime = Field(..., description='Дата обновления')
 
 
-class UserUpdate(BaseModel):
+class UserUpdate(UserBase):
     """Обновление пользователя."""
 
     username: Optional[str] = Field(None, description='Имя пользователя')
-    email: Optional[EmailStr] = Field(None, description='Email пользователя')
-    phone: Optional[str] = Field(None, description='Телефон')
-    tg_id: Optional[str] = Field(None, description='Telegram ID')
     password: Optional[str] = Field(None, description='Пароль')
     is_active: Optional[bool] = Field(
         None,
@@ -49,11 +47,14 @@ class UserUpdate(BaseModel):
 class UserShort(BaseModel):
     """Краткая информация о пользователе."""
 
-    id: int
-    username: str
-    email: EmailStr
-    phone: Optional[str] = None
-    is_active: bool
+    id: int = Field(..., description='ID')
+    username: str = Field(..., description='Имя пользователя')
+    email: Optional[EmailStr] = Field(None, description='Email пользователя')
+    phone: str = Field(..., description='Телефон')
+    is_active: bool = Field(
+        ...,
+        description='Активен ли пользователь',
+    )
 
     class Config:
         """Конфигурация Pydantic."""

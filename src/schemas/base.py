@@ -10,7 +10,6 @@ from src.schemas.validators import phone_validator
 class BaseSchema(BaseModel):
     """Базовая схема с общими полями для всех моделей."""
 
-    id: Optional[int] = Field(None, description='ID')
     created_at: Optional[datetime] = Field(None, description='Дата создания')
     updated_at: Optional[datetime] = Field(None, description='Дата обновления')
     is_active: bool = Field(True, description='Активен ли пользователь.')
