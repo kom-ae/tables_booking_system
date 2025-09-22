@@ -4,7 +4,6 @@ from typing import Optional
 from sqlalchemy import (
     CheckConstraint,
     ForeignKey,
-    LargeBinary,
     Numeric,
     String,
     Text,
@@ -42,8 +41,8 @@ class Dishes(BaseModel):
         CheckConstraint('price >= 0'),
         nullable=False,
     )
-    photo: Mapped[Optional[bytes]] = mapped_column(
-        LargeBinary(),
+    photo: Mapped[Optional[str]] = mapped_column(
+        String,
         nullable=True,
     )
     cafe: Mapped['Cafes'] = relationship('Cafes', back_populates='dishes')
