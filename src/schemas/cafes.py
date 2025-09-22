@@ -27,6 +27,7 @@ class CafeDB(CafeBase):
     updated_at: datetime = Field(..., title='Дата обновления')
 
 
+
 class CafeCreate(CafeBase):
     """Схема для создания кафе."""
 
