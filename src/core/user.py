@@ -6,11 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.constants import (
-    MIN_UPDATE_INTERVAL_SECONDS,
-    SYSTEM_USERNAME,
-    ZERO_DEFAULT_USER_ID,
-)
+from src.constants import MIN_UPDATE_INTERVAL_SECONDS
 from src.core.config import settings
 from src.core.db import get_async_session
 from src.core.logger import log_event
@@ -33,8 +29,8 @@ async def get_current_user(
     db: AsyncSession = Depends(get_async_session),
 ) -> User:
     """Возвращает текущего пользователя по JWT, обновляет last_used."""
-    username = SYSTEM_USERNAME
-    user_id = ZERO_DEFAULT_USER_ID
+    username = settings.system_username
+    user_id = settings.default_user_id
 
     if not token:
         log_event(
@@ -158,8 +154,8 @@ async def current_manager(user: User = Depends(current_user)) -> User:
 async def get_user_by_name(name: str, db: AsyncSession) -> Optional[User]:
     """Возвращает пользователя по email или телефону через CRUD."""
     user = await user_crud.get_by_name(db, name)
-    username = user.username if user else SYSTEM_USERNAME
-    user_id = user.id if user else ZERO_DEFAULT_USER_ID
+    username = user.username if user else settings.system_username
+    user_id = user.id if user else settings.default_user_id
     log_event(
         'info',
         f'Поиск пользователя по имени: {name}',

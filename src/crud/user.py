@@ -1,10 +1,9 @@
-from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.constants import SYSTEM_USERNAME, ZERO_DEFAULT_USER_ID
+from src.core.config import settings
 from src.core.logger import log_event
 from src.crud.base import CRUDBase
 from src.exceptions.user import (
@@ -34,7 +33,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     async def update_last_used(self, db: AsyncSession, user: User) -> User:
         """Обновляет поле last_used для пользователя."""
-        user.last_used = datetime.now(timezone.utc)
+        user.last_used = func.now()
         db.add(user)
         await db.commit()
         await db.refresh(user)
@@ -48,7 +47,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     async def touch_last_used(self, db: AsyncSession, user: User) -> None:
         """Обновляет поле last_used при активности пользователя."""
-        user.last_used = datetime.now(timezone.utc)
+        user.last_used = func.now()
         db.add(user)
         await db.commit()
 
@@ -71,9 +70,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                     username=getattr(
                         current_user,
                         'username',
-                        SYSTEM_USERNAME,
+                        settings.system_username,
                     ),
-                    user_id=getattr(current_user, 'id', ZERO_DEFAULT_USER_ID),
+                    user_id=getattr(
+                        current_user,
+                        'id',
+                        settings.default_user_id,
+                    ),
                 )
                 raise UserAlreadyExistsException(
                     f'Email {email} уже существует',
@@ -89,9 +92,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                     username=getattr(
                         current_user,
                         'username',
-                        SYSTEM_USERNAME,
+                        settings.system_username,
                     ),
-                    user_id=getattr(current_user, 'id', ZERO_DEFAULT_USER_ID),
+                    user_id=getattr(
+                        current_user,
+                        'id',
+                        settings.default_user_id,
+                    ),
                 )
                 raise UserAlreadyExistsException(
                     f'Телефон {phone} уже существует',
@@ -110,9 +117,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                     username=getattr(
                         current_user,
                         'username',
-                        SYSTEM_USERNAME,
+                        settings.system_username,
                     ),
-                    user_id=getattr(current_user, 'id', ZERO_DEFAULT_USER_ID),
+                    user_id=getattr(
+                        current_user,
+                        'id',
+                        settings.default_user_id,
+                    ),
                 )
                 raise UserAlreadyExistsException(
                     f'tg_id {tg_id} уже существует',
@@ -187,8 +198,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             'info',
             f'Получен список пользователей, show_all={show_all}',
             username=(
-                current_user.username if current_user else SYSTEM_USERNAME
+                current_user.username
+                if current_user
+                else settings.system_username
             ),
-            user_id=current_user.id if current_user else ZERO_DEFAULT_USER_ID,
+            user_id=(
+                current_user.id if current_user else settings.default_user_id
+            ),
         )
         return users

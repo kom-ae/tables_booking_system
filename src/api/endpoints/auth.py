@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.auth import login_responses, logout_responses
-from src.constants import SYSTEM_USERNAME, ZERO_DEFAULT_USER_ID
+from src.core.config import settings
 from src.core.db import get_async_session
 from src.core.logger import log_endpoint, log_event
 from src.core.user import get_user_by_name
@@ -61,7 +61,7 @@ async def logout() -> dict[str, str]:
     log_event(
         'info',
         'Пользователь вышел из системы',
-        username=SYSTEM_USERNAME,
-        user_id=ZERO_DEFAULT_USER_ID,
+        username=settings.system_username,
+        user_id=settings.default_user_id,
     )
     return {'message': 'Вы вышли из системы.'}

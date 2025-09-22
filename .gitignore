@@ -166,7 +166,17 @@ cython_debug/
 ruff.toml
 
 #Tests
-.Tests
-.tests
-.Test
-.test
+Tests
+tests
+Test
+test
+
+# База данных
+fastapi.db
+
+# Black
+pyproject.toml
+
+# Логирование
+app.log
+src.log
