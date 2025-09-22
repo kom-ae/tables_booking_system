@@ -1,9 +1,9 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 
-from sqlalchemy import DateTime, String, func, text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, String, text, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.constants import (
     EMAIL_MAX_LENGTH,
@@ -13,6 +13,7 @@ from src.constants import (
     TG_ID_MAX_LENGTH,
     USERNAME_MAX_LENGTH,
 )
+from src.models import Cafes
 from src.models.base import BaseModel
 
 
@@ -63,6 +64,12 @@ class User(BaseModel):
         server_default=text('CURRENT_TIMESTAMP'),
         onupdate=func.now(),
         nullable=False,
+    )
+    managed_cafes: Mapped[List['Cafes']] = relationship(
+        'Cafes',
+        secondary='cafe_manager',
+        back_populates='managers',
+        lazy='selectin',
     )
 
     # -------------------

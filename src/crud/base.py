@@ -31,13 +31,22 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         )
         return db_obj.scalars().first()
 
-    async def get_multi(
+    async def get_multi_all(
         self,
         session: AsyncSession,
     ) -> list[ModelType]:
         """Получение всех объектов."""
         result = await session.execute(select(self.model))
         return result.scalars().all()
+
+    async def get_multi_active(
+        self,
+        session: AsyncSession,
+    ) -> list[ModelType]:
+        """Корутина для получения активных объектов."""
+        response = select(self.model).where(self.model.is_active)
+        db_objects = await session.execute(response)
+        return db_objects.scalars().all()
 
     async def create(
         self,
