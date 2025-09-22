@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import DateTime, String, text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -13,8 +13,10 @@ from src.constants import (
     TG_ID_MAX_LENGTH,
     USERNAME_MAX_LENGTH,
 )
-from src.models import Cafes
 from src.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from src.models.cafes import Cafes
 
 
 class UserRole(str, Enum):
