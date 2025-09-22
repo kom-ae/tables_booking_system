@@ -46,7 +46,7 @@ class CafeBase(BaseModel):
         extra = 'forbid'
 
 
-class CafeDB(CafeBase):
+class Cafe(CafeBase):
     """Возвращаемая схема кафе."""
 
     id: int = Field(..., title='ID записи')
@@ -60,7 +60,7 @@ class CafeDB(CafeBase):
         from_attributes = True
 
 
-class CafeCreate(CafeBase):
+class CafeCreate(BaseModel):
     """Схема для создания кафе."""
 
     managers: Optional[List[int]] = Field(None, title='ID менеджера')
