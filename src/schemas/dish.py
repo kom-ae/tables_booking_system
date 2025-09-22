@@ -3,17 +3,15 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.schemas.cafes import CafeShortDB
-
 
 class DishBase(BaseModel):
     """Базовая схема для блюд."""
 
-    cafe: int = Field(..., description='ID записи')
+    cafe_id: int = Field(..., description='Кафе')
     name: str = Field(..., description='Название блюда')
-    description: str = Field(..., description='Описание акции')
+    description: str = Field(..., description='Описание блюда')
     price: Decimal | None = Field(None, description='Цена')
-    photo: bytes | None = Field(
+    photo: str | None = Field(
         None,
         description='Фото блюда в формате base64',
     )
@@ -29,22 +27,26 @@ class DishCreate(DishBase):
     )
 
 
-class DishUpdate(DishBase):
+class DishUpdate(BaseModel):
     """Схема для обновления блюд."""
 
-    cafe: int | None = Field(None, description='ID записи')
+    cafe_id: int | None = Field(None, description='Кафе')
     name: str | None = Field(None, description='Название блюда')
     description: str | None = Field(None, description='Описание акции')
+    price: Decimal | None = Field(None, description='Цена')
+    photo: str | None = Field(
+        None,
+        description='Фото блюда в формате base64',
+    )
     is_active: bool | None = Field(None, description='Объект активен?')
 
 
 class Dish(DishBase):
-    """Схема блюд со всеми полями и полной информацией о кафе."""
+    """Схема блюд со всеми полями."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description='ID записи')
-    cafe: CafeShortDB = Field(..., description='Кафе')
     is_active: bool = Field(..., description='Объект активен?')
     created_at: datetime = Field(..., description='Дата создания')
     updated_at: datetime = Field(..., description='Дата обновления')
