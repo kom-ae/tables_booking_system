@@ -3,7 +3,7 @@ from functools import wraps
 from logging.handlers import RotatingFileHandler
 from typing import Any, Callable, Coroutine, Optional
 
-from core.config import settings
+from src.core.config import settings
 
 formatter = logging.Formatter(
     '%(asctime)s | %(levelname)s | %(username)s | %(user_id)s | %(message)s',

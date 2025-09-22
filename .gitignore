@@ -176,3 +176,7 @@ fastapi.db
 
 # Black
 pyproject.toml
+
+# Логирование
+app.log
+src.log

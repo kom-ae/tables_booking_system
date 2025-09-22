@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.constants import SYSTEM_USERNAME, ZERO_DEFAULT_USER_ID
+from src.core.config import settings
 from src.core.db import Base
 from src.core.logger import log_event
 
@@ -59,8 +59,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             'info',
             f'Создан объект {self.model.__name__} id={db_obj.id} '
             f'с данными {obj_in_data}',
-            username=SYSTEM_USERNAME if not user_id else f'user_{user_id}',
-            user_id=user_id or ZERO_DEFAULT_USER_ID,
+            username=(
+                settings.system_username if not user_id else f'user_{user_id}'
+            ),
+            user_id=user_id or settings.default_user_id,
         )
         return db_obj
 
@@ -85,7 +87,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             'info',
             f'Обновлен объект {self.model.__name__} id={db_obj.id} '
             f'с данными {update_data}',
-            username=SYSTEM_USERNAME if not user_id else f'user_{user_id}',
-            user_id=user_id or ZERO_DEFAULT_USER_ID,
+            username=(
+                settings.system_username if not user_id else f'user_{user_id}'
+            ),
+            user_id=user_id or settings.default_user_id,
         )
         return db_obj
