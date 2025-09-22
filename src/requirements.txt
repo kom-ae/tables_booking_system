@@ -26,6 +26,7 @@ pwdlib==0.2.0
 pycparser==2.23
 pydantic==2.11.9
 pydantic_core==2.33.2
+pydantic-settings==2.10.1
 PyJWT==2.8.0
 python-dotenv==1.1.1
 python-multipart==0.0.9
@@ -39,3 +40,5 @@ typing_extensions==4.15.0
 uvicorn==0.17.6
 watchgod==0.8.2
 websockets==15.0.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
