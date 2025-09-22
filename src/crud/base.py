@@ -36,17 +36,22 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         session: AsyncSession,
     ) -> list[ModelType]:
         """Получение всех объектов."""
-        result = await session.execute(select(self.model))
-        return result.scalars().all()
+        db_objects = (await session.scalars(select(self.model))).all()
+        log_event('info', 'Получено {} {}'.
+                  format(len(db_objects), self.model.__name__))
+        return db_objects
 
     async def get_multi_active(
         self,
         session: AsyncSession,
     ) -> list[ModelType]:
-        """Корутина для получения активных объектов."""
-        response = select(self.model).where(self.model.is_active)
-        db_objects = await session.execute(response)
-        return db_objects.scalars().all()
+        """Получение активных объектов."""
+        db_objects = (await session.scalars(
+            select(self.model).where(self.model.is_active),
+            )).all()
+        log_event('info', 'Получено {} активных {}'.
+                  format(len(db_objects), self.model.__name__))
+        return db_objects
 
     async def create(
         self,

@@ -3,12 +3,15 @@ from typing import List
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.api.validators import check_duplicate_cafe
 from src.core.db import get_async_session
+from src.core.logger import log_endpoint, log_event
 from src.core.user import current_admin, current_user
-from src.crud.cafes import cafe_crud
+from src.crud.factory import get_cafe_crud
 from src.models import Cafes, User
 from src.schemas.cafes import CafeCreate, CafeDB
-from src.core.logger import log_endpoint, log_event
+
+cafe_crud = get_cafe_crud()
 
 router = APIRouter()
 
@@ -22,7 +25,7 @@ router = APIRouter()
     response_description='Список кафе',
 )
 @log_endpoint()
-async def get_all_cafes(
+async def get_cafes(
     show_all: bool = Query(
         None,
         description='Показать все кафе'
@@ -31,21 +34,17 @@ async def get_all_cafes(
     session: AsyncSession = Depends(get_async_session),
 ) -> List[CafeDB]:
     """Список с данными о кафе."""
-
-    if user.is_admin() and show_all:
-        log_event(
-            'info',
-            'Получены все кафе',
-            username=user.username,
-            user_id=user.id,
-        )
-        return await cafe_crud.get_multi_all(session)
+    log_message = 'Получение {}'.format(
+        'всех кафе.' if user.is_admin() and show_all else 'активных кафе.',
+    )
     log_event(
         'info',
-        'Получены активные кафе',
+        log_message,
         username=user.username,
         user_id=user.id,
     )
+    if user.is_admin() and show_all:
+        return await cafe_crud.get_multi_all(session)
     return await cafe_crud.get_multi_active(session)
 
 
@@ -60,14 +59,12 @@ async def get_all_cafes(
 async def create_cafe(
     cafe: CafeCreate,
     session: AsyncSession = Depends(get_async_session),
-    user: User = Depends(current_admin)
+    user: User = Depends(current_admin),
 ) -> Cafes:
     """Создание кафе (только для администратора)."""
-    db_cafe = await cafe_crud.create_cafe(cafe, session)
-    log_event(
-        'info',
-        f'Создано кафе c id={db_cafe.id}',
-        username=user.username,
-        user_id=user.id,
+    await check_duplicate_cafe(cafe=cafe, session=session)
+    return await cafe_crud.create_cafe(
+        obj_in=cafe,
+        user=user,
+        session=session,
     )
-    return db_cafe
