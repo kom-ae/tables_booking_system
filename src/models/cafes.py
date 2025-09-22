@@ -9,6 +9,7 @@ from src.models.base import BaseModel
 
 if TYPE_CHECKING:
     from src.models.user import User
+    from src.models.dish import Dishes
 
 
 # Ассоциативная таблица кафе и менеджеров.
@@ -33,4 +34,10 @@ class Cafes(BaseModel):
         secondary='cafe_manager',
         back_populates='managed_cafes',
         lazy='selectin',
+    )
+    dishes: Mapped[List['Dishes']] = relationship(
+        'Dishes',
+        back_populates='cafe',
+        lazy='selectin',
+        cascade='all, delete-orphan'
     )

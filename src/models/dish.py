@@ -22,11 +22,6 @@ from src.models.cafes import Cafes
 class Dishes(BaseModel):
     """Модель блюд для кафе."""
 
-    cafe_id: Mapped[int] = mapped_column(
-        ForeignKey('cafes.id', ondelete='CASCADE'),
-        nullable=False,
-        index=True,
-    )
     name: Mapped[str] = mapped_column(
         String(MAX_DISH_LENGTH_NAME),
         nullable=False,
@@ -45,4 +40,12 @@ class Dishes(BaseModel):
         String,
         nullable=True,
     )
-    cafe: Mapped['Cafes'] = relationship('Cafes', back_populates='dishes')
+    cafe_id: Mapped[int] = mapped_column(
+        ForeignKey('cafes.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    cafe: Mapped['Cafes'] = relationship(
+        back_populates='dishes',
+        lazy='selectin'
+    )
