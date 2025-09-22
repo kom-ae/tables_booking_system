@@ -18,7 +18,7 @@ from src.schemas.validators import (
 )
 
 
-class CafeDB(CafeBase):
+class Cafe(CafeBase):
     """Возвращаемая схема кафе."""
 
     id: int = Field(..., title='ID записи')
@@ -28,7 +28,7 @@ class CafeDB(CafeBase):
 
 
 
-class CafeCreate(CafeBase):
+class CafeCreate(BaseModel):
     """Схема для создания кафе."""
 
     managers: Optional[list[int]] = Field([], title='ID менеджера')
