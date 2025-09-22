@@ -1,8 +1,8 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, String, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.constants import (
@@ -60,10 +60,10 @@ class User(BaseModel):
     )
     last_used: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        server_default=text('CURRENT_TIMESTAMP'),
+        onupdate=func.now(),
+        nullable=False,
     )
-    # cafe_id: Mapped[Optional[int]] = mapped_column(
-    #    Integer, ForeignKey('cafe.id'), nullable=True)
 
     # -------------------
     # Методы проверки ролей

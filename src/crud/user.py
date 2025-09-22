@@ -1,7 +1,6 @@
-from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.constants import SYSTEM_USERNAME, ZERO_DEFAULT_USER_ID
@@ -34,7 +33,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     async def update_last_used(self, db: AsyncSession, user: User) -> User:
         """Обновляет поле last_used для пользователя."""
-        user.last_used = datetime.now(timezone.utc)
+        user.last_used = func.now()
         db.add(user)
         await db.commit()
         await db.refresh(user)
@@ -48,7 +47,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     async def touch_last_used(self, db: AsyncSession, user: User) -> None:
         """Обновляет поле last_used при активности пользователя."""
-        user.last_used = datetime.now(timezone.utc)
+        user.last_used = func.now()
         db.add(user)
         await db.commit()
 
