@@ -10,14 +10,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.models.base import BaseModel
-from src.models.cafes import Cafes
-
 from src.constants import (
     DISH_PRICE_PRECISION,
     MAX_DISH_LENGTH_DESC,
     MAX_DISH_LENGTH_NAME,
 )
+from src.models.base import BaseModel
+from src.models.cafes import Cafes
 
 
 class Dishes(BaseModel):
