@@ -1,16 +1,14 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from src.schemas.base import BaseSchema
-from src.schemas.cafes import CafeBase, CafeUpdate, CafeDB, CafeCreate
+from src.schemas.cafes import CafeShort
 
 
 class ActionsBase(BaseModel):
     """Базовая схема для акций."""
-    id: int = Field(...)
-    cafe: CafeDB = Field(..., description='Кафе')
+    id: int = Field(..., description='ID записи')
+    cafe: CafeShort = Field(..., description='Кафе')
     description: str = Field(..., description='Описание акции')
     active: bool = Field(..., description='Объект активен?')
     created_at: datetime = Field(..., description='Дата создания')
@@ -18,15 +16,16 @@ class ActionsBase(BaseModel):
 
 
 class ActionsCreate(BaseModel):
+    """Сехма для создания акций."""
 
-    cafe: CafeCreate = Field(..., description='Кафе')
+    cafe: CafeShort = Field(..., description='Кафе')
     description: str = Field(..., description='Описание акции')
 
 
 class ActionsUpdate(ActionsCreate):
     """Схема для изменения акций."""
 
-    cafe: CafeBase = Field(None, description='Кафе')
+    cafe: CafeShort = Field(None, description='Кафе')
     description: str = Field(None, description='Описание акции')
     is_active: bool = Field(None, description='Объект активен?')
 
