@@ -4,9 +4,18 @@ from src.core.db import Base
 
 
 class BaseModel(Base):
-    """Базовая модель."""
+    """Базовая абстрактная модель."""
 
     __abstract__ = True
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    is_active = Column(Boolean, default=True)
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+    is_active = Column(Boolean, default=True, nullable=False)

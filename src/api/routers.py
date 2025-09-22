@@ -1,5 +1,10 @@
-from src.api.endpoints import user_router, auth_router  # noqa
 from fastapi import APIRouter
+
+from src.api.endpoints import (
+    auth_router,
+    cafes_router,
+    user_router,
+)
 
 main_router = APIRouter()
 
@@ -8,4 +13,9 @@ main_router.include_router(
     auth_router,
     prefix='/auth',
     tags=['Аутентификация'],
+)
+main_router.include_router(
+    cafes_router,
+    prefix='/cafes',
+    tags=['Кафе'],
 )
