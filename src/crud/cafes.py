@@ -32,4 +32,4 @@ class CRUDCafe(CRUDBase):
         return db_obj
 
 
-cafes_crud = CRUDCafe(Cafes)
+cafe_crud = CRUDCafe(Cafes)

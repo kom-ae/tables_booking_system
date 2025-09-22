@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.db import get_async_session
 from src.core.user import current_admin, current_user
-from src.crud.cafes import cafes_crud
+from src.crud.cafes import cafe_crud
 from src.models import Cafes, User
 from src.schemas.cafes import CafeCreate, CafeDB
 
@@ -30,8 +30,8 @@ async def get_all_cafes(
 ) -> List[CafeDB]:
     """Список с данными о кафе."""
     if user.is_admin() and show_all:
-        return await cafes_crud.get_multi_all(session)
-    return await cafes_crud.get_multi_active(session)
+        return await cafe_crud.get_multi_all(session)
+    return await cafe_crud.get_multi_active(session)
 
 
 @router.post(
@@ -47,4 +47,4 @@ async def create_cafe(
     session: AsyncSession = Depends(get_async_session),
 ) -> Cafes:
     """Создание кафе (только для администратора)."""
-    return await cafes_crud.create_cafe(cafe, session)
+    return await cafe_crud.create_cafe(cafe, session)

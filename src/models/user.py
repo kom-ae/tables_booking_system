@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy import DateTime, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.constants import (
     EMAIL_MAX_LENGTH,
@@ -13,6 +13,7 @@ from src.constants import (
     TG_ID_MAX_LENGTH,
     USERNAME_MAX_LENGTH,
 )
+from src.models import Cafes
 from src.models.base import BaseModel
 
 
@@ -62,8 +63,12 @@ class User(BaseModel):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
     )
-    # cafe_id: Mapped[Optional[int]] = mapped_column(
-    #    Integer, ForeignKey('cafe.id'), nullable=True)
+    managed_cafes: Mapped[List['Cafes']] = relationship(
+        'Cafes',
+        secondary='cafe_manager',
+        back_populates='managers',
+        lazy='selectin',
+    )
 
     # -------------------
     # Методы проверки ролей

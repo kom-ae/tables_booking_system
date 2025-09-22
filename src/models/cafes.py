@@ -1,12 +1,15 @@
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import Column, ForeignKey, String, Table, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .user import User
 from src.constants import MAX_ADDRESS, MAX_NAME_CAFE, MAX_TEL
 from src.core.db import Base
 from src.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from src.models.user import User
+
 
 # Ассоциативная таблица кафе и менеджеров.
 cafe_manager = Table(
@@ -24,8 +27,10 @@ class Cafes(BaseModel):
     address: Mapped[str] = mapped_column(String(MAX_ADDRESS), nullable=False)
     phone: Mapped[str] = mapped_column(String(MAX_TEL), nullable=False)
     description: Mapped[str] = mapped_column(Text)
-    photo: Mapped[str] = mapped_column(String)
-    managers: Mapped[List[User]] = relationship(
-        secondary=cafe_manager,
+    photo: Mapped[str] = mapped_column(Text)
+    managers: Mapped[List['User']] = relationship(
+        'User',
+        secondary='cafe_manager',
+        back_populates='managed_cafes',
         lazy='selectin',
     )

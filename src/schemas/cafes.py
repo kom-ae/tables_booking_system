@@ -97,13 +97,21 @@ class CafeUpdate(BaseModel):
         extra = 'forbid'
 
 # Проверить работу валидатора
-    @field_validator('name', 'address', 'phone', 'is_active', mode='before')
+    @field_validator('name', 'address', 'phone', mode='before')
     @classmethod
     def is_not_null(cls, value: Optional[str]) -> str:
         """Проверка полей на null."""
         if value is None:
             raise ValueError(
                 'Поля name, address, phone, is_active не могут быть null.')
+        return value
+
+    @field_validator('is_active', mode='before')
+    @classmethod
+    def validate_active(cls, value: Optional[bool]) -> Optional[bool]:
+        """Проверка поля is_active."""
+        if value is None:
+            raise ValueError('Поле is_active не может быть null.')
         return value
 
 
