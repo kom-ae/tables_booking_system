@@ -90,7 +90,6 @@ async def get_current_user(
     request.state.username = username
     request.state.user_id = user_id
 
-    # Преобразуем last_used в aware datetime, если вдруг она naive
     last_used = user.last_used
     if last_used.tzinfo is None:
         last_used = last_used.replace(tzinfo=timezone.utc)

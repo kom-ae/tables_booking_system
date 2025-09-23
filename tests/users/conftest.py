@@ -19,10 +19,13 @@ user_crud = get_user_crud()
 VALID_PASSWORD = 'Vx9!rT#4qLp$2mZ'
 PHONE_ONE = '+70000000001'
 PHONE_TWO = '+70000000002'
+PHONE_THREE = '+70000000003'
 USERNAME_ONE = 'user1'
 USERNAME_TWO = 'user2'
+USERNAME_THREE = 'user3'
 EMAIL_ONE = 'user1@test.com'
 EMAIL_TWO = 'user2@test.com'
+EMAIL_THREE = 'user3@test.com'
 USER_UPDATED_ONE = 'user_updated'
 
 
@@ -46,8 +49,6 @@ async def cleanup_db(session_fixture: AsyncSession) -> None:
 # -----------------------
 # Клиент
 # -----------------------
-
-
 @pytest_asyncio.fixture
 async def client_fixture(
     session_fixture: AsyncSession,
@@ -66,16 +67,26 @@ async def client_fixture(
 # -----------------------
 # Пользователи
 # -----------------------
-
-
 @pytest_asyncio.fixture
 async def normal_user(session_fixture: AsyncSession) -> User:
     """Создаём обычного пользователя для тестов."""
     user_in = UserCreate(
-        username='user',
-        email='user@test.com',
+        username=USERNAME_ONE,
+        email=EMAIL_ONE,
         password=VALID_PASSWORD,
-        phone='+70000000001',
+        phone=PHONE_ONE,
+    )
+    return await user_crud.create(obj_in=user_in, session=session_fixture)
+
+
+@pytest_asyncio.fixture
+async def another_user(session_fixture: AsyncSession) -> User:
+    """Создаём второго пользователя для тестов дубликатов."""
+    user_in = UserCreate(
+        username=USERNAME_TWO,
+        email=EMAIL_TWO,
+        password=VALID_PASSWORD,
+        phone=PHONE_TWO,
     )
     return await user_crud.create(obj_in=user_in, session=session_fixture)
 
@@ -87,7 +98,7 @@ async def admin_user(session_fixture: AsyncSession) -> User:
         username='admin',
         email='admin@test.com',
         password=VALID_PASSWORD,
-        phone='+70000000002',
+        phone='+70000000004',
         is_admin=True,
     )
     return await user_crud.create(obj_in=user_in, session=session_fixture)
@@ -96,8 +107,6 @@ async def admin_user(session_fixture: AsyncSession) -> User:
 # -----------------------
 # Фикстуры для аутентификации
 # -----------------------
-
-
 @pytest_asyncio.fixture
 async def auth_token_email(
     client_fixture: AsyncClient,

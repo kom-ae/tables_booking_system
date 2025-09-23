@@ -1,0 +1,32 @@
+# ---- Build stage ----
+FROM python:3.11-alpine AS build
+
+RUN apk add --no-cache \
+    build-base \
+    postgresql-dev \
+    libffi-dev \
+    && pip install --upgrade pip
+
+WORKDIR /app
+
+COPY src/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# ---- Final stage ----
+FROM python:3.11-alpine
+
+WORKDIR /app
+
+COPY --from=build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=build /usr/local/bin /usr/local/bin
+
+COPY ...src/ ./src/
+COPY ../alembic/ ./alembic/
+COPY ../alembic.ini .
+COPY ../.env .
+
+ENV PYTHONUNBUFFERED=1
+ENV DATABASE_URL=postgresql://user:password@db:5432/dbname
+
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "src.main:app", \
+     "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120"]
