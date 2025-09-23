@@ -1,10 +1,10 @@
-from http import HTTPStatus
-
+from fastapi import status
 from fastapi.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.factory import get_cafe_crud
 from src.schemas.cafes import CafeCreate
+
 
 cafe_crud = get_cafe_crud()
 
@@ -21,6 +21,6 @@ async def check_duplicate_cafe(
     )
     if db_obj:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail='Кафе с таким именем и адресом уже существует.',
         )

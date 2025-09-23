@@ -3,6 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.api.responses.cafes import cafes_list_responses
 from src.api.validators import check_duplicate_cafe
 from src.core.db import get_async_session
 from src.core.logger import log_endpoint, log_event
@@ -10,6 +11,7 @@ from src.core.user import current_admin, current_user
 from src.crud.factory import get_cafe_crud
 from src.models import Cafes, User
 from src.schemas.cafes import CafeCreate, CafeDB
+
 
 cafe_crud = get_cafe_crud()
 
@@ -19,6 +21,7 @@ router = APIRouter()
 @router.get(
     '/',
     response_model=list[CafeDB],
+    responses=cafes_list_responses,
     response_model_exclude_none=True,
     summary='Получение списка кафе'
     ' (только для администратора, пользователь - только активные).',
