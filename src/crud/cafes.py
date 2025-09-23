@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.logger import log_event
 from src.crud.base import CRUDBase
 from src.models import Cafes, User
-from src.schemas.cafes import CafeCreate, CafeDB
+from src.schemas.cafes import CafeCreate, CafeUpdate
 
 
-class CRUDCafe(CRUDBase):
+class CRUDCafe(CRUDBase[Cafes, CafeCreate, CafeUpdate]):
     """CRUD для кафе."""
 
     async def create_cafe(
@@ -17,7 +17,7 @@ class CRUDCafe(CRUDBase):
         obj_in: CafeCreate,
         session: AsyncSession,
         user: Optional[User] = None,
-    ) -> CafeDB:
+    ) -> Cafes:
         """Создание кафе."""
         in_managers = obj_in.model_dump(include='managers').get('managers', [])
         obj_in_data = obj_in.model_dump(exclude='managers')
