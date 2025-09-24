@@ -14,6 +14,7 @@ file_handler = RotatingFileHandler(
     settings.log_file,
     maxBytes=settings.max_bytes,
     backupCount=settings.backup_count,
+    encoding='utf-8',
 )
 file_handler.setFormatter(formatter)
 
