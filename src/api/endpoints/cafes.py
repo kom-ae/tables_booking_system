@@ -32,7 +32,8 @@ async def get_cafes(
     show_all: bool = Query(
         None,
         description='Показать все кафе'
-        '(если не задан, возвращаются только активные кафе)'),
+        '(если не задан, возвращаются только активные кафе)',
+    ),
     user: User = Depends(current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> List[CafeDB]:

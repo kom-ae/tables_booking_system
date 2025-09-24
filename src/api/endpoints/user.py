@@ -150,7 +150,7 @@ async def get_user_by_id(
     admin: User = Depends(current_admin),
 ) -> UserRead:
     """Возвращает пользователя по ID или 404."""
-    user = await user_crud.get_or_404(user_id, session)
+    user = await user_crud.get_user_id_or_404(user_id, session)
     log_event(
         'info',
         f'Получен пользователь {user.id}',
@@ -177,7 +177,7 @@ async def update_user_by_id(
     admin: User = Depends(current_admin),
 ) -> UserRead:
     """Обновляет данные пользователя по ID."""
-    user = await user_crud.get_or_404(user_id, session)
+    user = await user_crud.get_user_id_or_404(user_id, session)
 
     updated_user = await user_crud.update(
         db_obj=user,
