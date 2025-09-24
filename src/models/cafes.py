@@ -8,8 +8,8 @@ from src.core.db import Base
 from src.models.base import BaseModel
 
 if TYPE_CHECKING:
-    from src.models.user import User
     from src.models.dish import Dishes
+    from src.models.user import User
 
 
 # Ассоциативная таблица кафе и менеджеров.
@@ -39,5 +39,5 @@ class Cafes(BaseModel):
         'Dishes',
         back_populates='cafe',
         lazy='selectin',
-        cascade='all, delete-orphan'
+        cascade='all, delete-orphan',
     )

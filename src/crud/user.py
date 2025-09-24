@@ -8,6 +8,7 @@ from src.core.logger import log_event
 from src.crud.base import CRUDBase
 from src.exceptions.user import (
     UserAlreadyExistsException,
+    UserException,
     UserNotFoundException,
 )
 from src.models.user import User
@@ -16,7 +17,7 @@ from src.services.auth import PasswordService
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
-    """CRUD для User с проверкой уникальности, хэш-ием пароля + логирование."""
+    """CRUD для User с проверкой уникальности, хэш-ем пароля + логирование."""
 
     async def get_by_name(self, db: AsyncSession, name: str) -> Optional[User]:
         """По email или телефону."""
@@ -24,7 +25,11 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         result = await db.execute(query)
         return result.scalars().first()
 
-    async def get_or_404(self, obj_id: int, session: AsyncSession) -> User:
+    async def get_user_id_or_404(
+        self,
+        obj_id: int,
+        session: AsyncSession,
+    ) -> User:
         """По ID или UserNotFoundException."""
         obj = await self.get(obj_id, session)
         if not obj:
@@ -51,97 +56,30 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db.add(user)
         await db.commit()
 
-    async def _check_unique(
-        self,
-        session: AsyncSession,
-        email: Optional[str],
-        phone: Optional[str],
-        tg_id: Optional[str] = None,
-        current_user: Optional[User] = None,
-    ) -> None:
-        """Проверка уникальности email, телефона и tg_id с лог-ием попытки."""
-        if email:
-            existing: Optional[User] = await self.get_by_name(session, email)
-            if existing and existing.id != getattr(current_user, 'id', None):
-                log_event(
-                    'warning',
-                    'Попытка создать/обновить пользователя'
-                    f'с уже существующим email: {email}',
-                    username=getattr(
-                        current_user,
-                        'username',
-                        settings.system_username,
-                    ),
-                    user_id=getattr(
-                        current_user,
-                        'id',
-                        settings.default_user_id,
-                    ),
-                )
-                raise UserAlreadyExistsException(
-                    f'Email {email} уже существует',
-                )
-
-        if phone:
-            existing: Optional[User] = await self.get_by_name(session, phone)
-            if existing and existing.id != getattr(current_user, 'id', None):
-                log_event(
-                    'warning',
-                    'Попытка создать/обновить пользователя'
-                    f'с уже существующим телефоном: {phone}',
-                    username=getattr(
-                        current_user,
-                        'username',
-                        settings.system_username,
-                    ),
-                    user_id=getattr(
-                        current_user,
-                        'id',
-                        settings.default_user_id,
-                    ),
-                )
-                raise UserAlreadyExistsException(
-                    f'Телефон {phone} уже существует',
-                )
-
-        if tg_id:
-            result = await session.execute(
-                select(User).where(User.tg_id == tg_id),
-            )
-            existing: Optional[User] = result.scalars().first()
-            if existing and existing.id != getattr(current_user, 'id', None):
-                log_event(
-                    'warning',
-                    'Попытка создать/обновить пользователя'
-                    f'с уже существующим tg_id: {tg_id}',
-                    username=getattr(
-                        current_user,
-                        'username',
-                        settings.system_username,
-                    ),
-                    user_id=getattr(
-                        current_user,
-                        'id',
-                        settings.default_user_id,
-                    ),
-                )
-                raise UserAlreadyExistsException(
-                    f'tg_id {tg_id} уже существует',
-                )
-
     async def create(
         self,
         obj_in: UserCreate,
         session: AsyncSession,
         user_id: Optional[int] = None,
     ) -> User:
-        """Создаёт нового пользователя с хэш-ем пароля и проверкой unique."""
-        await self._check_unique(
-            session,
-            obj_in.email,
-            obj_in.phone,
-            obj_in.tg_id,
-        )
+        """Создает нового юзера с проверкой уникальности и хэш-ем пароля."""
+        try:
+            await self._check_unique(
+                session,
+                model=User,
+                email=obj_in.email,
+                phone=obj_in.phone,
+                tg_id=obj_in.tg_id,
+                current_obj=None,
+            )
+        except Exception as error:
+            log_event(
+                'warning',
+                f'Неудачная попытка создать пользователя: {str(error)}',
+                username=getattr(obj_in, 'username', 'system'),
+                user_id=getattr(obj_in, 'id', settings.default_user_id),
+            )
+            raise UserAlreadyExistsException(str(error))
 
         hashed_password = PasswordService.hash_password(obj_in.password)
         obj_in_data = obj_in.model_copy(update={'password': hashed_password})
@@ -160,13 +98,24 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         user_id: Optional[int] = None,
     ) -> User:
         """Обновляет пользователя с проверкой уникальности и хэш-ем пароля."""
-        await self._check_unique(
-            session,
-            obj_in.email,
-            obj_in.phone,
-            tg_id=obj_in.tg_id,
-            current_user=db_obj,
-        )
+        try:
+            await self._check_unique(
+                session,
+                model=User,
+                email=obj_in.email,
+                phone=obj_in.phone,
+                tg_id=obj_in.tg_id,
+                current_obj=db_obj,
+            )
+        except Exception as error:
+            log_event(
+                'warning',
+                'Неудачная попытка обновить пользователя '
+                f'{db_obj.id}: {str(error)}',
+                username=getattr(db_obj, 'username', 'system'),
+                user_id=getattr(db_obj, 'id', settings.default_user_id),
+            )
+            raise UserAlreadyExistsException(str(error))
 
         update_data = obj_in.model_dump(exclude_unset=True)
         if 'password' in update_data and update_data['password']:
@@ -187,23 +136,36 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         show_all: bool = False,
         current_user: Optional[User] = None,
     ) -> list[User]:
-        """Список пользователей с логированием действия."""
-        stmt = select(User)
-        if not show_all:
-            stmt = stmt.where(User.is_active.is_(True))
-        result = await session.execute(stmt)
-        users = result.scalars().all()
+        """Возвращает список пользователей."""
+        try:
+            stmt = select(User)
+            if not show_all:
+                stmt = stmt.where(User.is_active.is_(True))
 
-        log_event(
-            'info',
-            f'Получен список пользователей, show_all={show_all}',
-            username=(
-                current_user.username
-                if current_user
-                else settings.system_username
-            ),
-            user_id=(
-                current_user.id if current_user else settings.default_user_id
-            ),
-        )
-        return users
+            result = await session.execute(stmt)
+            users = result.scalars().all()
+
+            log_event(
+                'info',
+                f'Получен список пользователей, show_all={show_all}',
+                username=getattr(
+                    current_user,
+                    'username',
+                    settings.system_username,
+                ),
+                user_id=getattr(current_user, 'id', settings.default_user_id),
+            )
+            return users
+
+        except Exception as error:
+            log_event(
+                'error',
+                f'Ошибка при получении списка пользователей: {str(error)}',
+                username=getattr(
+                    current_user,
+                    'username',
+                    settings.system_username,
+                ),
+                user_id=getattr(current_user, 'id', settings.default_user_id),
+            )
+            raise UserException('Не удалось получить список пользователей')
