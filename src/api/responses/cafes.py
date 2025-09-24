@@ -14,19 +14,20 @@ cafes_list_responses = {
 }
 
 cafe_create_responses = {
-    status.HTTP_201_CREATED: {
-        'description': 'Данные созданного кафе',
-        'model': CafeDB,
-    },
+    status.HTTP_201_CREATED: CAFE_RESPONSES[status.HTTP_201_CREATED],
     status.HTTP_400_BAD_REQUEST: CAFE_RESPONSES[status.HTTP_400_BAD_REQUEST],
     status.HTTP_401_UNAUTHORIZED: CAFE_RESPONSES[status.HTTP_401_UNAUTHORIZED],
 }
 
 cafe_get_responses = {
-    status.HTTP_200_OK: {
-        'description': 'Данные кафе',
-        'model': CafeDB,
-    },
+    status.HTTP_200_OK: CAFE_RESPONSES[status.HTTP_200_OK],
+    status.HTTP_401_UNAUTHORIZED: CAFE_RESPONSES[status.HTTP_401_UNAUTHORIZED],
+    status.HTTP_404_NOT_FOUND: CAFE_RESPONSES[status.HTTP_404_NOT_FOUND],
+}
+
+cafe_update_responses = {
+    status.HTTP_200_OK: CAFE_RESPONSES[status.HTTP_200_OK],
+    status.HTTP_400_BAD_REQUEST: CAFE_RESPONSES[status.HTTP_400_BAD_REQUEST],
     status.HTTP_401_UNAUTHORIZED: CAFE_RESPONSES[status.HTTP_401_UNAUTHORIZED],
     status.HTTP_404_NOT_FOUND: CAFE_RESPONSES[status.HTTP_404_NOT_FOUND],
 }

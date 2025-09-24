@@ -1,12 +1,13 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.cafes import (
     cafe_create_responses,
     cafe_get_responses,
     cafe_not_found,
+    cafe_update_responses,
     cafes_list_responses,
 )
 from src.api.validators import check_duplicate_cafe
@@ -15,7 +16,7 @@ from src.core.logger import log_endpoint, log_event
 from src.core.user import current_admin, current_user
 from src.crud.factory import get_cafe_crud
 from src.models import User
-from src.schemas.cafes import CafeCreate, CafeDB
+from src.schemas.cafes import CafeCreate, CafeDB, CafeUpdate
 
 
 cafe_crud = get_cafe_crud()
@@ -64,6 +65,7 @@ async def get_cafes(
     response_description='Данные созданного кафе',
     responses=cafe_create_responses,
     summary='Создание кафе (только для администратора)',
+    status_code=status.HTTP_201_CREATED,
 )
 @log_endpoint()
 async def create_cafe(
@@ -101,3 +103,23 @@ async def get_cafe(
     if not obj_db:
         raise HTTPException(**cafe_not_found)
     return obj_db
+
+
+@router.patch(
+    '/{cafe_id}',
+    response_model=CafeDB,
+    response_model_exclude_none=True,
+    responses=cafe_update_responses,
+    summary='Обновление кафе по ID (только для администратора)',
+    dependencies=[Depends(current_admin)]
+)
+async def update_cafe(
+    cafe_id: int,
+    obj_in: CafeUpdate,
+    session: AsyncSession = Depends(get_async_session),
+) -> CafeDB:
+    """Обновление кафе по ID."""
+    cafe = await cafe_crud.get(obj_id=cafe_id, session=session)
+    if not cafe:
+        raise HTTPException(**cafe_not_found)
+    return await cafe_crud.update(db_obj=cafe, obj_in=obj_in, session=session)

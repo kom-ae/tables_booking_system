@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from src.constants import PASSWORD_REGEX, PHONE_REGEX
 from src.exceptions.user import InvalidPhoneException
@@ -21,10 +21,11 @@ def password_validator(password: str) -> str:
     return password
 
 
-def cafe_update_field_is_not_null(cls, value: Optional[str]) -> str:
+def cafe_update_field_is_not_null(
+        cls,
+        value: Union[str, bool, None]
+        ) -> Union[str, bool]:
     """Проверка полей на null."""
     if value is None:
-        raise ValueError(
-            'Поля name, address, phone, is_active не могут быть null.',
-        )
+        raise ValueError('Поле не может быть null.')
     return value
