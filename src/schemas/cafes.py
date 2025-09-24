@@ -12,6 +12,10 @@ from src.constants import (
     MIN_TEL,
 )
 from src.schemas.user import UserShort
+from src.schemas.validators import (
+    cafe_update_field_is_not_null,
+    phone_validator,
+)
 
 
 class CafeBase(BaseModel):
@@ -64,6 +68,8 @@ class CafeCreate(CafeBase):
 
     managers: Optional[List[int]] = Field(None, title='ID менеджера')
 
+    _validate_phone = field_validator('phone', mode='before')(phone_validator)
+
 
 class CafeUpdate(BaseModel):
     """Схема для обновления кафе."""
@@ -97,15 +103,14 @@ class CafeUpdate(BaseModel):
         extra = 'forbid'
 
     # Проверить работу валидатора
-    @field_validator('name', 'address', 'phone', mode='before')
-    @classmethod
-    def is_not_null(cls, value: Optional[str]) -> str:
-        """Проверка полей на null."""
-        if value is None:
-            raise ValueError(
-                'Поля name, address, phone, is_active не могут быть null.',
-            )
-        return value
+    _validate_fields = field_validator(
+        'name',
+        'address',
+        'phone',
+        mode='before'
+    )(cafe_update_field_is_not_null)
+
+    _validate_phone = field_validator('phone', mode='before')(phone_validator)
 
     @field_validator('is_active', mode='before')
     @classmethod

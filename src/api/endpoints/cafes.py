@@ -1,9 +1,14 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.responses.cafes import cafe_create_responses, cafes_list_responses
+from src.api.responses.cafes import (
+    cafe_create_responses,
+    cafe_get_responses,
+    cafe_not_found,
+    cafes_list_responses,
+)
 from src.api.validators import check_duplicate_cafe
 from src.core.db import get_async_session
 from src.core.logger import log_endpoint, log_event
@@ -25,7 +30,7 @@ router = APIRouter()
     response_description='Список кафе',
     responses=cafes_list_responses,
     summary='Получение списка кафе'
-    ' (только для администратора, пользователь - только активные).',
+    ' (только для администратора, пользователь - только активные)',
 )
 @log_endpoint()
 async def get_cafes(
@@ -73,3 +78,26 @@ async def create_cafe(
         user=user,
         session=session,
     )
+
+
+@router.get(
+    '/{cafe_id}',
+    response_model=CafeDB,
+    response_model_exclude_none=True,
+    responses=cafe_get_responses,
+    summary='Получение кафе по ID '
+    '(только для администратора, пользователь - только активные)'
+)
+async def get_cafe(
+    cafe_id: int,
+    session: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_user)
+) -> CafeDB:
+    """Получение кафе по ID."""
+    if user.is_admin():
+        obj_db = await cafe_crud.get(obj_id=cafe_id, session=session)
+    else:
+        obj_db = await cafe_crud.get_active(obj_id=cafe_id, session=session)
+    if not obj_db:
+        raise HTTPException(**cafe_not_found)
+    return obj_db

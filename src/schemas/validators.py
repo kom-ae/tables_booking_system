@@ -20,3 +20,12 @@ def password_validator(password: str) -> str:
             'строчную и заглавную буквы, цифру и спецсимвол',
         )
     return password
+
+
+def cafe_update_field_is_not_null(cls, value: Optional[str]) -> str:
+    """Проверка полей на null."""
+    if value is None:
+        raise ValueError(
+            'Поля name, address, phone, is_active не могут быть null.',
+        )
+    return value
