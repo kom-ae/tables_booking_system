@@ -13,7 +13,7 @@ from src.core.logger import log_endpoint, log_event
 from src.core.user import current_admin, current_user
 from src.crud.factory import get_user_crud
 from src.models.user import User
-from src.schemas.user import UserCreate, UserRead, UserUpdate
+from src.schemas.users import UserCreate, UserRead, UserUpdate
 
 user_crud = get_user_crud()
 

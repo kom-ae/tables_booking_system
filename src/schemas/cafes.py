@@ -11,7 +11,7 @@ from src.constants import (
     MIN_NAME_CAFE,
     MIN_TEL,
 )
-from src.schemas.user import UserShort
+from src.schemas.users import UserShort
 
 
 class CafeBase(BaseModel):

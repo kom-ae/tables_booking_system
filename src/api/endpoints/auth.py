@@ -7,7 +7,7 @@ from src.core.db import get_async_session
 from src.core.logger import log_endpoint, log_event
 from src.core.user import get_user_by_name
 from src.crud.factory import get_user_crud
-from src.crud.user import CRUDUser
+from src.crud.users import CRUDUser
 from src.exceptions.auth import InvalidCredentialsException
 from src.schemas.auth import Auth, TokenResponse
 from src.services.auth import PasswordService, TokenService

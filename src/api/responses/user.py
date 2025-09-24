@@ -1,7 +1,7 @@
 from fastapi import status
 
 from src.schemas.base import Error
-from src.schemas.user import UserRead
+from src.schemas.users import UserRead
 
 users_list_responses = {
     status.HTTP_200_OK: {

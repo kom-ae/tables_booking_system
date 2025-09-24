@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from src.schemas.base import UserBase
-from src.schemas.validators import password_validator
+from src.schemas.validators import password_validator, phone_validator
 
 
 class UserCreate(UserBase):
@@ -15,6 +15,7 @@ class UserCreate(UserBase):
     _validate_password = field_validator('password', mode='before')(
         password_validator,
     )
+    _validate_phone = field_validator('phone', mode='before')(phone_validator)
 
 
 class UserRead(UserBase):
@@ -39,6 +40,7 @@ class UserUpdate(UserBase):
     _validate_password = field_validator('password', mode='before')(
         password_validator,
     )
+    _validate_phone = field_validator('phone', mode='before')(phone_validator)
 
 
 class UserShort(BaseModel):

@@ -8,6 +8,7 @@ from src.api import main_router
 from src.constants import TAGS_METADATA
 from src.core.config import settings
 from src.core.init_db import init_db_and_superuser
+from src.core.logger import init_logger
 from src.exceptions.auth import BaseAPIException
 from src.exceptions.handlers import (
     base_api_exception_handler,
@@ -15,6 +16,8 @@ from src.exceptions.handlers import (
     validation_exception_handler,
 )
 from src.exceptions.user import UserException
+
+init_logger(settings)
 
 
 @asynccontextmanager

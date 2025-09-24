@@ -3,12 +3,16 @@ from fastapi import APIRouter
 from src.api.endpoints import (
     auth_router,
     cafes_router,
-    user_router,
+    users_router,
 )
 
 main_router = APIRouter()
 
-main_router.include_router(user_router, prefix='/users', tags=['Пользователи'])
+main_router.include_router(
+    users_router,
+    prefix='/users',
+    tags=['Пользователи'],
+)
 main_router.include_router(
     auth_router,
     prefix='/auth',
