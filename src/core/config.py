@@ -1,58 +1,107 @@
+from enum import Enum
 from typing import Optional
 
-from pydantic import EmailStr
+from pydantic import EmailStr, field_validator
 from pydantic_settings import BaseSettings
 
+from src.core.logger import temp_logger
 
-class Settings(BaseSettings):
-    """Конфигурационные настройки приложения."""
+logger = temp_logger()
 
-    # -------------------
-    # Общие настройки приложения
-    # -------------------
-    app_title: str = 'Сервис бронирования столиков'
-    description: str = 'API для управления сервисом бронирования столиков'
-    debug: bool = True
+try:
 
-    # -------------------
-    # База данных
-    # -------------------
-    database_uri: str = 'sqlite+aiosqlite:///./fastapi.db'
+    class DBEngine(str, Enum):
+        """Поддерживаемые движки баз данных для приложения."""
 
-    # -------------------
-    # JWT / безопасность
-    # -------------------
-    secret: str = 'SECRET'
-    jwt_algorithm: str = 'HS256'
-    access_token_expire_minutes: int = 120
+        SQLITE = 'sqlite'
+        POSTGRES = 'postgres'
+        POSTGRESQL = 'postgresql'
 
-    # -------------------
-    # Первый суперпользователь
-    # -------------------
-    first_superuser_name: Optional[EmailStr] = None
-    first_superuser_email: Optional[EmailStr] = None
-    first_superuser_password: Optional[str] = None
-    first_superuser_role: Optional[str] = None
-    first_superuser_phone_number: Optional[str] = None
+    class Settings(BaseSettings):
+        """Настройки проекта."""
 
-    # -------------------
-    # Логирование
-    # -------------------
-    log_file: Optional[str] = None
-    max_bytes: Optional[int] = None
-    backup_count: Optional[int] = None
-    system_username: Optional[str] = None
+        app_title: str = 'Сервис бронирования столиков'
+        description: str = 'API для управления сервисом бронирования столиков'
+        debug: bool = True
 
-    # -------------------
-    # Прочие
-    # -------------------
-    default_user_id: Optional[int] = None
+        database_uri: Optional[str] = None
+        db_engine: str = 'sqlite'
+        db_host: Optional[str] = None
+        db_port: Optional[int] = None
+        db_name: str = 'fastapi.db'
+        db_user: Optional[str] = None
+        db_password: Optional[str] = None
 
-    class Config:
-        """Настройки Pydantic для работы с переменными окружения."""
+        secret: str = 'SECRET'
+        jwt_algorithm: str = 'HS256'
+        access_token_expire_minutes: int = 120
 
-        env_file = '.env'
-        extra = 'allow'
+        first_superuser_name: Optional[EmailStr] = None
+        first_superuser_email: Optional[EmailStr] = None
+        first_superuser_password: Optional[str] = None
+        first_superuser_role: Optional[str] = None
+        first_superuser_phone_number: Optional[str] = None
 
+        log_file: Optional[str] = None
+        max_bytes: Optional[int] = None
+        backup_count: Optional[int] = None
+        system_username: Optional[str] = None
+        default_user_id: Optional[int] = None
 
-settings: Settings = Settings()
+        @property
+        def get_database_uri(self) -> str:
+            """Возвращает полный URI для подключения к базе данных."""
+            if self.database_uri:
+                return self.database_uri
+
+            if self.db_engine.lower() in ['postgres', 'postgresql']:
+                return self._get_postgresql_uri()
+            return self._get_sqlite_uri()
+
+        def _get_sqlite_uri(self) -> str:
+            """Возвращает URI для SQLite."""
+            return f'sqlite+aiosqlite:///./{self.db_name}'
+
+        def _get_postgresql_uri(self) -> str:
+            """Возвращает URI для PostgreSQL."""
+            if not all([
+                self.db_host,
+                self.db_name,
+                self.db_user,
+                self.db_password,
+            ]):
+                raise ValueError(
+                    'Для PostgreSQL необходимо'
+                    'указать host, name, user, password',
+                )
+
+            port = f':{self.db_port}' if self.db_port else ''
+            return (
+                f'postgresql+asyncpg://{self.db_user}:'
+                f'{self.db_password}@{self.db_host}{port}/{self.db_name}'
+            )
+
+        @field_validator('db_engine')
+        @classmethod
+        def validate_db_engine(cls, value: str) -> str:
+            """Проверяет допустимый тип базы данных."""
+            valid_engines = ['sqlite', 'postgres', 'postgresql']
+            if value.lower() not in valid_engines:
+                raise ValueError(
+                    'DB engine должен быть одним из: '
+                    f'{", ".join(valid_engines)}',
+                )
+            return value.lower()
+
+        class Config:
+            """Конфигурация Pydantic для работы с переменными окружения."""
+
+            env_file = '.env'
+            extra = 'allow'
+
+    settings: Settings = Settings()
+    """Глобальный объект конфигурации приложения."""
+
+except Exception as error:
+    logger.exception(f'Ошибка при создании Settings: {error}')
+    raise

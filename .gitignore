@@ -122,6 +122,8 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.env.prod
+.env.local
 .env
 .venv
 .bot_venv
@@ -181,3 +183,4 @@ pyproject.toml
 # Логирование
 app.log
 src.log
+app_temp.log
