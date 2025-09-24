@@ -80,7 +80,7 @@ try:
 
             if self.db_engine in (
                 DBEngine.POSTGRES.value,
-                DBEngine.POSTGRESQL.value
+                DBEngine.POSTGRESQL.value,
             ):
                 return self._get_postgresql_uri()
             return self._get_sqlite_uri()
@@ -93,11 +93,11 @@ try:
             """Возвращает URI для PostgreSQL."""
             if not all([
                 self.db_host, self.db_name,
-                self.db_user, self.db_password
+                self.db_user, self.db_password,
             ]):
                 raise ValueError(
                     'Для PostgreSQL необходимо указать host, name, user, '
-                    'password'
+                    'password',
                 )
 
             port = f':{self.db_port}' if self.db_port else ''
@@ -113,7 +113,7 @@ try:
             if value.lower() not in [e.value for e in DBEngine]:
                 raise ValueError(
                     'DB engine должен быть одним из: '
-                    f'{", ".join(e.value for e in DBEngine)}'
+                    f'{", ".join(e.value for e in DBEngine)}',
                 )
             return value.lower()
 
