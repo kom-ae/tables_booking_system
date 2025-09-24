@@ -1,19 +1,18 @@
-import re
 from typing import Optional
 
 from src.constants import PASSWORD_REGEX, PHONE_REGEX
 from src.exceptions.user import InvalidPhoneException
 
 
-def phone_validator(v: Optional[str]) -> Optional[str]:
+def phone_validator(value: Optional[str]) -> Optional[str]:
     """Проверка корректности телефона."""
-    if v and not re.match(PHONE_REGEX, v):
-        raise InvalidPhoneException(f'Некорректный номер телефона: {v}')
-    return v
+    if value and not PHONE_REGEX.match(value):
+        raise InvalidPhoneException(f'Некорректный номер телефона: {value}')
+    return value
 
 
 def password_validator(password: str) -> str:
-    """Валидация пароля по одной регулярке."""
+    """Валидация пароля."""
     if not PASSWORD_REGEX.match(password):
         raise ValueError(
             'Пароль должен содержать минимум 8 символов, '
