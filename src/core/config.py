@@ -91,12 +91,15 @@ try:
 
         def _get_postgresql_uri(self) -> str:
             """Возвращает URI для PostgreSQL."""
-            if not all(
-                [self.db_host, self.db_name, self.db_user, self.db_password],
-            ):
+            if not all([
+                self.db_host,
+                self.db_name,
+                self.db_user,
+                self.db_password,
+            ]):
                 raise ValueError(
-                    'Для PostgreSQL необходимо указать'
-                    'host, name, user, password',
+                    'Для PostgreSQL необходимо указать host, name, user, '
+                    'password',
                 )
 
             port = f':{self.db_port}' if self.db_port else ''
@@ -114,6 +117,7 @@ try:
                     'DB engine должен быть одним из: '
                     f'{", ".join(enum.value for enum in DBEngine)}',
                 )
+
             return value.lower()
 
         class Config:
