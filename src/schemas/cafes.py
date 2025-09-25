@@ -17,7 +17,6 @@ from src.schemas.user import UserShort
 class CafeBase(BaseModel):
     """Базовая схема для кафе."""
 
-    id: int = Field(..., description='ID записи')
     name: str = Field(
         ...,
         title='Название кафе',
@@ -46,7 +45,7 @@ class CafeBase(BaseModel):
         extra = 'forbid'
 
 
-class Cafe(CafeBase):
+class CafeDB(CafeBase):
     """Возвращаемая схема кафе."""
 
     id: int = Field(..., title='ID записи')
@@ -60,7 +59,7 @@ class Cafe(CafeBase):
         from_attributes = True
 
 
-class CafeCreate(BaseModel):
+class CafeCreate(CafeBase):
     """Схема для создания кафе."""
 
     managers: Optional[List[int]] = Field(None, title='ID менеджера')
@@ -69,19 +68,19 @@ class CafeCreate(BaseModel):
 class CafeUpdate(BaseModel):
     """Схема для обновления кафе."""
 
-    name: str = Field(
+    name: Optional[str] = Field(
         None,
         title='Название кафе',
         min_length=MIN_NAME_CAFE,
         max_length=MAX_NAME_CAFE,
     )
-    address: str = Field(
+    address: Optional[str] = Field(
         None,
         title='Адрес кафе',
         min_length=MIN_ADDRESS,
         max_length=MAX_ADDRESS,
     )
-    phone: str = Field(
+    phone: Optional[str] = Field(
         None,
         title='Телефон кафе',
         min_length=MIN_TEL,
