@@ -15,7 +15,7 @@ from tests.users.conftest import (
 )
 
 from src.schemas.auth import Auth
-from src.schemas.user import UserCreate
+from src.schemas.users import UserCreate
 
 
 @pytest.mark.asyncio

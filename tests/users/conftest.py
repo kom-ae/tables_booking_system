@@ -11,7 +11,7 @@ from src.crud.factory import get_user_crud
 from src.main import app
 from src.models.user import User
 from src.schemas.auth import Auth
-from src.schemas.user import UserCreate
+from src.schemas.users import UserCreate
 
 user_crud = get_user_crud()
 

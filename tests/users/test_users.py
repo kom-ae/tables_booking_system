@@ -22,7 +22,7 @@ from src.exceptions.user import (
 )
 from src.main import app
 from src.models.user import User
-from src.schemas.user import UserCreate, UserUpdate
+from src.schemas.users import UserCreate, UserUpdate
 
 
 @asynccontextmanager
