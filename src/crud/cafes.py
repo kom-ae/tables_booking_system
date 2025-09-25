@@ -4,7 +4,6 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.logger import log_event
 from src.crud.base import CRUDBase
 from src.models import Cafes, User
 from src.schemas.cafes import CafeCreate, CafeUpdate
@@ -32,24 +31,13 @@ class CRUDCafe(CRUDBase[Cafes, CafeCreate, CafeUpdate]):
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
-        log_event(
-            'info',
-            f'Создано кафе, id={db_obj.id} '
-            f'с данными: {obj_in_data}',
-            **{'username': user.username, 'user_id': user.id} if user else {},
-        )
         return db_obj
-
-    def encoder(obj):
-        if isinstance(obj, list[User]):
-            return []
-        return obj
 
     async def update(
             self,
             db_obj: Cafes,
             obj_in: CafeUpdate,
-            session: AsyncSession
+            session: AsyncSession,
     ) -> Cafes:
         """Обновление кафе."""
         obj_data = jsonable_encoder(db_obj, exclude={'managers'})

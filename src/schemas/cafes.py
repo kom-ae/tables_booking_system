@@ -108,7 +108,8 @@ class CafeUpdate(BaseModel):
         'address',
         'phone',
         'is_active',
-        mode='before'
+        'managers',
+        mode='before',
     )(cafe_update_field_is_not_null)
 
     _validate_phone = field_validator('phone', mode='before')(phone_validator)

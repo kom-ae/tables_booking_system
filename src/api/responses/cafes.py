@@ -3,7 +3,6 @@ from fastapi import status
 from src.api.responses.constants import CAFE_RESPONSES
 from src.schemas.cafes import CafeDB
 
-
 cafes_list_responses = {
     status.HTTP_200_OK: {
         'description': 'Список кафе',
@@ -39,5 +38,5 @@ cafe_check_duplicate_responses = {
 
 cafe_not_found = {
     'status_code': status.HTTP_404_NOT_FOUND,
-    'detail': 'Кафе не найдено.'
+    'detail': 'Кафе не найдено.',
 }

@@ -22,8 +22,7 @@ def password_validator(password: str) -> str:
 
 
 def cafe_update_field_is_not_null(
-        cls,
-        value: Union[str, bool, None]
+        value: Union[str, bool, None],
         ) -> Union[str, bool]:
     """Проверка полей на null."""
     if value is None:

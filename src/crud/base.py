@@ -1,7 +1,7 @@
 from typing import Any, Generic, Optional, Type, TypeVar
 
 from pydantic import BaseModel
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
@@ -67,7 +67,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db_obj = await session.execute(
             select(self.model).where(self.model.id == obj_id),
         )
-        return db_obj.scalars().first()
+        return db_obj.scalars().one_or_none()
 
     async def get_active(
         self,
@@ -79,33 +79,27 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             select(self.model).where(
                 and_(
                     self.model.id == obj_id,
-                    self.model.is_active
-                )
+                    self.model.is_active,
+                ),
             ),
         )
-        return db_obj.scalars().first()
+        return db_obj.scalars().one_or_none()
 
     async def get_multi_all(
         self,
         session: AsyncSession,
     ) -> list[ModelType]:
         """Получение всех объектов."""
-        db_objects = (await session.scalars(select(self.model))).all()
-        log_event('info', 'Получено {} {}'.
-                  format(len(db_objects), self.model.__name__))
-        return db_objects
+        return (await session.scalars(select(self.model))).all()
 
     async def get_multi_active(
         self,
         session: AsyncSession,
     ) -> list[ModelType]:
         """Получение только активных объектов."""
-        db_objects = (await session.scalars(
+        return (await session.scalars(
             select(self.model).where(self.model.is_active),
         )).all()
-        log_event('info', 'Получено {} активных {}'.
-                  format(len(db_objects), self.model.__name__))
-        return db_objects
 
     async def create(
         self,
