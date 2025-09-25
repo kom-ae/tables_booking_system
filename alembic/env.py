@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from alembic import context
 from src.core.base import Base  # Мета-данные моделей
 
+<<<<<<< HEAD
 
 load_dotenv(".env")
 
