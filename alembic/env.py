@@ -10,9 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from alembic import context
 from src.core.base import Base  # Мета-данные моделей
 
-load_dotenv("src/.env")
 
-load_dotenv('.env')
+load_dotenv('src/.env')
 
 # Alembic config object
 config = context.config
