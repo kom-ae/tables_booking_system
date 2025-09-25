@@ -8,7 +8,7 @@ from src.crud.base import CRUDBase
 from src.models.slots import Slots
 from src.services.slot_rules import ensure_no_overlap
 from src.schemas.slots import SlotCreate, SlotUpdate
-from src.api.exceptions.slots import (
+from src.exceptions.slots import (
     SlotNotFoundException, SlotOverlapException
 )
 
@@ -78,13 +78,17 @@ class CRUDSlot(CRUDBase[Slots, SlotCreate, SlotUpdate]):
         session: AsyncSession,
         user_id: Optional[int] = None,
     ) -> Slots:
-        """Создаёт слот с валидацией пересечений."""
-        await self._check_overlap(
-            session,
-            cafe_id=obj_in.cafe_id,
-            start_time=obj_in.start_time,
-            end_time=obj_in.end_time,
-        )
+        """Создаёт слот с валидацией границ и пересечений."""
+        if obj_in.start_time >= obj_in.end_time:
+            raise SlotOverlapException()
+        will_be_active = getattr(obj_in, "is_active", True)
+        if will_be_active:
+            await self._check_overlap(
+                session,
+                cafe_id=obj_in.cafe_id,
+                start_time=obj_in.start_time,
+                end_time=obj_in.end_time,
+            )
         db_obj = Slots(**obj_in.model_dump())
         session.add(db_obj)
         await session.commit()
@@ -99,14 +103,16 @@ class CRUDSlot(CRUDBase[Slots, SlotCreate, SlotUpdate]):
     ) -> Slots:
         """Обновляет слот с валидацией пересечений."""
         data = obj_in.model_dump(exclude_unset=True)
-        new_start = data.get("start_time", db_obj.start_time)
-        new_end = data.get("end_time", db_obj.end_time)
-        will_be_active = data.get("is_active", db_obj.is_active)
+        new_start = data.get('start_time', db_obj.start_time)
+        new_end = data.get('end_time', db_obj.end_time)
+        will_be_active = data.get('is_active', db_obj.is_active)
 
+        if new_start >= new_end:
+            raise SlotOverlapException()
         if will_be_active:
             await self._check_overlap(
                 session,
-                cafe_id=db_obj.cafe_id,
+                cafe_id=new_cafe_id,
                 start_time=new_start,
                 end_time=new_end,
                 exclude_slot_id=db_obj.id,
@@ -124,11 +130,7 @@ class CRUDSlot(CRUDBase[Slots, SlotCreate, SlotUpdate]):
         db_obj: Slots,
         session: AsyncSession,
     ) -> None:
-        """Деактивирует слот (мягкое удаление)."""
         if db_obj.is_active:
             db_obj.is_active = False
             session.add(db_obj)
             await session.commit()
-
-
-slot_crud = CRUDSlot(Slots)

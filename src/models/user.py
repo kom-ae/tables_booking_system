@@ -1,35 +1,86 @@
-from typing import Optional
+from datetime import datetime
+from enum import Enum
+from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, String, func, text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.models.base import (
-    BaseModel,
-)  # наследуем BaseModel с id, created_at, updated_at, active
+from src.constants import (
+    EMAIL_MAX_LENGTH,
+    PASSWORD_MAX_LENGTH,
+    PHONE_MAX_LENGTH,
+    ROLE_MAX_LENGTH,
+    TG_ID_MAX_LENGTH,
+    USERNAME_MAX_LENGTH,
+)
+from src.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from src.models.cafes import Cafes
+
+
+class UserRole(str, Enum):
+    """Роли пользователей."""
+
+    ADMIN = 'admin'
+    MANAGER = 'manager'
+    USER = 'user'
 
 
 class User(BaseModel):
     """Кастомный класс пользователя."""
 
     __tablename__ = 'user'
-    username: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    username: Mapped[str] = mapped_column(
+        String(USERNAME_MAX_LENGTH),
+        nullable=False,
+    )
     email: Mapped[str] = mapped_column(
-        String(255),
+        String(EMAIL_MAX_LENGTH),
         unique=True,
         nullable=False,
     )
-    password: Mapped[str] = mapped_column(String(255), nullable=False)
+    password: Mapped[str] = mapped_column(
+        String(PASSWORD_MAX_LENGTH),
+        nullable=False,
+    )
     is_superuser: Mapped[bool] = mapped_column(default=False, nullable=False)
-    phone: Mapped[Optional[str]] = mapped_column(
-        String(20),
+    phone: Mapped[str] = mapped_column(
+        String(PHONE_MAX_LENGTH),
         unique=True,
-        nullable=True,
-    )
-    tg_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    role: Mapped[str] = mapped_column(
-        String(50),
-        default='user',
         nullable=False,
     )
-    # cafe_id: Mapped[Optional[int]] = mapped_column(
-    # Integer, ForeignKey("cafe.id"), nullable=True)
+    tg_id: Mapped[Optional[str]] = mapped_column(
+        String(TG_ID_MAX_LENGTH),
+        nullable=True,
+        unique=True,
+    )
+    role: Mapped[str] = mapped_column(
+        String(ROLE_MAX_LENGTH),
+        default=UserRole.USER,
+        nullable=False,
+    )
+    last_used: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=text('CURRENT_TIMESTAMP'),
+        onupdate=func.now(),
+        nullable=False,
+    )
+    managed_cafes: Mapped[List['Cafes']] = relationship(
+        'Cafes',
+        secondary='cafe_manager',
+        back_populates='managers',
+        lazy='selectin',
+    )
+
+    # -------------------
+    # Методы проверки ролей
+    # -------------------
+    def is_admin(self) -> bool:
+        """Проверка, является ли пользователь администратором."""
+        return self.role == UserRole.ADMIN.value
+
+    def is_manager(self) -> bool:
+        """Проверка, является ли пользователь менеджером или админином."""
+        return self.role in (UserRole.MANAGER.value, UserRole.ADMIN.value)

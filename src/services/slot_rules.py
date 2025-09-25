@@ -18,23 +18,22 @@ async def ensure_no_overlap(
     """
     Проверяет, что в рамках одного кафе нет пересечения интервалов.
     """
-    stmt = (
-        select(func.count(Slots.id))
-        .where(
-            and_(
-                Slots.cafe_id == cafe_id,
-                Slots.start_time < end_time,
-                start_time < Slots.end_time,
-                Slots.is_active.is_(True),
-            )
+    if end_time <= start_time:
+        raise ValueError('Время окончания должно быть позже времени начала')
+    stmt = select(func.count(Slots.id)).where(
+        and_(
+            Slots.cafe_id == cafe_id,
+            Slots.start_time < end_time,
+            start_time < Slots.end_time,
+            Slots.is_active.is_(True),
         )
     )
-    if exclude_slot_id:
+    if exclude_slot_id is not None:
         stmt = stmt.where(Slots.id != exclude_slot_id)
 
     conflicts = await session.scalar(stmt)
     if conflicts and conflicts > 0:
         raise ValueError(
-            "Интервал времени слота пересекается "
-            "с существующим активным слотом"
-            )
+            'Интервал времени слота пересекается '
+            'с существующим активным слотом'
+        )
