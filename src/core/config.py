@@ -92,8 +92,10 @@ try:
         def _get_postgresql_uri(self) -> str:
             """Возвращает URI для PostgreSQL."""
             if not all([
-                self.db_host, self.db_name,
-                self.db_user, self.db_password,
+                self.db_host,
+                self.db_name,
+                self.db_user,
+                self.db_password,
             ]):
                 raise ValueError(
                     'Для PostgreSQL необходимо указать host, name, user, '
@@ -110,11 +112,12 @@ try:
         @classmethod
         def validate_db_engine(cls, value: str) -> str:
             """Проверяет допустимый тип базы данных."""
-            if value.lower() not in [e.value for e in DBEngine]:
+            if value.lower() not in [enum.value for enum in DBEngine]:
                 raise ValueError(
                     'DB engine должен быть одним из: '
-                    f'{", ".join(e.value for e in DBEngine)}',
+                    f'{", ".join(enum.value for enum in DBEngine)}',
                 )
+
             return value.lower()
 
         class Config:
