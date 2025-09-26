@@ -28,6 +28,7 @@ def init_logger(settings: Any) -> None:
         settings.log_file,  # type: ignore
         maxBytes=settings.max_bytes,  # type: ignore
         backupCount=settings.backup_count,  # type: ignore
+        encoding='utf-8',
     )
     file_handler.setFormatter(formatter)
 
