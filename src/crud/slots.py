@@ -1,7 +1,7 @@
 from typing import List, Optional
 from datetime import time
 
-from sqlalchemy import select
+from sqlalchemy import select, update as sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.base import CRUDBase
@@ -100,15 +100,19 @@ class CRUDSlot(CRUDBase[Slots, SlotCreate, SlotUpdate]):
         db_obj: Slots,
         obj_in: SlotUpdate,
         session: AsyncSession,
+        user_id: Optional[int] = None,
     ) -> Slots:
         """Обновляет слот с валидацией пересечений."""
         data = obj_in.model_dump(exclude_unset=True)
+
         new_start = data.get('start_time', db_obj.start_time)
         new_end = data.get('end_time', db_obj.end_time)
+        new_cafe_id = data.get('cafe_id', db_obj.cafe_id)
         will_be_active = data.get('is_active', db_obj.is_active)
 
         if new_start >= new_end:
             raise SlotOverlapException()
+
         if will_be_active:
             await self._check_overlap(
                 session,
@@ -117,6 +121,7 @@ class CRUDSlot(CRUDBase[Slots, SlotCreate, SlotUpdate]):
                 end_time=new_end,
                 exclude_slot_id=db_obj.id,
             )
+
         for field, value in data.items():
             setattr(db_obj, field, value)
 
@@ -130,7 +135,9 @@ class CRUDSlot(CRUDBase[Slots, SlotCreate, SlotUpdate]):
         db_obj: Slots,
         session: AsyncSession,
     ) -> None:
-        if db_obj.is_active:
-            db_obj.is_active = False
-            session.add(db_obj)
-            await session.commit()
+        await session.execute(
+            sa_update(Slots)
+            .where(Slots.id == db_obj.id)
+            .values(is_active=False)
+        )
+        await session.commit()

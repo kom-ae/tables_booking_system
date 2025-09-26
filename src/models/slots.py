@@ -26,8 +26,10 @@ class Slots(BaseModel):
     cafe = relationship('Cafes', back_populates='slots')
 
     __table_args__ = (
-        UniqueConstraint('cafe_id', 'start_time', 'end_time',
-                     name='uq_cafe_time_window'),
+        UniqueConstraint('cafe_id',
+                         'start_time',
+                         'end_time',
+                         name='uq_cafe_time_window'),
         CheckConstraint('start_time < end_time',
                         name='ck_slot_start_before_end'),
     )

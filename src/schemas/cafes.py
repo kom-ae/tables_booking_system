@@ -11,7 +11,11 @@ from src.constants import (
     MIN_NAME_CAFE,
     MIN_TEL,
 )
-from src.schemas.user import UserShort
+from src.schemas.users import UserShort
+from src.schemas.validators import (
+    cafe_update_field_is_not_null,
+    phone_validator,
+)
 
 
 class CafeBase(BaseModel):
@@ -62,7 +66,9 @@ class CafeDB(CafeBase):
 class CafeCreate(CafeBase):
     """Схема для создания кафе."""
 
-    managers: Optional[List[int]] = Field(None, title='ID менеджера')
+    managers: Optional[List[int]] = Field([], title='ID менеджера')
+
+    _validate_phone = field_validator('phone', mode='before')(phone_validator)
 
 
 class CafeUpdate(BaseModel):
@@ -88,7 +94,7 @@ class CafeUpdate(BaseModel):
     )
     description: Optional[str] = Field(None, title='Описание кафе')
     photo: Optional[str] = Field(None, title='Фото кафе в формате base64')
-    managers: Optional[List[int]] = Field(None, title='ID менеджера')
+    managers: Optional[List[int]] = Field([], title='ID менеджера')
     is_active: Optional[bool] = Field(None, title='Объект активен?')
 
     class Config:
@@ -97,23 +103,16 @@ class CafeUpdate(BaseModel):
         extra = 'forbid'
 
     # Проверить работу валидатора
-    @field_validator('name', 'address', 'phone', mode='before')
-    @classmethod
-    def is_not_null(cls, value: Optional[str]) -> str:
-        """Проверка полей на null."""
-        if value is None:
-            raise ValueError(
-                'Поля name, address, phone, is_active не могут быть null.',
-            )
-        return value
+    _validate_fields = field_validator(
+        'name',
+        'address',
+        'phone',
+        'is_active',
+        'managers',
+        mode='before',
+    )(cafe_update_field_is_not_null)
 
-    @field_validator('is_active', mode='before')
-    @classmethod
-    def validate_active(cls, value: Optional[bool]) -> Optional[bool]:
-        """Проверка поля is_active."""
-        if value is None:
-            raise ValueError('Поле is_active не может быть null.')
-        return value
+    _validate_phone = field_validator('phone', mode='before')(phone_validator)
 
 
 class CafeShortDB(CafeBase):

@@ -1,1 +1,1 @@
-from src.api.endpoints import main_router  # re-export
+from .routers import main_router as main_router  # noqa

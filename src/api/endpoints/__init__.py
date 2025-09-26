@@ -1,5 +1,4 @@
-from fastapi import APIRouter
-from src.api.endpoints.slots import router as slots_router
-
-main_router = APIRouter(prefix="/api")
-main_router.include_router(slots_router)
+from .auth import router as auth_router  # noqa
+from .cafes import router as cafes_router  # noqa
+from .users import router as users_router  # noqa
+from .slots import router as slots_router  # noqa

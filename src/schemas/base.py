@@ -1,10 +1,9 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field
 
 from src.constants import MAX_LENGTH_USERNAME, MIN_LENGTH_USERNAME
-from src.schemas.validators import phone_validator
 
 
 class BaseSchema(BaseModel):
@@ -33,8 +32,6 @@ class UserBase(BaseModel):
     email: Optional[EmailStr] = Field(None, description='Email пользователя.')
     phone: Optional[str] = Field(None, description='Телефон.')
     tg_id: Optional[str] = Field(None, description='Telegram ID.')
-
-    _validate_phone = field_validator('phone', mode='before')(phone_validator)
 
 
 class Error(BaseModel):

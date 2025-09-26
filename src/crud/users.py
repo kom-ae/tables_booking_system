@@ -12,7 +12,7 @@ from src.exceptions.user import (
     UserNotFoundException,
 )
 from src.models.user import User
-from src.schemas.user import UserCreate, UserUpdate
+from src.schemas.users import UserCreate, UserUpdate
 from src.services.auth import PasswordService
 
 

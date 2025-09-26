@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, func, Integer
+from sqlalchemy import Boolean, Column, DateTime, func
 
 from src.core.db import Base
 
@@ -7,8 +7,6 @@ class BaseModel(Base):
     """Базовая абстрактная модель."""
 
     __abstract__ = True
-    id = Column(Integer, primary_key=True, index=True)
-
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
