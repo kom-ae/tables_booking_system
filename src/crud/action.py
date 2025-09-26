@@ -1,10 +1,8 @@
 from typing import Optional
-from http import HTTPStatus
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from fastapi import HTTPException
 
 from src.crud.base import CRUDBase
 from src.models import Actions, User
@@ -43,7 +41,7 @@ class ActionsCRUD(CRUDBase):
             self,
             session: AsyncSession,
             action_id: int,
-            current_user: User
+            current_user: User,
     ) -> Optional[Actions]:
         """Возвращает акция по его ID."""
         db_obj = select(Actions)
@@ -54,11 +52,11 @@ class ActionsCRUD(CRUDBase):
         if not is_admin_is_manager:
             db_obj = db_obj.where(and_(
                 Actions.id == action_id,
-                Actions.is_active
+                Actions.is_active,
             ))
         else:
             db_obj = db_obj.where(
-                Actions.id == action_id
+                Actions.id == action_id,
             )
         response = await session.execute(db_obj)
 
