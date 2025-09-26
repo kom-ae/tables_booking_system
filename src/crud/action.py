@@ -1,11 +1,13 @@
 from typing import Optional
+from http import HTTPStatus
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from fastapi import HTTPException
 
 from src.crud.base import CRUDBase
-from src.models import Actions
+from src.models import Actions, User
 from src.schemas.action import ActionsCreate, ActionsDB, ActionsUpdate
 
 
@@ -15,11 +17,18 @@ class ActionsCRUD(CRUDBase):
     async def get_all_actions(
             self,
             session: AsyncSession,
+            current_user: User,
             cafe_id: Optional[int] = None,
             show_all: bool | None = None,
     ) -> list[Actions]:
         """Получает все акции."""
         query = select(Actions)
+
+        is_admin_is_manager = (current_user.is_admin() or
+                               current_user.is_manager())
+
+        if not is_admin_is_manager:
+            query = query.where(Actions.is_active)
 
         if cafe_id is not None:
             query = query.where(Actions.cafe_id == cafe_id)
@@ -30,43 +39,30 @@ class ActionsCRUD(CRUDBase):
         response = await session.execute(query)
         return response.scalars().all()
 
-    async def get_all_active_actions(
-        self,
-        session: AsyncSession,
-        cafe_id: Optional[int] = None,
-    ) -> list[Actions]:
-        """Получет акции для всех обычных пользователей."""
-        query = select(Actions).where(Actions.is_active)
-        if cafe_id is not None:
-            query = query.where(Actions.cafe_id == cafe_id)
-
-        response = await session.execute(query)
-        return response.scalars().all()
-
     async def get_action(
             self,
             session: AsyncSession,
             action_id: int,
+            current_user: User
     ) -> Optional[Actions]:
         """Возвращает акция по его ID."""
-        db_obj = await session.execute(
-            select(Actions).where(Actions.id == action_id),
-        )
-        return db_obj.scalars().first()
+        db_obj = select(Actions)
 
-    async def get_acive_action(
-            self,
-            session: AsyncSession,
-            action_id: int,
-    ) -> Optional[Actions]:
-        """Возвращает только активне акции по ID."""
-        db_obj = await session.execute(
-            select(Actions).where(and_(
+        is_admin_is_manager = (current_user.is_admin() or
+                               current_user.is_manager())
+
+        if not is_admin_is_manager:
+            db_obj = db_obj.where(and_(
                 Actions.id == action_id,
-                Actions.is_active,
-            )),
-        )
-        return db_obj.scalars().first()
+                Actions.is_active
+            ))
+        else:
+            db_obj = db_obj.where(
+                Actions.id == action_id
+            )
+        response = await session.execute(db_obj)
+
+        return response.scalars().first()
 
     async def create_action(
         self,
