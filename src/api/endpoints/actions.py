@@ -34,13 +34,12 @@ async def get_actions(
     ),
 ) -> list[ActionsDB]:
     """Получение списка акций."""
-    if current_user.is_admin() and show_all:
-        return await actions_crud.get_all_actions(
-            session=session,
-            cafe_id=cafe_id,
-            show_all=show_all,
-        )
-    return await actions_crud.get_all_active_actions(session, cafe_id)
+    return await actions_crud.get_all_actions(
+        session=session,
+        current_user=current_user,
+        cafe_id=cafe_id,
+        show_all=show_all,
+    )
 
 
 @router.post(
@@ -75,19 +74,13 @@ async def get_action_by_id(
     current_user: User = Depends(current_user),
 ) -> ActionsDB:
     """Получение акции по ID."""
-    await check_action_exist(
-        action_id=action_id,
-        session=session,
+
+    action = await actions_crud.get_action(
+        session,
+        action_id,
+        current_user
     )
-    if current_user.is_admin():
-        return await actions_crud.get_action(
-            session=session,
-            action_id=action_id,
-        )
-    action = await actions_crud.get_acive_action(
-        session=session,
-        action_id=action_id,
-    )
+
     if action is None:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
