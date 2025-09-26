@@ -74,11 +74,10 @@ async def get_action_by_id(
     current_user: User = Depends(current_user),
 ) -> ActionsDB:
     """Получение акции по ID."""
-
     action = await actions_crud.get_action(
         session,
         action_id,
-        current_user
+        current_user,
     )
 
     if action is None:
