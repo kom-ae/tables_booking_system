@@ -1,8 +1,10 @@
 from typing import Optional
+from http import HTTPStatus
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from fastapi import HTTPException
 
 from src.crud.base import CRUDBase
 from src.models import Actions, User
