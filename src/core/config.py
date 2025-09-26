@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     class Config:
         """Настройки Pydantic для работы с переменными окружения."""
 
-        env_file = 'src/.env'
+        env_file = '.env'
         extra = 'allow'
 
 
