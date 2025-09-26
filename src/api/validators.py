@@ -29,7 +29,7 @@ async def check_duplicate_cafe(
         )
 
 
-async def handler_cafe_error(func: callable, **kwargs: Any) -> Union[
+async def handler_run_crud_cafe(func: callable, **kwargs: Any) -> Union[
         CafeDB, List[CafeDB],
 ]:
     """Запуск корутины и логирование результатов."""
@@ -41,8 +41,8 @@ async def handler_cafe_error(func: callable, **kwargs: Any) -> Union[
     try:
         if obj := await func(**crud_args):
             msg_log_full = (
-                msg_log + (str(obj.id) if not isinstance(obj, list) else '' +
-                           ' Успешно.')
+                msg_log + (str(obj.id) if not isinstance(obj, list) else '') +
+                '. Успешно.'
             )
             log_event('info', msg_log_full, **user_log)
     except RequestValidationError as err:
