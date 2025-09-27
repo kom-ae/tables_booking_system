@@ -21,3 +21,15 @@ MAX_LENGTH_USERNAME = 40
 
 # Регулярка для проверки телефонного номера
 PHONE_REGEX = r'^(\+[1-9]\d{0,2})\d{6,15}$'
+
+# Максимальная длина description для модели Tables
+MAX_DESCRIPTION = 256
+
+# Минимальное количество мест стола
+MIN_SEATS_NUMBER = 1
+
+# Максимальное количество мест стола
+MAX_SEATS_NUMBER = 12
+
+# Минимальное знаение id кафе
+MIN_ID_CAFE = 1
