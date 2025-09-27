@@ -49,6 +49,10 @@ current_user_get_responses = {
         'description': 'Необходима авторизация',
         'model': Error,
     },
+    status.HTTP_404_NOT_FOUND: {
+        'description': 'Пользователь не найден',
+        'model': Error,
+    },
 }
 
 current_user_update_responses = {

@@ -9,13 +9,31 @@ from src.constants import TAGS_METADATA
 from src.core.config import settings
 from src.core.init_db import init_db_and_superuser
 from src.core.logger import init_logger
-from src.exceptions.auth import BaseAPIException
+from src.exceptions.auth import (
+    ExpiredTokenException,
+    InvalidCredentialsException,
+    InvalidTokenException,
+    PermissionDeniedException,
+)
+from src.exceptions.base import AppException
 from src.exceptions.handlers import (
     base_api_exception_handler,
-    user_exception_handler,
+    db_integrity_exception_handler,
+    expired_token_exception_handler,
+    invalid_credentials_exception_handler,
+    invalid_password_exception_handler,
+    invalid_phone_exception_handler,
+    invalid_token_exception_handler,
+    permission_denied_exception_handler,
+    user_not_found_exception_handler,
     validation_exception_handler,
 )
-from src.exceptions.user import UserException
+from src.exceptions.user import (
+    DBIntegrityException,
+    InvalidPasswordException,
+    InvalidPhoneException,
+    UserNotFoundException,
+)
 
 init_logger(settings)
 
@@ -34,9 +52,36 @@ app = FastAPI(
     openapi_tags=TAGS_METADATA,
 )
 
-
 app.include_router(main_router)
 
+app.add_exception_handler(
+    InvalidPhoneException,
+    invalid_phone_exception_handler,
+)
+app.add_exception_handler(
+    InvalidPasswordException,
+    invalid_password_exception_handler,
+)
+app.add_exception_handler(AppException, base_api_exception_handler)
+app.add_exception_handler(
+    InvalidTokenException,
+    invalid_token_exception_handler,
+)
+app.add_exception_handler(
+    ExpiredTokenException,
+    expired_token_exception_handler,
+)
+app.add_exception_handler(
+    InvalidCredentialsException,
+    invalid_credentials_exception_handler,
+)
+app.add_exception_handler(
+    PermissionDeniedException,
+    permission_denied_exception_handler,
+)
+app.add_exception_handler(
+    UserNotFoundException,
+    user_not_found_exception_handler,
+)
+app.add_exception_handler(DBIntegrityException, db_integrity_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
-app.add_exception_handler(UserException, user_exception_handler)
-app.add_exception_handler(BaseAPIException, base_api_exception_handler)

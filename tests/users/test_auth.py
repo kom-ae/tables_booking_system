@@ -3,6 +3,8 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
+from src.schemas.auth import Auth
+from src.schemas.users import UserCreate
 from tests.users.conftest import (
     EMAIL_ONE,
     EMAIL_TWO,
@@ -13,9 +15,6 @@ from tests.users.conftest import (
     VALID_PASSWORD,
     user_crud,
 )
-
-from src.schemas.auth import Auth
-from src.schemas.users import UserCreate
 
 
 @pytest.mark.asyncio

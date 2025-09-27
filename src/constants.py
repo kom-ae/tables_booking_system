@@ -26,6 +26,8 @@ ROLE_MAX_LENGTH = 50
 MAX_BYTES_TEMP_LOGER = 1000000
 BACKUP_COUNT_TEMP_LOGER = 3
 LOG_FILE_TEMP_LOGER = 'app_temp.log'
+DEFAULT_USER_ID = 0
+SYSTEM_USERNAME = 'SYSTEM'
 
 # -------------------
 # Пользователи
@@ -40,15 +42,15 @@ MIN_LENGTH_USERNAME = 1
 MAX_LENGTH_USERNAME = 40
 
 # Регулярка для проверки международного формата телефона
-PHONE_REGEX = re.compile(
-    r'^(\+[1-9]\d{0,2})\d{6,15}$',  # +код страны, затем 6-15 цифр
-)
+PHONE_REGEX = re.compile(r'^\+7\d{10}$')  # +7XXXXXXXXXX
 
 # Регулярка для проверки пароля
 PASSWORD_REGEX = re.compile(
-    r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$',
-    # Минимум: 1 заглавная, 1 строчная, 1 цифра, 1 спецсимвол, длина ≥8
+    r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$',
 )
+
+# Регулярка для проверки имени
+USERNAME_REGEX = re.compile(r'^[a-zA-Z0-9_]+$')
 
 # -------------------
 # Кафе / Бизнес

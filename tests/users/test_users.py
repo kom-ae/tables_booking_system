@@ -7,14 +7,6 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from tests.users.conftest import (
-    EMAIL_ONE,
-    USERNAME_ONE,
-    USER_UPDATED_ONE,
-    VALID_PASSWORD,
-    user_crud,
-)
-
 from src.core.user import current_admin, current_user
 from src.exceptions.user import (
     UserAlreadyExistsException,
@@ -23,6 +15,13 @@ from src.exceptions.user import (
 from src.main import app
 from src.models.user import User
 from src.schemas.users import UserCreate, UserUpdate
+from tests.users.conftest import (
+    EMAIL_ONE,
+    USER_UPDATED_ONE,
+    USERNAME_ONE,
+    VALID_PASSWORD,
+    user_crud,
+)
 
 
 @asynccontextmanager

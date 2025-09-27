@@ -1,15 +1,15 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.db import get_async_session
-from src.core.user import current_admin, current_user
-from src.crud.cafes import cafe_crud
-from src.models import Cafes, User
+from src.core.dependencies import current_admin, current_user
+from src.crud.factory import get_cafe_crud
+from src.models import Cafe, User
 from src.schemas.cafes import CafeCreate, CafeDB
 
 router = APIRouter()
+
+cafe_crud = get_cafe_crud()
 
 
 @router.get(
@@ -28,7 +28,7 @@ async def get_all_cafes(
     ),
     user: User = Depends(current_user),
     session: AsyncSession = Depends(get_async_session),
-) -> List[CafeDB]:
+) -> list[CafeDB]:
     """Список с данными о кафе."""
     if user.is_admin() and show_all:
         return await cafe_crud.get_multi_all(session)
@@ -46,6 +46,6 @@ async def get_all_cafes(
 async def create_cafe(
     cafe: CafeCreate,
     session: AsyncSession = Depends(get_async_session),
-) -> Cafes:
+) -> Cafe:
     """Создание кафе (только для администратора)."""
     return await cafe_crud.create_cafe(cafe, session)

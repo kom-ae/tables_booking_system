@@ -19,6 +19,8 @@ services:
       context: ../src
       dockerfile: src/Dockerfile.prod
     container_name: backend
+    env_file:
+      - ../.env
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}
       PYTHONUNBUFFERED: 1

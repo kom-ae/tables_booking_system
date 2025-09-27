@@ -6,7 +6,6 @@ from sqlalchemy import (
     ForeignKey,
     Numeric,
     String,
-    Text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,10 +15,10 @@ from src.constants import (
     MAX_DISH_LENGTH_NAME,
 )
 from src.models.base import BaseModel
-from src.models.cafes import Cafes
+from src.models.cafe import Cafe
 
 
-class Dishes(BaseModel):
+class Dishe(BaseModel):
     """Модель блюд для кафе."""
 
     name: Mapped[str] = mapped_column(
@@ -28,7 +27,7 @@ class Dishes(BaseModel):
         index=True,
     )
     description: Mapped[str] = mapped_column(
-        Text(MAX_DISH_LENGTH_DESC),
+        String(MAX_DISH_LENGTH_DESC),
         nullable=False,
     )
     price: Mapped[Decimal] = mapped_column(
@@ -41,11 +40,11 @@ class Dishes(BaseModel):
         nullable=True,
     )
     cafe_id: Mapped[int] = mapped_column(
-        ForeignKey('cafes.id', ondelete='CASCADE'),
+        ForeignKey('cafe.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
     )
-    cafe: Mapped['Cafes'] = relationship(
+    cafe: Mapped['Cafe'] = relationship(
         back_populates='dishes',
         lazy='selectin',
     )
