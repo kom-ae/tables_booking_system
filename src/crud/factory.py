@@ -1,6 +1,6 @@
 from src.crud.cafes import CRUDCafe
-from src.crud.users import CRUDUser
 from src.crud.slots import CRUDSlot
+from src.crud.users import CRUDUser
 from src.models import Cafes, Slots, User
 
 
