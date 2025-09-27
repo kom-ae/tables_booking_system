@@ -6,8 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.cafes import cafe_check_duplicate_responses
 from src.core.logger import project_log
+from src.crud.action import actions_crud
 from src.crud.factory import get_cafe_crud
-from src.models import User
+from src.models import Actions, User
 from src.schemas.cafes import CafeCreate, CafeDB
 
 cafe_crud = get_cafe_crud()
