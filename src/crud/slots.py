@@ -1,7 +1,8 @@
 from datetime import time
 from typing import List, Optional
 
-from sqlalchemy import select, update as sa_update
+from sqlalchemy import select
+from sqlalchemy import update as sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.base import CRUDBase
@@ -102,9 +103,10 @@ class CRUDSlot(CRUDBase[Slots, SlotCreate, SlotUpdate]):
     ) -> Slots:
         """Обновляет слот с валидацией пересечений."""
         data = obj_in.model_dump(exclude_unset=True)
-        new_start = data.get('start_time', db_obj.start_time)
-        new_end = data.get('end_time', db_obj.end_time)
-        new_cafe_id = data.get('cafe_id', db_obj.cafe_id)
+
+        new_start = data.get("start_time", db_obj.start_time)
+        new_end = data.get("end_time", db_obj.end_time)
+        new_cafe_id = data.get("cafe_id", db_obj.cafe_id)
         will_be_active = bool(data.get("is_active", db_obj.is_active))
 
         if new_start >= new_end:
