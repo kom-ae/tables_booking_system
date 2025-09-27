@@ -6,8 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.cafes import cafe_check_duplicate_responses
 from src.core.logger import log_event
+from src.crud.action import actions_crud
 from src.crud.factory import get_cafe_crud
-from src.models import User
+from src.models import Actions, User
 from src.schemas.cafes import CafeCreate, CafeDB
 
 cafe_crud = get_cafe_crud()
@@ -64,3 +65,19 @@ async def handler_run_crud_cafe(func: callable, **kwargs: Any) -> Union[
             detail='Ошибка сервера.',
         )
     return obj
+
+
+async def check_action_exist(
+        action_id: int,
+        session: AsyncSession,
+) -> Actions:
+    """Проверяет на наличие доступа и акции."""
+    action = await actions_crud.get(
+        obj_id=action_id, session=session,
+    )
+    if action is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Акция не найдена',
+        )
+    return action
