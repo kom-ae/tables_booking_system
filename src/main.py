@@ -16,6 +16,7 @@ from src.exceptions.auth import (
     PermissionDeniedException,
 )
 from src.exceptions.base import AppException
+from src.exceptions.db import DBIntegrityException
 from src.exceptions.handlers import (
     base_api_exception_handler,
     db_integrity_exception_handler,
@@ -29,7 +30,6 @@ from src.exceptions.handlers import (
     validation_exception_handler,
 )
 from src.exceptions.user import (
-    DBIntegrityException,
     InvalidPasswordException,
     InvalidPhoneException,
     UserNotFoundException,

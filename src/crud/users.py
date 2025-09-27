@@ -49,31 +49,36 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         self,
         obj_in: UserCreate,
         session: AsyncSession,
-        user: Optional[User] = None,
+        user: Optional[User] = None,  # пользователь, который создаёт нового
     ) -> User:
         """Создание нового пользователя."""
         hashed_password = PasswordService.hash_password(obj_in.password)
         obj_in_data = obj_in.model_copy(update={'password': hashed_password})
-        try:
-            return await super().create(
-                obj_in=obj_in_data,
-                session=session,
-                user=user,
-            )
-        except Exception as error:
-            project_log(
-                'error',
-                f'Ошибка при создании пользователя: {error}',
-                user=user,
-            )
-            raise
+
+        db_user = await super().create(
+            obj_in=obj_in_data,
+            session=session,
+            user=user,
+        )
+
+        initiator_info = (
+            f'id={user.id}, username={user.username}' if user else 'SYSTEM'
+        )
+        project_log(
+            'info',
+            f'Пользователь {initiator_info} создал нового пользователя '
+            f'id={db_user.id}, username={db_user.username}',
+            user=user,
+        )
+
+        return db_user
 
     async def update(
         self,
         db_obj: User,
         obj_in: UserUpdate,
         session: AsyncSession,
-        user: Optional[User] = None,
+        user: Optional[User] = None,  # пользователь, который делает обновление
     ) -> User:
         """Обновление данных пользователя."""
         update_data = obj_in.model_dump(exclude_unset=True)
@@ -81,20 +86,25 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             update_data['password'] = PasswordService.hash_password(
                 update_data['password'],
             )
-        try:
-            return await super().update(
-                db_obj=db_obj,
-                obj_in=obj_in.model_copy(update=update_data),
-                session=session,
-                user=user,
-            )
-        except Exception as error:
-            project_log(
-                'error',
-                f'Ошибка при обновлении пользователя {db_obj.id}: {error}',
-                user=user,
-            )
-            raise
+
+        updated_user = await super().update(
+            db_obj=db_obj,
+            obj_in=obj_in.model_copy(update=update_data),
+            session=session,
+            user=user,
+        )
+
+        initiator_info = (
+            f'id={user.id}, username={user.username}' if user else 'SYSTEM'
+        )
+        project_log(
+            'info',
+            f'Пользователь {initiator_info} обновил пользователя '
+            f'id={db_obj.id}, username={db_obj.username}',
+            user=user,
+        )
+
+        return updated_user
 
     async def get_users(
         self,

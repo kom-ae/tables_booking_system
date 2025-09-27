@@ -35,18 +35,21 @@ try:
             default=DBEngine.POSTGRES.value,
             env='DB_ENGINE',
         )
-        db_host: str = Field(default='db', env='DB_HOST')
-        db_port: int = Field(default=5432, env='DB_PORT')
-        db_name: str = Field(default='fastapi_db', env='DB_NAME')
-        db_user: str = Field(default='fastapi_user', env='DB_USER')
+        db_host: str = Field(..., env='DB_HOST')
+        db_port: int = Field(..., env='DB_PORT')
+        db_name: str = Field(..., env='DB_NAME')
+        db_user: str = Field(..., env='DB_USER')
         db_password: str = Field(..., env='DB_PASSWORD')
 
         # -------------------
         # JWT / безопасность
         # -------------------
-        secret: str = 'SECRET'
-        jwt_algorithm: str = 'HS256'
-        access_token_expire_minutes: int = 120
+        secret: str = Field(..., env='SECRET')
+        jwt_algorithm: str = Field(..., env='JWT_ALGORITHM')
+        access_token_expire_minutes: int = Field(
+            ...,
+            env='ACCESS_TOKEN_EXPIRE_MINUTES',
+        )
 
         # -------------------
         # Первый суперпользователь
@@ -60,9 +63,9 @@ try:
         # -------------------
         # Логирование
         # -------------------
-        log_file: str = Field(default='app.log', env='LOG_FILE')
-        max_bytes: int = Field(default=5_242_880, env='MAX_BYTES')
-        backup_count: int = Field(default=3, env='BACKUP_COUNT')
+        log_file: str = Field(..., env='LOG_FILE')
+        max_bytes: int = Field(..., env='MAX_BYTES')
+        backup_count: int = Field(..., env='BACKUP_COUNT')
 
         # -------------------
         # Методы

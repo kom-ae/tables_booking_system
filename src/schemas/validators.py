@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from src.constants import PASSWORD_REGEX, PHONE_REGEX
 from src.core.logger import project_log
@@ -58,4 +58,12 @@ def validate_active(value: Optional[bool]) -> Optional[bool]:
     """Проверка поля is_active."""
     if value is None:
         raise ValueError('Поле is_active не может быть null.')
+
+
+def cafe_update_field_is_not_null(
+    value: Union[str, bool, None],
+) -> Union[str, bool]:
+    """Проверка полей на null."""
+    if value is None:
+        raise ValueError('Поле не может быть null.')
     return value

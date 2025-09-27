@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -80,3 +81,25 @@ async def current_manager(user: User = Depends(current_user)) -> User:
         user=user,
     )
     return user
+
+
+async def get_current_user_or_none(
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+    user_crud: CRUDUser = Depends(get_user_crud),
+) -> Optional[User]:
+    """Возвращает пользователя по токену из заголовка или None."""
+    auth_header: str = request.headers.get('Authorization')
+    if not auth_header:
+        return None
+
+    try:
+        token_str = auth_header.split(' ')[1]
+        return await get_current_user_logic(token_str, user_crud, db)
+    except Exception as error:
+        project_log(
+            'warning',
+            f'Не удалось получить пользователя по токену:{error}',
+            user=None,
+        )
+        return None

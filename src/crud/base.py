@@ -1,13 +1,13 @@
 from typing import Any, Generic, List, Optional, Type, TypeVar
 
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.db import Base
 from src.core.logger import project_log
-from src.exceptions.user import DBException, DBIntegrityException
+from src.exceptions.db import DBException, DBIntegrityException
 
 ModelType = TypeVar('ModelType', bound=Base)  # type: ignore
 CreateSchemaType = TypeVar('CreateSchemaType', bound=BaseModel)
@@ -96,6 +96,22 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             select(self.model).where(getattr(self.model, 'is_active', True)),
         )
         return result.scalars().all()
+
+    async def get_active(
+        self,
+        obj_id: int,
+        session: AsyncSession,
+    ) -> Optional[ModelType]:
+        """Получение активных объектов по ID."""
+        db_obj = await session.execute(
+            select(self.model).where(
+                and_(
+                    self.model.id == obj_id,
+                    self.model.is_active,
+                ),
+            ),
+        )
+        return db_obj.scalars().one_or_none()
 
     async def create(
         self,

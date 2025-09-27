@@ -9,8 +9,8 @@ from src.exceptions.auth import (
     PermissionDeniedException,
 )
 from src.exceptions.base import AppException
+from src.exceptions.db import DBIntegrityException
 from src.exceptions.user import (
-    DBIntegrityException,
     InvalidPasswordException,
     InvalidPhoneException,
     UserNotFoundException,

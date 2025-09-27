@@ -3,8 +3,19 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.constants import (
+    MAX_ADDRESS,
+    MAX_NAME_CAFE,
+    MAX_TEL,
+    MIN_ADDRESS,
+    MIN_NAME_CAFE,
+    MIN_TEL,
+)
 from src.schemas.base import CafeBase
-from src.schemas.validators import is_not_null, validate_active
+from src.schemas.validators import (
+    cafe_update_field_is_not_null,
+    phone_validator,
+)
 
 
 class CafeDB(CafeBase):
@@ -19,40 +30,52 @@ class CafeDB(CafeBase):
 class CafeCreate(CafeBase):
     """Схема для создания кафе."""
 
-    managers: Optional[list[int]] = Field(None, title='ID менеджера')
+    managers: Optional[list[int]] = Field([], title='ID менеджера')
+
+    _validate_phone = field_validator('phone', mode='before')(phone_validator)
 
 
 class CafeUpdate(BaseModel):
     """Схема для обновления кафе."""
 
-    name: Optional[str] = Field(None, description='Название кафе')
-    address: Optional[str] = Field(None, description='Адрес кафе')
-    phone: Optional[str] = Field(None, description='Телефон кафе')
-    description: Optional[str] = Field(None, description='Описание кафе')
-    photo: Optional[str] = Field(
+    name: Optional[str] = Field(
         None,
-        description='Фото кафе в формате base64',
+        title='Название кафе',
+        min_length=MIN_NAME_CAFE,
+        max_length=MAX_NAME_CAFE,
     )
-    managers: Optional[list[int]] = Field(None, description='ID менеджера')
-    is_active: Optional[bool] = Field(None, description='Объект активен?')
+    address: Optional[str] = Field(
+        None,
+        title='Адрес кафе',
+        min_length=MIN_ADDRESS,
+        max_length=MAX_ADDRESS,
+    )
+    phone: Optional[str] = Field(
+        None,
+        title='Телефон кафе',
+        min_length=MIN_TEL,
+        max_length=MAX_TEL,
+    )
+    description: Optional[str] = Field(None, title='Описание кафе')
+    photo: Optional[str] = Field(None, title='Фото кафе в формате base64')
+    managers: Optional[list[int]] = Field([], title='ID менеджера')
+    is_active: Optional[bool] = Field(None, title='Объект активен?')
 
     class Config:
         """Конфиг класса."""
 
         extra = 'forbid'
 
-    _validate_name = field_validator('name', mode='before')(
-        lambda value: is_not_null(value, 'name'),
-    )
-    _validate_address = field_validator('address', mode='before')(
-        lambda value: is_not_null(value, 'address'),
-    )
-    _validate_phone = field_validator('phone', mode='before')(
-        lambda value: is_not_null(value, 'phone'),
-    )
-    _validate_is_active = field_validator('is_active', mode='before')(
-        validate_active,
-    )
+    _validate_fields = field_validator(
+        'name',
+        'address',
+        'phone',
+        'is_active',
+        'managers',
+        mode='before',
+    )(cafe_update_field_is_not_null)
+
+    _validate_phone = field_validator('phone', mode='before')(phone_validator)
 
 
 class CafeShortDB(CafeBase):

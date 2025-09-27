@@ -30,9 +30,10 @@ def init_logger(settings: Any) -> None:
     )
 
     file_handler = RotatingFileHandler(
-        settings.log_file,
-        maxBytes=settings.max_bytes,
-        backupCount=settings.backup_count,
+        settings.log_file,  # type: ignore
+        maxBytes=settings.max_bytes,  # type: ignore
+        backupCount=settings.backup_count,  # type: ignore
+        encoding='utf-8',
     )
     file_handler.setFormatter(formatter)
 

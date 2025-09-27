@@ -8,6 +8,7 @@ from src.core.db import Base
 from src.models.base import BaseModel
 
 if TYPE_CHECKING:
+    from src.models.action import Actions
     from src.models.dish import Dishe
     from src.models.user import User
 
@@ -36,6 +37,12 @@ class Cafe(BaseModel):
     )
     dishes: Mapped[list['Dishe']] = relationship(
         'Dishe',
+        back_populates='cafe',
+        lazy='selectin',
+        cascade='all, delete-orphan',
+    )
+    actions: Mapped[list['Actions']] = relationship(
+        'Action',
         back_populates='cafe',
         lazy='selectin',
         cascade='all, delete-orphan',

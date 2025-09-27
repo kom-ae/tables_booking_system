@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from src.constants import (
     MAX_ADDRESS,
@@ -13,7 +13,6 @@ from src.constants import (
     MIN_TEL,
 )
 from src.schemas.users import UserShort
-from src.schemas.validators import is_not_null, phone_validator
 
 
 class BaseSchema(BaseModel):
@@ -67,14 +66,6 @@ class CafeBase(BaseModel):
         """Конфиг класса."""
 
         extra = 'forbid'
-
-    _validate_name = field_validator('name', mode='before')(
-        lambda value: is_not_null(value, 'name'),
-    )
-    _validate_address = field_validator('address', mode='before')(
-        lambda value: is_not_null(value, 'address'),
-    )
-    _validate_phone = field_validator('phone', mode='before')(phone_validator)
 
 
 class Error(BaseModel):
