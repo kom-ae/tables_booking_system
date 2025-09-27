@@ -25,13 +25,10 @@ class ActionsCRUD(CRUDBase):
         is_admin_is_manager = (current_user.is_admin() or
                                current_user.is_manager())
 
-        if not is_admin_is_manager:
-            query = query.where(Actions.is_active)
-
         if cafe_id is not None:
             query = query.where(Actions.cafe_id == cafe_id)
 
-        if show_all is False:
+        if not (is_admin_is_manager and show_all):
             query = query.where(Actions.is_active)
 
         response = await session.execute(query)
@@ -70,8 +67,17 @@ class ActionsCRUD(CRUDBase):
     ) -> ActionsDB:
         """Создает акцию."""
         obj_in_data = obj_in.model_dump()
+
+        cafe_id = obj_in.cafe
+
         if user_id is not None:
             obj_in_data['user_id'] = user_id
+
+        if 'cafe' in obj_in_data:
+            del obj_in_data['cafe']
+
+        obj_in_data['cafe_id'] = cafe_id
+
         db_obj = self.model(**obj_in_data)
 
         session.add(db_obj)
@@ -96,6 +102,12 @@ class ActionsCRUD(CRUDBase):
     ) -> ActionsDB:
         """Обновляет акцию."""
         update_data = obj_in.model_dump(exclude_unset=True)
+
+        if 'cafe' in update_data:
+            cafe_id = update_data['cafe']
+            del update_data['cafe']
+            update_data['cafe_id'] = cafe_id
+
         for field, value in update_data.items():
             setattr(db_obj, field, value)
 
