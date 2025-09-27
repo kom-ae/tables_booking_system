@@ -3,8 +3,8 @@ from fastapi import APIRouter
 from src.api.endpoints import (
     auth_router,
     cafes_router,
-    users_router,
     slots_router,
+    users_router,
 )
 
 main_router = APIRouter()

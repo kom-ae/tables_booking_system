@@ -1,7 +1,7 @@
 from datetime import time
 from typing import Optional
 
-from sqlalchemy import select, and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.slots import Slots
@@ -15,9 +15,7 @@ async def ensure_no_overlap(
     end_time: time,
     exclude_slot_id: Optional[int] = None,
 ) -> None:
-    """
-    Проверяет, что в рамках одного кафе нет пересечения интервалов.
-    """
+    """Проверяет, что в рамках одного кафе нет пересечения интервалов."""
     if end_time <= start_time:
         raise ValueError('Время окончания должно быть позже времени начала')
     stmt = select(func.count(Slots.id)).where(
@@ -26,7 +24,7 @@ async def ensure_no_overlap(
             Slots.start_time < end_time,
             start_time < Slots.end_time,
             Slots.is_active.is_(True),
-        )
+        ),
     )
     if exclude_slot_id is not None:
         stmt = stmt.where(Slots.id != exclude_slot_id)
@@ -35,5 +33,5 @@ async def ensure_no_overlap(
     if conflicts and conflicts > 0:
         raise ValueError(
             'Интервал времени слота пересекается '
-            'с существующим активным слотом'
+            'с существующим активным слотом',
         )

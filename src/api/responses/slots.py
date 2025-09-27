@@ -1,94 +1,98 @@
+from typing import Any, Dict, Union
+
 from fastapi import status
 
 from src.schemas.base import Error
 from src.schemas.slots import SlotDB
 
-slots_list_responses = {
+Responses = Dict[Union[int, str], Dict[str, Any]]
+
+slots_list_responses: Responses = {
     status.HTTP_200_OK: {
-        'description': 'Список слотов кафе',
-        'model': list[SlotDB],
+        "description": "Список слотов кафе",
+        "model": list[SlotDB],
     },
     status.HTTP_401_UNAUTHORIZED: {
-        'description': 'Необходима авторизация',
-        'model': Error,
+        "description": "Необходима авторизация",
+        "model": Error,
     },
 }
 
-slot_create_responses = {
+slot_create_responses: Responses = {
     status.HTTP_201_CREATED: {
-        'description': 'Слот создан',
-        'model': SlotDB,
+        "description": "Слот создан",
+        "model": SlotDB,
     },
     status.HTTP_400_BAD_REQUEST: {
-        'description': 'Некорректное время или пересечение интервалов',
-        'model': Error,
+        "description": "Некорректное время или пересечение интервалов",
+        "model": Error,
     },
     status.HTTP_401_UNAUTHORIZED: {
-        'description': 'Необходима авторизация',
-        'model': Error,
+        "description": "Необходима авторизация",
+        "model": Error,
     },
     status.HTTP_403_FORBIDDEN: {
-        'description': 'Недостаточно прав',
-        'model': Error,
+        "description": "Недостаточно прав",
+        "model": Error,
     },
     status.HTTP_404_NOT_FOUND: {
-        'description': 'Кафе не найдено',
-        'model': Error,
+        "description": "Кафе не найдено",
+        "model": Error,
     },
 }
 
-slot_get_responses = {
+slot_get_responses: Responses = {
     status.HTTP_200_OK: {
-        'description': 'Данные слота',
-        'model': SlotDB,
+        "description": "Данные слота",
+        "model": SlotDB,
     },
     status.HTTP_401_UNAUTHORIZED: {
-        'description': 'Необходима авторизация',
-        'model': Error,
+        "description": "Необходима авторизация",
+        "model": Error,
     },
     status.HTTP_404_NOT_FOUND: {
-        'description': 'Кафе или слот не найдены',
-        'model': Error,
+        "description": "Кафе или слот не найдены",
+        "model": Error,
     },
 }
 
-slot_update_responses = {
+slot_update_responses: Responses = {
     status.HTTP_200_OK: {
-        'description': 'Обновлённый слот',
-        'model': SlotDB,
+        "description": "Обновлённый слот",
+        "model": SlotDB,
     },
     status.HTTP_400_BAD_REQUEST: {
-        'description': 'Некорректное время или пересечение интервалов',
-        'model': Error,
+        "description": "Некорректное время или пересечение интервалов",
+        "model": Error,
     },
     status.HTTP_401_UNAUTHORIZED: {
-        'description': 'Необходима авторизация',
-        'model': Error,
+        "description": "Необходима авторизация",
+        "model": Error,
     },
     status.HTTP_403_FORBIDDEN: {
-        'description': 'Недостаточно прав',
-        'model': Error,
+        "description": "Недостаточно прав",
+        "model": Error,
     },
     status.HTTP_404_NOT_FOUND: {
-        'description': 'Кафе или слот не найдены',
-        'model': Error,
+        "description": "Кафе или слот не найдены",
+        "model": Error,
     },
 }
 
-slot_delete_responses = {
+slot_delete_responses: Responses = {
     status.HTTP_204_NO_CONTENT: {
-        'description': 'Слот деактивирован',
+        "description": "Слот деактивирован",
     },
     status.HTTP_401_UNAUTHORIZED: {
-        'description': 'Необходима авторизация',
-        'model': Error,
+        "description": "Необходима авторизация",
+        "model": Error,
     },
     status.HTTP_403_FORBIDDEN: {
-        'description': 'Недостаточно прав',
-        'model': Error,
+        "description": "Недостаточно прав",
+        "model": Error,
     },
     status.HTTP_404_NOT_FOUND: {
-        'description': 'Кафе или слот не найдены',
-        'model': Error,
+        "description": "Кафе или слот не найдены",
+        "model": Error,
     },
 }

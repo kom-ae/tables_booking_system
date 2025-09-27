@@ -1,16 +1,14 @@
-from typing import List, Optional
 from datetime import time
+from typing import List, Optional
 
 from sqlalchemy import select, update as sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.base import CRUDBase
+from src.exceptions.slots import SlotNotFoundException, SlotOverlapException
 from src.models.slots import Slots
-from src.services.slot_rules import ensure_no_overlap
 from src.schemas.slots import SlotCreate, SlotUpdate
-from src.exceptions.slots import (
-    SlotNotFoundException, SlotOverlapException
-)
+from src.services.slot_rules import ensure_no_overlap
 
 
 class CRUDSlot(CRUDBase[Slots, SlotCreate, SlotUpdate]):
@@ -104,11 +102,10 @@ class CRUDSlot(CRUDBase[Slots, SlotCreate, SlotUpdate]):
     ) -> Slots:
         """Обновляет слот с валидацией пересечений."""
         data = obj_in.model_dump(exclude_unset=True)
-
         new_start = data.get('start_time', db_obj.start_time)
         new_end = data.get('end_time', db_obj.end_time)
         new_cafe_id = data.get('cafe_id', db_obj.cafe_id)
-        will_be_active = data.get('is_active', db_obj.is_active)
+        will_be_active = bool(data.get("is_active", db_obj.is_active))
 
         if new_start >= new_end:
             raise SlotOverlapException()
@@ -135,9 +132,10 @@ class CRUDSlot(CRUDBase[Slots, SlotCreate, SlotUpdate]):
         db_obj: Slots,
         session: AsyncSession,
     ) -> None:
+        """Мягко отметить слот как неактивный (soft delete)."""
         await session.execute(
             sa_update(Slots)
             .where(Slots.id == db_obj.id)
-            .values(is_active=False)
+            .values(is_active=False),
         )
         await session.commit()

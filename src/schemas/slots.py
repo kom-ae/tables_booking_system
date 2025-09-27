@@ -3,16 +3,17 @@ from __future__ import annotations
 from datetime import datetime, time
 from typing import Optional
 
-from pydantic import BaseModel, Field, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from src.constants import SLOT_DESCRIPTION_MAX_LENGTH, ID_MIN
+from src.constants import ID_MIN, SLOT_DESCRIPTION_MAX_LENGTH
 
 
 class SlotBase(BaseModel):
-    """
-    Базовая схема слота.
+    """Базовая схема слота.
+
     Принимает как is_active, так и active (alias), чтобы фронту было удобно.
     """
+
     model_config = ConfigDict(
         extra='forbid',
         populate_by_name=True,
@@ -21,7 +22,11 @@ class SlotBase(BaseModel):
     cafe_id: int = Field(..., ge=ID_MIN, title='ID кафе')
     start_time: time = Field(..., title='Начало интервала')
     end_time: time = Field(..., title='Конец интервала')
-    description: Optional[str] = Field(None, max_length=255, title='Описание')
+    description: Optional[str] = Field(
+        None,
+        max_length=SLOT_DESCRIPTION_MAX_LENGTH,
+        title='Описание',
+    )
     is_active: bool = Field(
         True,
         title='Активен?',
@@ -39,25 +44,29 @@ class SlotBase(BaseModel):
 
 class SlotCreate(SlotBase):
     """Схема создания слота."""
+
     pass
 
 
 class SlotUpdate(BaseModel):
+    """Схема частичного обновления слота.
+
+    Разрешены только перечисленные поля; None допустим,
+    если поле не присылается вовсе.
     """
-    Схема частичного обновления слота.
-    Разрешены только перечисленные поля; None допустим, если поле не присылается вовсе.
-    """
+
     model_config = ConfigDict(
         extra='forbid',
         populate_by_name=True,
     )
 
+    cafe_id: Optional[int] = Field(None, ge=ID_MIN, title='ID кафе')
     start_time: Optional[time] = Field(None, title='Начало интервала')
     end_time: Optional[time] = Field(None, title='Конец интервала')
     description: Optional[str] = Field(
         None,
         max_length=SLOT_DESCRIPTION_MAX_LENGTH,
-        title='Описание'
+        title='Описание',
     )
     is_active: Optional[bool] = Field(
         None,
@@ -68,9 +77,9 @@ class SlotUpdate(BaseModel):
 
     @model_validator(mode='after')
     def check_times(self) -> 'SlotUpdate':
-        """
-        Если оба времени присланы вместе — проверяем, что end_time > start_time.
-        Если прислано только одно из времен — проверку сделает слой CRUD,
+        """Если оба времени присланы вместе — end_time > start_time.
+
+        Если прислано только одно из времён — проверку сделает слой CRUD,
         собрав конечные значения вместе с текущим состоянием в БД.
         """
         if self.start_time is not None and self.end_time is not None:
@@ -80,10 +89,11 @@ class SlotUpdate(BaseModel):
 
 
 class SlotDB(BaseModel):
-    """
-    Полная схема слота из БД (для ответов).
+    """Полная схема слота из БД (для ответов).
+
     Использует from_attributes=True, чтобы маппиться напрямую из ORM-модели.
     """
+
     model_config = ConfigDict(
         from_attributes=True,
         populate_by_name=True,
@@ -100,6 +110,8 @@ class SlotDB(BaseModel):
 
 
 class SlotShortDB(BaseModel):
+    """Короткая схема слота (для списков)."""
+
     model_config = ConfigDict(
         from_attributes=True,
         populate_by_name=True,
@@ -110,12 +122,3 @@ class SlotShortDB(BaseModel):
     start_time: time
     end_time: time
     is_active: bool = Field(..., serialization_alias='active')
-
-
-__all__ = [
-    'SlotBase',
-    'SlotCreate',
-    'SlotUpdate',
-    'SlotDB',
-    'SlotShortDB',
-]
