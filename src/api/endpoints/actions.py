@@ -1,11 +1,18 @@
-from http import HTTPStatus
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.api.responses.actions import (
+    action_create_responses,
+    action_get_responses,
+    action_not_found,
+    action_update_responses,
+    actions_list_responses,
+)
 from src.api.validators import check_action_exist
 from src.core.db import get_async_session
+from src.core.logger import log_endpoint
 from src.core.user import current_manager, current_user
 from src.crud.action import actions_crud
 from src.models import User
@@ -18,9 +25,12 @@ router = APIRouter()
     '',
     response_model=list[ActionsDB],
     response_model_exclude_none=True,
+    response_description='Список акций',
+    responses=actions_list_responses,
     summary='Получение списка акций'
     ' (только для администратора, пользователь - только активные).',
 )
+@log_endpoint()
 async def get_actions(
     session: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(current_user),
@@ -46,10 +56,13 @@ async def get_actions(
     '',
     response_model=ActionsDB,
     response_model_exclude_none=True,
+    response_description='Данные созданной акции',
+    responses=action_create_responses,
     dependencies=[Depends(current_manager)],
     summary='Создание акций'
     ' (только для администратора и менеджера).',
 )
+@log_endpoint()
 async def create_action(
     action: ActionsCreate,
     session: AsyncSession = Depends(get_async_session),
@@ -64,10 +77,12 @@ async def create_action(
     '/{action_id}',
     response_model=ActionsDB,
     response_model_exclude_none=True,
+    responses=action_get_responses,
     summary='Получение акции по ID'
     ' (только для администратора и менеджера, пользователь - только активные)',
     dependencies=[Depends(current_user)],
 )
+@log_endpoint()
 async def get_action_by_id(
     action_id: int,
     session: AsyncSession = Depends(get_async_session),
@@ -81,10 +96,7 @@ async def get_action_by_id(
     )
 
     if action is None:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail='Акция не найдена',
-        )
+        raise HTTPException(**action_not_found)
     return action
 
 
@@ -92,9 +104,11 @@ async def get_action_by_id(
     '/{action_id}',
     response_model=ActionsDB,
     response_model_exclude_none=True,
+    responses=action_update_responses,
     summary='Обновление акции по ID (только для администратора и менеджера)',
     dependencies=[Depends(current_manager)],
 )
+@log_endpoint()
 async def update_action_by_id(
     action_id: int,
     update_data: ActionsUpdate,
