@@ -1,13 +1,14 @@
 from datetime import datetime
 from typing import Optional
 
+from src.schemas.cafes import CafeShortDB
+
 from pydantic import BaseModel, Field
 
 from src.constants import (
     MAX_DESCRIPTION,
     MIN_SEATS_NUMBER,
     MAX_SEATS_NUMBER,
-    MIN_ID_CAFE
 )
 
 
@@ -63,6 +64,10 @@ class TableDB(TableBase):
     """Схема стола из БД."""
 
     id: int = Field(..., title='ID записи')
+    cafe: CafeShortDB = Field(..., title="Кафе")
     is_active: bool = Field(..., title='Стол активен?')
     created_at: datetime = Field(..., title='Дата создания')
     updated_at: datetime = Field(..., title='Дата обновления')
+
+    class Config(TableBase.Config):
+        from_attributes = True

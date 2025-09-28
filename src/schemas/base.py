@@ -3,33 +3,38 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
+from src.constants import MAX_LENGTH_USERNAME, MIN_LENGTH_USERNAME
+
 
 class BaseSchema(BaseModel):
     """Базовая схема с общими полями для всех моделей."""
 
-    id: Optional[int] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    is_active: bool = True
+    id: Optional[int] = Field(None, description='ID')
+    created_at: Optional[datetime] = Field(None, description='Дата создания')
+    updated_at: Optional[datetime] = Field(None, description='Дата обновления')
+    is_active: bool = Field(None, description='Активен ли пользователь.')
 
     class Config:
-        """Настройки Pydantic для ORM совместимости."""
+        """Конфигурация Pydantic."""
 
-        orm_mode = True
+        from_attributes = True
 
 
 class UserBase(BaseModel):
-    """Базовая схема пользователя с email, телефоном и Telegram ID."""
+    """Базовая схема пользователя."""
 
-    email: EmailStr = Field(..., description='Email пользователя')
-    tg_id: Optional[str] = Field(None, description='Telegram ID пользователя')
-    phone: Optional[str] = Field(
-        None,
-        description='Телефон пользователя в формате +7/8XXXXXXXXXX',
+    username: str = Field(
+        ...,
+        description='Имя пользователя.',
+        min_length=MIN_LENGTH_USERNAME,
+        max_length=MAX_LENGTH_USERNAME,
     )
+    email: Optional[EmailStr] = Field(None, description='Email пользователя.')
+    phone: Optional[str] = Field(None, description='Телефон.')
+    tg_id: Optional[str] = Field(None, description='Telegram ID.')
 
 
-class BaseError(BaseModel):
-    """Базовая схема ошибки."""
+class Error(BaseModel):
+    """Схема ошибки."""
 
     message: str

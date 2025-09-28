@@ -1,5 +1,6 @@
-from sqlalchemy import ForeignKey, Integer, String
 from typing import Optional
+
+from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.constants import MAX_DESCRIPTION
@@ -15,6 +16,7 @@ class Tables(BaseModel):
     cafe_id: Mapped[int] = mapped_column(
         ForeignKey('cafes.id', ondelete='CASCADE'),
         nullable=False,
+        index=True,
     )
     seats_number: Mapped[int] = mapped_column(
         Integer(),
@@ -26,6 +28,6 @@ class Tables(BaseModel):
         nullable=True,
     )
     cafe: Mapped['Cafes'] = relationship(
-        'Cafes',
         back_populates='tables',
+        lazy='selectin',
         )

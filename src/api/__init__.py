@@ -1,1 +1,1 @@
-from src.api.routers import main_router as main_router  # noqa
+from .routers import main_router as main_router  # noqa

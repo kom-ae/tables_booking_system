@@ -12,9 +12,9 @@ class UserException(Exception):
         message: str,
         status_code: int = status.HTTP_400_BAD_REQUEST,
     ) -> None:
-        """Инициализация с сообщением и HTTP-статусом."""
+        """Инициализация исключения с сообщением и HTTP-статусом."""
         self.message = message
-        self.status_code = status_code
+        self.status_code = int(status_code)
         super().__init__(message)
 
     def to_response(self) -> JSONResponse:
@@ -34,7 +34,7 @@ class UserAlreadyExistsException(UserException):
         self,
         message: str = 'Пользователь с такими данными уже существует',
     ) -> None:
-        """Инициализация исключения UserAlreadyExists."""
+        """Инициализация исключения UserAlreadyExistsException."""
         super().__init__(message, status.HTTP_400_BAD_REQUEST)
 
 
@@ -44,7 +44,7 @@ class InvalidPhoneException(UserException):
     error_code: str = 'InvalidPhone'
 
     def __init__(self, message: str = 'Некорректный номер телефона') -> None:
-        """Инициализация исключения InvalidPhone."""
+        """Инициализация исключения InvalidPhoneException."""
         super().__init__(message, status.HTTP_400_BAD_REQUEST)
 
 
@@ -54,5 +54,5 @@ class UserNotFoundException(UserException):
     error_code: str = 'UserNotFound'
 
     def __init__(self, message: str = 'Пользователь не найден') -> None:
-        """Инициализация исключения UserNotFound."""
+        """Инициализация исключения UserNotFoundException."""
         super().__init__(message, status.HTTP_404_NOT_FOUND)

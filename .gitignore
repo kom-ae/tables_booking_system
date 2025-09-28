@@ -123,6 +123,8 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.env.prod
+.env.local
 .env
 .venv
 .bot_venv
@@ -164,4 +166,22 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 .vscode/
-ruff.toml
+fastapi.db
+
+
+#Tests
+Tests
+tests
+Test
+test
+
+# База данных
+fastapi.db
+
+# Black
+pyproject.toml
+
+# Логирование
+app.log
+src.log
+app_temp.log

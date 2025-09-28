@@ -1,7 +1,7 @@
 from fastapi import status
 
-from src.schemas.base import BaseError
-from src.schemas.user import UserRead
+from src.schemas.base import Error
+from src.schemas.users import UserRead
 
 users_list_responses = {
     status.HTTP_200_OK: {
@@ -10,7 +10,7 @@ users_list_responses = {
     },
     status.HTTP_401_UNAUTHORIZED: {
         'description': 'Необходима авторизация',
-        'model': BaseError,
+        'model': Error,
     },
 }
 
@@ -21,10 +21,9 @@ user_create_responses = {
     },
     status.HTTP_400_BAD_REQUEST: {
         'description': 'Неверный формат запроса',
-        'model': BaseError,
+        'model': Error,
     },
 }
-
 
 user_update_responses = {
     status.HTTP_200_OK: {
@@ -33,11 +32,11 @@ user_update_responses = {
     },
     status.HTTP_401_UNAUTHORIZED: {
         'description': 'Необходима авторизация',
-        'model': BaseError,
+        'model': Error,
     },
     status.HTTP_404_NOT_FOUND: {
         'description': 'Пользователь не найден',
-        'model': BaseError,
+        'model': Error,
     },
 }
 
@@ -48,7 +47,7 @@ current_user_get_responses = {
     },
     status.HTTP_401_UNAUTHORIZED: {
         'description': 'Необходима авторизация',
-        'model': BaseError,
+        'model': Error,
     },
 }
 
@@ -59,10 +58,10 @@ current_user_update_responses = {
     },
     status.HTTP_400_BAD_REQUEST: {
         'description': 'Неверный формат запроса',
-        'model': BaseError,
+        'model': Error,
     },
     status.HTTP_401_UNAUTHORIZED: {
         'description': 'Необходима авторизация',
-        'model': BaseError,
+        'model': Error,
     },
 }
