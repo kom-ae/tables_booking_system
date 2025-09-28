@@ -12,7 +12,7 @@ from src.api.responses.actions import (
 )
 from src.api.validators import check_action_exist
 from src.core.db import get_async_session
-from src.core.logger import log_endpoint, log_event
+from src.core.logger import log_endpoint
 from src.core.user import current_admin, current_manager, current_user
 from src.crud.action import actions_crud
 from src.models import User
@@ -30,7 +30,7 @@ router = APIRouter()
     summary='Получение списка акций'
     ' (только для администратора, пользователь - только активные).',
 )
-@log_endpoint()
+@log_endpoint('info')
 async def get_actions(
     session: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(current_user),
@@ -51,13 +51,6 @@ async def get_actions(
         show_all=show_all,
     )
 
-    log_event(
-        'info',
-        f'Получен список акций, show_all={show_all}',
-        username=current_user.username,
-        user_id=current_user.id,
-    )
-
     return actions
 
 
@@ -71,7 +64,7 @@ async def get_actions(
     summary='Создание акций'
     ' (только для администратора и менеджера).',
 )
-@log_endpoint()
+@log_endpoint('info')
 async def create_action(
     action: ActionsCreate,
     session: AsyncSession = Depends(get_async_session),
@@ -80,13 +73,6 @@ async def create_action(
     """Создание акций."""
     new_action = await actions_crud.create_action(
         obj_in=action, session=session,
-    )
-
-    log_event(
-        'info',
-        f'Создана новая акция с ID {new_action.id}',
-        username=admin.username,
-        user_id=admin.id,
     )
 
     return new_action
@@ -101,7 +87,7 @@ async def create_action(
     ' (только для администратора и менеджера, пользователь - только активные)',
     dependencies=[Depends(current_user)],
 )
-@log_endpoint()
+@log_endpoint('info')
 async def get_action_by_id(
     action_id: int,
     session: AsyncSession = Depends(get_async_session),
@@ -117,13 +103,6 @@ async def get_action_by_id(
     if action is None:
         raise HTTPException(**action_not_found)
 
-    log_event(
-        'info',
-        f'Получена акция. ID {action_id}.',
-        username=current_user.username,
-        user_id=current_user.id,
-    )
-
     return action
 
 
@@ -135,7 +114,7 @@ async def get_action_by_id(
     summary='Обновление акции по ID (только для администратора и менеджера)',
     dependencies=[Depends(current_manager)],
 )
-@log_endpoint()
+@log_endpoint('info')
 async def update_action_by_id(
     action_id: int,
     update_data: ActionsUpdate,
@@ -152,13 +131,6 @@ async def update_action_by_id(
         db_obj=action,
         obj_in=update_data,
         session=session,
-    )
-
-    log_event(
-        'info',
-        f'Обновлены данные по акции с ID {action_id}',
-        username=admin.username,
-        user_id=admin.id,
     )
 
     return action
