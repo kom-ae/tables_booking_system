@@ -2,6 +2,28 @@
 
 Находясь в корневой дирректории проекта, в терминале выполнить команду:
 ```bash
+# Активация виртуального окружения
+source venv/bin/activate
+
+# Установка переменных окружения для тестов
+export JWT_ALGORITHM=HS256
+export SECRET=test_secret
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=test
+export DB_USER=test
+export DB_PASSWORD=test
+
+# Запуск всех тестов
+python -m pytest tests/ -v
+
+# Запуск только реализованных тестов (исключая пропущенные)
+python -m pytest tests/ -v -m "not skip"
+
+# Запуск конкретных тестов
+python -m pytest tests/test_cafes.py -v
+python -m pytest tests/test_auth.py -v
+python -m pytest tests/test_users.py -v
 ```
 
 # Руководство по тестированию API системы бронирования столов
@@ -129,6 +151,39 @@ TEST_CAFES = {...}  # Словарь с тестовыми кафе
 INVALID_DATA = {...}  # Невалидные данные для тестов валидации
 ```
 
+## Эндпоинты API
+
+В `conftest.py` определены все эндпоинты API в словаре `ENDPOINTS`:
+
+```python
+ENDPOINTS = {
+    'auth': {
+        'login': '/auth/login',
+        'register': '/auth/register',
+        'refresh': '/auth/refresh',
+    },
+    'users': {
+        'list': '/users',
+        'create': '/users',
+        'get': '/users/{user_id}',
+        'update': '/users/{user_id}',
+        'delete': '/users/{user_id}',
+    },
+    'cafes': {
+        'list': '/cafes',
+        'create': '/cafes',
+        'get': '/cafes/{cafe_id}',
+        'update': '/cafes/{cafe_id}',
+    },
+    # Нереализованные эндпоинты (для будущего использования)
+    'actions': {...},
+    'bookings': {...},
+    'dishes': {...},
+    'tables': {...},
+    'time_slots': {...},
+}
+```
+
 ## Утилиты для тестов
 
 ### Функции-помощники
@@ -136,6 +191,12 @@ INVALID_DATA = {...}  # Невалидные данные для тестов в
 - `get_auth_headers(token)` - Создание заголовков авторизации
 - `assert_error_response(response, status, message)` - Проверка ошибочных ответов
 - `assert_success_response(response, status)` - Проверка успешных ответов
+
+### Утилиты для работы с эндпоинтами
+
+- `get_endpoint_url(endpoint_type, action, **kwargs)` - Получение URL эндпоинта с подстановкой параметров
+- `get_cafe_endpoint_url(action, cafe_id, **kwargs)` - Получение URL эндпоинта кафе
+- `get_user_endpoint_url(action, user_id, **kwargs)` - Получение URL эндпоинта пользователя
 
 ## Типы тестов
 
@@ -175,7 +236,9 @@ INVALID_DATA = {...}  # Невалидные данные для тестов в
 - ✅ Управление менеджерами кафе
 - ✅ Валидация данных кафе
 - ✅ Права доступа
-- ✅ Фильтрация кафе
+- ✅ Фильтрация кафе (show_all параметр)
+- ✅ Параметризованные тесты валидации
+- ✅ Тесты с уникальными данными (timestamp)
 
 ### Интеграционные тесты (test_integration.py)
 - ✅ Полный цикл регистрации и использования
@@ -183,3 +246,47 @@ INVALID_DATA = {...}  # Невалидные данные для тестов в
 - ✅ Безопасность и права доступа
 - ✅ Консистентность данных
 - ✅ Обработка ошибок
+
+## Особенности реализации тестов
+
+### Параметризованные тесты
+
+Многие тесты используют `@pytest.mark.parametrize` для уменьшения дублирования кода:
+
+```python
+@pytest.mark.parametrize("field,invalid_value,valid_fields", [
+    ('name', 'x' * 300, {...}),
+    ('address', 'x' * 300, {...}),
+    ('phone', 'x' * 20, {...}),
+])
+async def test_cafe_field_validation(self, ...):
+    # Тест выполняется для каждого набора параметров
+```
+
+### Уникальные данные в тестах
+
+Для избежания конфликтов данных между тестами используются уникальные имена:
+
+```python
+import time
+timestamp = int(time.time() * 1000)
+payload = {
+    'name': f'Test Cafe {timestamp}',
+    'address': f'Test Address {timestamp}',
+    'phone': f'+7000000{timestamp % 10000:04d}',
+}
+```
+
+### Пропуск нереализованных тестов
+
+Тесты для нереализованных модулей помечены как пропускаемые:
+
+```python
+pytestmark = pytest.mark.skip(reason="Actions endpoints not implemented yet")
+```
+
+### Правильная передача параметров
+
+В тестах используется правильная передача параметров через `params`:
+
+response = await client_fixture.get('/cafes/', params={'show_all': True})

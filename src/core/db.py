@@ -25,7 +25,7 @@ class PreBase:
 
 Base = declarative_base(cls=PreBase)
 
-engine = create_async_engine(settings.get_database_uri, echo=True)
+engine = create_async_engine(settings.get_database_uri(), echo=True)
 
 AsyncSessionLocal = sessionmaker(
     engine,
@@ -38,3 +38,8 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """Асинхронный генератор сессии базы данных."""
     async with AsyncSessionLocal() as async_session:
         yield async_session
+
+
+def get_async_session_cm():
+    """Контекстный менеджер для асинхронной сессии базы данных."""
+    return AsyncSessionLocal()

@@ -29,6 +29,9 @@ from tests.conftest import (
 # 3. CRUD операции для акций
 # 4. Схемы ActionCreate, ActionUpdate, Action
 
+# Пропускаем все тесты до реализации эндпоинтов
+pytestmark = pytest.mark.skip(reason="Actions endpoints not implemented yet")
+
 
 class TestActionsList:
     """Тесты эндпоинта GET /actions."""

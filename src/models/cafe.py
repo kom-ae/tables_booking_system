@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Column, ForeignKey, String, Table, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -8,7 +8,7 @@ from src.core.db import Base
 from src.models.base import BaseModel
 
 if TYPE_CHECKING:
-    from src.models.action import Actions
+    from src.models.action import Action
     from src.models.dish import Dishe
     from src.models.user import User
 
@@ -28,7 +28,7 @@ class Cafe(BaseModel):
     address: Mapped[str] = mapped_column(String(MAX_ADDRESS), nullable=False)
     phone: Mapped[str] = mapped_column(String(MAX_TEL), nullable=False)
     description: Mapped[str] = mapped_column(Text)
-    photo: Mapped[str] = mapped_column(Text)
+    photo: Mapped[Optional[str]] = mapped_column(Text)
     managers: Mapped[list['User']] = relationship(
         'User',
         secondary='cafe_manager',
@@ -41,7 +41,7 @@ class Cafe(BaseModel):
         lazy='selectin',
         cascade='all, delete-orphan',
     )
-    actions: Mapped[list['Actions']] = relationship(
+    actions: Mapped[list['Action']] = relationship(
         'Action',
         back_populates='cafe',
         lazy='selectin',
