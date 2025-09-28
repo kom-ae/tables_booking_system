@@ -2,12 +2,11 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.auth import login_responses, logout_responses
-from src.core.config import settings
+from src.constants import DEFAULT_USER_ID, SYSTEM_USERNAME
 from src.core.db import get_async_session
-from src.core.logger import log_endpoint, log_event
+from src.core.logger import log_endpoint, project_log
 from src.core.user import get_user_by_name
-from src.crud.factory import get_user_crud
-from src.crud.users import CRUDUser
+from src.crud.factory import CRUDUser, get_user_crud
 from src.exceptions.auth import InvalidCredentialsException
 from src.schemas.auth import Auth, TokenResponse
 from src.services.auth import PasswordService, TokenService
@@ -29,7 +28,7 @@ async def login(
     user_crud: CRUDUser = Depends(get_user_crud),
 ) -> TokenResponse:
     """Авторизация пользователя и выдача JWT по email или телефону."""
-    user = await get_user_by_name(auth.name, db)
+    user = await get_user_by_name(auth.name, db, user_crud=user_crud)
 
     if not user or not PasswordService.verify_password(
         auth.password,
@@ -37,14 +36,8 @@ async def login(
     ):
         raise InvalidCredentialsException()
 
-    await user_crud.touch_last_used(db, user)
-
-    log_event(
-        'info',
-        'Успешный вход в систему',
-        username=user.username,
-        user_id=user.id,
-    )
+    await user_crud.update_last_used(db, user)
+    project_log('info', 'Успешный вход в систему', user=user)
 
     token: str = TokenService.create_access_token(data={'sub': str(user.id)})
     return {'token': token}
@@ -58,10 +51,10 @@ async def login(
 @log_endpoint('info')
 async def logout() -> dict[str, str]:
     """Выход пользователя (информативно, JWT статический)."""
-    log_event(
-        'info',
-        'Пользователь вышел из системы',
-        username=settings.system_username,
-        user_id=settings.default_user_id,
-    )
+
+    class SystemUser:
+        id = DEFAULT_USER_ID
+        username = SYSTEM_USERNAME
+
+    project_log('info', 'Пользователь вышел из системы', user=SystemUser())
     return {'message': 'Вы вышли из системы.'}
