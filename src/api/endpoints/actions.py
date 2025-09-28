@@ -12,8 +12,8 @@ from src.api.responses.actions import (
 )
 from src.api.validators import check_action_exist
 from src.core.db import get_async_session
-from src.core.logger import log_endpoint
-from src.core.user import current_manager, current_user
+from src.core.logger import log_endpoint, log_event
+from src.core.user import current_admin, current_manager, current_user
 from src.crud.action import actions_crud
 from src.models import User
 from src.schemas.action import ActionsCreate, ActionsDB, ActionsUpdate
@@ -44,12 +44,21 @@ async def get_actions(
     ),
 ) -> list[ActionsDB]:
     """Получение списка акций."""
-    return await actions_crud.get_all_actions(
+    actions = await actions_crud.get_all_actions(
         session=session,
         current_user=current_user,
         cafe_id=cafe_id,
         show_all=show_all,
     )
+
+    log_event(
+        'info',
+        f'Получен список акций, show_all={show_all}',
+        username=current_user.username,
+        user_id=current_user.id,
+    )
+
+    return actions
 
 
 @router.post(
@@ -66,11 +75,21 @@ async def get_actions(
 async def create_action(
     action: ActionsCreate,
     session: AsyncSession = Depends(get_async_session),
+    admin: User = Depends(current_admin),
 ) -> ActionsDB:
     """Создание акций."""
-    return await actions_crud.create_action(
+    new_action = await actions_crud.create_action(
         obj_in=action, session=session,
     )
+
+    log_event(
+        'info',
+        f'Создана новая акция с ID {new_action.id}',
+        username=admin.username,
+        user_id=admin.id,
+    )
+
+    return new_action
 
 
 @router.get(
@@ -97,6 +116,14 @@ async def get_action_by_id(
 
     if action is None:
         raise HTTPException(**action_not_found)
+
+    log_event(
+        'info',
+        f'Получена акция. ID {action_id}.',
+        username=current_user.username,
+        user_id=current_user.id,
+    )
+
     return action
 
 
@@ -113,6 +140,7 @@ async def update_action_by_id(
     action_id: int,
     update_data: ActionsUpdate,
     session: AsyncSession = Depends(get_async_session),
+    admin: User = Depends(current_admin),
 ) -> ActionsDB:
     """Обновление акции по ID."""
     action = await check_action_exist(
@@ -120,8 +148,17 @@ async def update_action_by_id(
         session=session,
     )
 
-    return await actions_crud.update_action(
+    action = await actions_crud.update_action(
         db_obj=action,
         obj_in=update_data,
         session=session,
     )
+
+    log_event(
+        'info',
+        f'Обновлены данные по акции с ID {action_id}',
+        username=admin.username,
+        user_id=admin.id,
+    )
+
+    return action
