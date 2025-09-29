@@ -68,3 +68,8 @@ class UserShort(BaseModel):
         ...,
         description='Активен ли пользователь',
     )
+
+    class Config:
+        """Конфиг класса."""
+
+        from_attributes = True

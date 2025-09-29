@@ -83,3 +83,8 @@ class CafeShortDB(CafeBase):
 
     id: int = Field(..., title='ID записи')
     is_active: bool = Field(..., title='Объект активен?')
+
+    class Config:
+        """Конфиг класса."""
+
+        from_attributes = True
