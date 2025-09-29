@@ -18,17 +18,14 @@ async def check_duplicate_cafe(
     cafe: CafeCreate,
     session: AsyncSession,
 ) -> None:
-    """Проверить на существование дубликата кафе."""
+    """Проверяет на существование дубликата кафе."""
     db_obj = await cafe_crud.get_by_name_address(
         name=cafe.name,
         address=cafe.address,
         session=session,
     )
     if db_obj:
-        logger.warning(
-            f'Попытка создать дубликат кафе: {cafe.name}, {cafe.address}',
-            user=None,
-        )
+        logger.warning('Попытка создать дубликат кафе', info_dict=db_obj)
         raise HTTPException(**cafe_check_duplicate_responses)
 
 

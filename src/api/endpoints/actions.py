@@ -45,21 +45,15 @@ async def get_actions(
 ) -> list[ActionDB]:
     """Получение списка акций."""
     logger.info(
-        f'Запрошен список акций, show_all={show_all}',
+        f'{get_actions.__doc__} show_all: {show_all} | cafe_id: {cafe_id}',
         user=current_user,
     )
-    actions = await actions_crud.get_all_actions(
+    return await actions_crud.get_all_actions(
         session=session,
         current_user=current_user,
         cafe_id=cafe_id,
         show_all=show_all,
     )
-    logger.info(
-        f'Список акций получен по cafe_id={cafe_id}.',
-        user=current_user,
-    )
-
-    return actions
 
 
 @router.post(
@@ -77,10 +71,9 @@ async def create_action(
     session: AsyncSession = Depends(get_async_session),
     admin: User = Depends(current_admin),
 ) -> ActionDB:
-    """Создание акций."""
+    """Создание акции."""
     logger.info(
-        'Создание новой акции',
-        user=admin,
+        f'{create_action.__doc__} Данные:', user=admin, info_dict=action,
     )
 
     new_action = await actions_crud.create_action(
@@ -88,10 +81,7 @@ async def create_action(
         session=session,
     )
 
-    logger.info(
-        f'Акция создана с ID: {new_action.id}',
-        user=admin,
-    )
+    logger.info(f'Создана акция с ID: {new_action.id}', user=admin)
 
     return new_action
 
@@ -113,8 +103,7 @@ async def get_action_by_id(
 ) -> ActionDB:
     """Получение акции по ID."""
     logger.info(
-        f'Запрошена акция {action_id}',
-        user=current_user,
+        f'{get_action_by_id.__doc__} ID: {action_id}', user=current_user,
     )
     action = await actions_crud.get_action(
         session,
@@ -124,11 +113,6 @@ async def get_action_by_id(
 
     if action is None:
         raise HTTPException(**action_not_found)
-
-    logger.info(
-        f'Акция {action_id} получена',
-        user=current_user,
-    )
 
     return action
 
@@ -150,8 +134,9 @@ async def update_action_by_id(
 ) -> ActionDB:
     """Обновление акции по ID."""
     logger.info(
-        f'Попытка обновления акции {action_id}',
+        f'{update_action_by_id.__doc__} ID: {action_id}. Данные',
         user=admin,
+        info_dict=update_data,
     )
 
     action = await check_action_exist(
@@ -165,9 +150,6 @@ async def update_action_by_id(
         session=session,
     )
 
-    logger.info(
-        f'Акция {action_id} обновлена',
-        user=admin,
-    )
+    logger.info(f'Обновлена акция с ID: {action.id}', user=admin)
 
     return action

@@ -42,10 +42,8 @@ async def get_cafes(
     user: User = Depends(current_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> List[CafeDB]:
-    """Список с данными о кафе."""
-    log_message = 'Получение {}'.format(
-        'всех кафе' if user.is_admin() and show_all else 'активных кафе',
-    )
+    """Получение списка кафе."""
+    log_message = f'{get_cafes.__doc__} show_all: {show_all}'
     logger.info(log_message, user=user)
 
     if user.is_admin() and show_all:
@@ -78,14 +76,14 @@ async def create_cafe(
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_admin),
 ) -> CafeDB:
-    """Создание кафе (только для администратора)."""
+    """Создание кафе."""
     await check_duplicate_cafe(cafe=cafe, session=session)
-    logger.info(f'Создание кафе c данными: {cafe.model_dump()}', user=user)
+    logger.info(f'{create_cafe.__doc__} Данные', user=user, info_dict=cafe)
 
     return await handler_run_crud_cafe(
         cafe_crud.create_cafe,
         crud_args={'obj_in': cafe, 'session': session},
-        msg_log=f'Создание кафе c данными: {cafe.model_dump()}. Создано с id=',
+        msg_log='Создано кафе ID: ',
         user=user,
     )
 
@@ -105,20 +103,20 @@ async def get_cafe(
     user: User = Depends(current_user),
 ) -> CafeDB:
     """Получение кафе по ID."""
-    logger.info(f'Получение кафе по id={cafe_id}', user=user)
+    logger.info(f'{get_cafe.__doc__} ID: {cafe_id}', user=user)
 
     if user.is_admin():
         obj_db = await handler_run_crud_cafe(
             cafe_crud.get,
             crud_args={'obj_id': cafe_id, 'session': session},
-            msg_log='Получение кафе по id=',
+            msg_log='Получено кафе по ID: ',
             user=user,
         )
     else:
         obj_db = await handler_run_crud_cafe(
             cafe_crud.get_active,
             crud_args={'obj_id': cafe_id, 'session': session},
-            msg_log='Получение кафе по id=',
+            msg_log='Получено кафе по ID: ',
             user=user,
         )
     if not obj_db:
@@ -141,23 +139,27 @@ async def update_cafe(
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeDB:
     """Обновление кафе по ID."""
-    logger.info(f'Получение кафе для обновления по id={cafe_id}', user=user)
+    logger.info(
+        f'{update_cafe.__doc__} ID {cafe_id} Данные',
+        user=user,
+        info_dict=obj_in,
+    )
 
     cafe = await handler_run_crud_cafe(
         cafe_crud.get,
         crud_args={'obj_id': cafe_id, 'session': session},
-        msg_log='Получение кафе для обновления по id=',
+        msg_log='Получено кафе для обновления по ID: ',
         user=user,
     )
     if not cafe:
         raise HTTPException(**cafe_not_found)
 
-    logger.info(f'Обновление кафе данными: {obj_in.model_dump()}', user=user)
+    logger.info(f'Обновлено кафе с ID: {cafe.id}', user=user)
 
     return await handler_run_crud_cafe(
         cafe_crud.update,
         crud_args={'db_obj': cafe, 'obj_in': obj_in, 'session': session},
-        msg_log=f'Обновление кафе данными: {obj_in.model_dump()}. '
-        'Обновляемое кафе с id=',
+        msg_log=f'Обновление кафе данными: {obj_in}. '
+        'Обновляемое кафе с ID: ',
         user=user,
     )

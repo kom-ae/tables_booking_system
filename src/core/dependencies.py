@@ -45,7 +45,7 @@ async def current_user(
     """
     # Проверка наличия токена
     if not token:
-        logger.warning('Отсутствует токен при доступе', user=None)
+        logger.warning('Отсутствует токен при доступе')
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Токен отсутствует',
@@ -60,7 +60,7 @@ async def current_user(
         )
     except Exception as error:
         # Единообразная ошибка для избежания утечки информации
-        logger.warning(f'Ошибка аутентификации: {error}', user=None)
+        logger.warning(f'Ошибка аутентификации: {error}')
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Неверный или просроченный токен',
@@ -96,10 +96,7 @@ async def current_user(
 async def current_admin(user: User = Depends(current_user)) -> User:
     """Dependency: проверяет права администратора."""
     if not user.is_admin():
-        logger.warning(
-            'Недостаточно прав для администратора',
-            user=user,
-        )
+        logger.warning('Недостаточно прав для администратора', user=user)
         raise PermissionDeniedException()
 
     logger.info(
@@ -112,16 +109,10 @@ async def current_admin(user: User = Depends(current_user)) -> User:
 async def current_manager(user: User = Depends(current_user)) -> User:
     """Dependency: проверяет права менеджера или администратора."""
     if not user.is_manager():
-        logger.warning(
-            'Недостаточно прав для менеджера',
-            user=user,
-        )
+        logger.warning(f'{current_manager.__doc__} Отказано', user=user)
         raise PermissionDeniedException()
 
-    logger.info(
-        'Пользователь прошел проверку manager/admin',
-        user=user,
-    )
+    logger.info(f'{current_manager.__doc__} Успешно', user=user)
     return user
 
 
@@ -159,7 +150,7 @@ async def get_current_user_or_none(
         user = await get_current_user_logic(token_str, user_crud, db)
         logger.debug(
             'Получен пользователь по опциональному токену.'
-            f'd пользователя:{user.id}',
+            f'ID: {user.id}',
         )
         return user
 
