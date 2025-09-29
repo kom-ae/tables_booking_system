@@ -1,7 +1,6 @@
 from src.schemas.base import Error
 from src.schemas.cafes import CafeDB
 
-# Описания кодов ответа для эндпоинта кафе.
 CAFE_RESPONSES = {
     200: {
         'description': 'Данные кафе',

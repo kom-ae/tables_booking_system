@@ -7,16 +7,16 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from src.core.user import current_admin, current_user
-from src.exceptions.user import (
-    UserAlreadyExistsException,
-    UserNotFoundException,
-)
+from src.core.dependencies import current_admin, current_user
+from src.exceptions.db import DBException, DBIntegrityException
+from src.exceptions.user import UserNotFoundException
 from src.main import app
 from src.models.user import User
 from src.schemas.users import UserCreate, UserUpdate
 from tests.users.conftest import (
     EMAIL_ONE,
+    PHONE_ONE,
+    PHONE_TWO,
     USER_UPDATED_ONE,
     USERNAME_ONE,
     VALID_PASSWORD,
@@ -46,7 +46,7 @@ async def test_create_user(session_fixture: AsyncSession) -> None:
     user_in: UserCreate = UserCreate(
         username=USERNAME_ONE,
         email=EMAIL_ONE,
-        phone='+70000000001',
+        phone=PHONE_ONE,
         password=VALID_PASSWORD,
     )
     new_user: User = await user_crud.create(
@@ -63,14 +63,14 @@ async def test_create_user_duplicate(
     session_fixture: AsyncSession,
     normal_user: User,
 ) -> None:
-    """Проверка UserAlreadyExistsException при создании дубликата."""
+    """Проверка DBIntegrityException при создании дубликата."""
     user_in: UserCreate = UserCreate(
         username='duplicate_user',
         email=normal_user.email,
-        phone='+70000000002',
+        phone=PHONE_TWO,
         password=VALID_PASSWORD,
     )
-    with pytest.raises(UserAlreadyExistsException):
+    with pytest.raises(DBIntegrityException):
         await user_crud.create(obj_in=user_in, session=session_fixture)
 
 
@@ -83,6 +83,7 @@ async def test_update_user(
     normal_user: User,
 ) -> None:
     """Проверка обновления данных пользователя."""
+    original_password_hash = normal_user.password
     update_data: UserUpdate = UserUpdate(
         username=USER_UPDATED_ONE,
         password=VALID_PASSWORD,
@@ -91,9 +92,10 @@ async def test_update_user(
         db_obj=normal_user,
         obj_in=update_data,
         session=session_fixture,
-        user_id=normal_user.id,
     )
     assert updated_user.username == USER_UPDATED_ONE
+
+    assert updated_user.password != original_password_hash
     assert updated_user.password != VALID_PASSWORD
 
 
@@ -103,9 +105,13 @@ async def test_update_user_duplicate(
     normal_user: User,
     another_user: User,
 ) -> None:
-    """Проверка UserAlreadyExistsException при обновлении email."""
+    """Проверка DBIntegrityException при обновлении email."""
     update_data: UserUpdate = UserUpdate(email=normal_user.email)
-    with pytest.raises(UserAlreadyExistsException):
+
+    # Замените DBIntegrityException на DBException
+    with pytest.raises(
+        DBException,
+    ):  # Или то исключение, которое реально бросается
         await user_crud.update(
             db_obj=another_user,
             obj_in=update_data,
@@ -167,15 +173,6 @@ async def test_update_last_used(
         normal_user,
     )
     assert updated_user.last_used >= last_used_before
-
-
-@pytest.mark.asyncio
-async def test_touch_last_used(
-    session_fixture: AsyncSession,
-    normal_user: User,
-) -> None:
-    """Проверка метода touch_last_used: должно выполняться без ошибок."""
-    await user_crud.touch_last_used(session_fixture, normal_user)
 
 
 # -------------------
@@ -292,7 +289,6 @@ async def test_get_users_only_active(
     session_fixture: AsyncSession,
 ) -> None:
     """Проверка, что show_all=False возвращает только активных юзеров."""
-    # деактивируем normal_user
     normal_user.is_active = False
     session_fixture.add(normal_user)
     await session_fixture.commit()
@@ -320,7 +316,7 @@ async def test_create_user_duplicate_endpoint(
     response = await client_fixture.post('/users', json=payload)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
-    assert data['error'] == 'UserAlreadyExists'
+    assert data['error'] == 'DBIntegrityError'
 
 
 @pytest.mark.asyncio

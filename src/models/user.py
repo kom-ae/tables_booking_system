@@ -48,7 +48,7 @@ class User(BaseModel):
     email: Mapped[str] = mapped_column(
         String(EMAIL_MAX_LENGTH),
         unique=True,
-        nullable=False,
+        nullable=True,
     )
     password: Mapped[str] = mapped_column(
         String(PASSWORD_MAX_LENGTH),
