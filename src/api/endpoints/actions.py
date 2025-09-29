@@ -16,14 +16,14 @@ from src.core.dependencies import current_admin, current_manager, current_user
 from src.core.logger import log_endpoint, project_log
 from src.crud.action import actions_crud
 from src.models import User
-from src.schemas.action import ActionsCreate, ActionsDB, ActionsUpdate
+from src.schemas.action import ActionCreate, ActionDB, ActionUpdate
 
 router = APIRouter()
 
 
 @router.get(
     '',
-    response_model=list[ActionsDB],
+    response_model=list[ActionDB],
     response_model_exclude_none=True,
     response_description='Список акций',
     responses=actions_list_responses,
@@ -42,7 +42,7 @@ async def get_actions(
         False,
         description='Показать все акции (только для админа/менеджера)',
     ),
-) -> list[ActionsDB]:
+) -> list[ActionDB]:
     """Получение списка акций."""
     project_log(
         'info',
@@ -66,7 +66,7 @@ async def get_actions(
 
 @router.post(
     '',
-    response_model=ActionsDB,
+    response_model=ActionDB,
     response_model_exclude_none=True,
     response_description='Данные созданной акции',
     responses=action_create_responses,
@@ -76,10 +76,10 @@ async def get_actions(
 )
 @log_endpoint('info')
 async def create_action(
-    action: ActionsCreate,
+    action: ActionCreate,
     session: AsyncSession = Depends(get_async_session),
     admin: User = Depends(current_admin),
-) -> ActionsDB:
+) -> ActionDB:
     """Создание акций."""
     new_action = await actions_crud.create_action(
         obj_in=action, session=session,
@@ -96,7 +96,7 @@ async def create_action(
 
 @router.get(
     '/{action_id}',
-    response_model=ActionsDB,
+    response_model=ActionDB,
     response_model_exclude_none=True,
     responses=action_get_responses,
     summary='Получение акции по ID'
@@ -108,7 +108,7 @@ async def get_action_by_id(
     action_id: int,
     session: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(current_user),
-) -> ActionsDB:
+) -> ActionDB:
     """Получение акции по ID."""
     project_log(
         'info',
@@ -135,7 +135,7 @@ async def get_action_by_id(
 
 @router.patch(
     '/{action_id}',
-    response_model=ActionsDB,
+    response_model=ActionDB,
     response_model_exclude_none=True,
     responses=action_update_responses,
     summary='Обновление акции по ID (только для администратора и менеджера)',
@@ -144,10 +144,10 @@ async def get_action_by_id(
 @log_endpoint('info')
 async def update_action_by_id(
     action_id: int,
-    update_data: ActionsUpdate,
+    update_data: ActionUpdate,
     session: AsyncSession = Depends(get_async_session),
     admin: User = Depends(current_admin),
-) -> ActionsDB:
+) -> ActionDB:
     """Обновление акции по ID."""
     project_log(
         'info',

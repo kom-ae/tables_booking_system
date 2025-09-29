@@ -8,7 +8,7 @@ from src.api.responses.cafes import cafe_check_duplicate_responses
 from src.core.logger import project_log
 from src.crud.action import actions_crud
 from src.crud.factory import get_cafe_crud
-from src.models import Actions, User
+from src.models import Action, User
 from src.schemas.cafes import CafeCreate, CafeDB
 
 cafe_crud = get_cafe_crud()
@@ -36,7 +36,7 @@ async def check_duplicate_cafe(
 async def check_action_exist(
         action_id: int,
         session: AsyncSession,
-) -> Actions:
+) -> Action:
     """Проверяет на наличие доступа и акции."""
     action = await actions_crud.get(
         obj_id=action_id, session=session,
