@@ -5,7 +5,7 @@ from src.models.base import BaseModel
 from src.models.cafe import Cafe
 
 
-class Action(BaseModel):
+class Actions(BaseModel):
     """Модель акций."""
 
     description: Mapped[str] = mapped_column(Text, nullable=False)
