@@ -22,7 +22,7 @@ SYSTEM_USERNAME = 'SYSTEM'
 # -------------------
 # Пользователи
 # -------------------
-USERNAME_MAX_LENGTH = 15
+USERNAME_MAX_LENGTH = 50
 USERNAME_MIN_LENGTH = 3
 EMAIL_MIN_LENGTH = 5
 EMAIL_MAX_LENGTH = 255

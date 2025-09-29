@@ -12,7 +12,7 @@ from src.api.responses.user import (
     user_update_responses,
     users_list_responses,
 )
-from src.core.db import get_async_session
+from src.core.db import get_async_session  # noqa
 from src.core.dependencies import (
     current_admin,
     current_user,

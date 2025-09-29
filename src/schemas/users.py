@@ -90,3 +90,8 @@ class UserShort(BaseModel):
     email: Optional[EmailStr] = Field(None, description='Email пользователя')
     phone: str = Field(..., description='Телефон')
     is_active: bool = Field(..., description='Активен ли пользователь')
+
+    class Config:
+        """Конфиг класса."""
+
+        from_attributes = True
