@@ -3,8 +3,22 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from src.schemas.base import UserBase
+from src.constants import MAX_LENGTH_USERNAME, MIN_LENGTH_USERNAME
 from src.schemas.validators import password_validator, phone_validator
+
+
+class UserBase(BaseModel):
+    """Базовая схема пользователя."""
+
+    username: str = Field(
+        ...,
+        description='Имя пользователя.',
+        min_length=MIN_LENGTH_USERNAME,
+        max_length=MAX_LENGTH_USERNAME,
+    )
+    email: Optional[EmailStr] = Field(None, description='Email пользователя.')
+    phone: Optional[str] = Field(None, description='Телефон.')
+    tg_id: Optional[str] = Field(None, description='Telegram ID.')
 
 
 class UserCreate(UserBase):
@@ -56,6 +70,6 @@ class UserShort(BaseModel):
     )
 
     class Config:
-        """Конфигурация Pydantic."""
+        """Конфиг класса."""
 
         from_attributes = True

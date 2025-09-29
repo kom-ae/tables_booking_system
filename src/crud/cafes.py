@@ -1,74 +1,98 @@
 from typing import Optional
 
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.logger import project_log
 from src.crud.base import CRUDBase
-from src.models import Cafes, User
-from src.schemas.cafes import CafeCreate, CafeUpdate
+from src.models import Cafe, User
+from src.schemas.cafes import CafeCreate, CafeDB, CafeUpdate
 
 
-class CRUDCafe(CRUDBase[Cafes, CafeCreate, CafeUpdate]):
-    """CRUD для кафе."""
+class CRUDCafe(CRUDBase[Cafe, CafeCreate, CafeUpdate]):
+    """CRUD для модели Cafe с логированием."""
 
     async def create_cafe(
         self,
         obj_in: CafeCreate,
         session: AsyncSession,
         user: Optional[User] = None,
-    ) -> Cafes:
-        """Создание кафе."""
-        in_managers = obj_in.model_dump(include='managers').get('managers')
-        obj_in_data = obj_in.model_dump(exclude='managers')
-
-        db_obj_managers = (await session.scalars(
+    ) -> CafeDB:
+        """Создание кафе с менеджерами."""
+        in_managers: list[int] = obj_in.model_dump(include={'managers'}).get(
+            'managers',
+            [],
+        )
+        obj_in_data = obj_in.model_dump(exclude={'managers'})
+        db_obj_managers = await session.scalars(
             select(User).where(User.id.in_(in_managers)),
-        )).all()
-
-        db_obj = Cafes(**obj_in_data)
+        )
+        db_obj_managers = db_obj_managers.all()
+        db_obj = Cafe(**obj_in_data)
         db_obj.managers = db_obj_managers
+
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
-        return db_obj
+
+        project_log(
+            'info',
+            f'Создано кафе {db_obj.name} с id={db_obj.id}',
+            user=user,
+        )
+        return CafeDB.model_validate(db_obj, from_attributes=True)
 
     async def update(
-            self,
-            db_obj: Cafes,
-            obj_in: CafeUpdate,
-            session: AsyncSession,
-    ) -> Cafes:
-        """Обновление кафе."""
-        obj_data = jsonable_encoder(db_obj, exclude={'managers'})
-        update_data = obj_in.model_dump(exclude_unset=True, exclude='managers')
-        in_managers = obj_in.model_dump(include='managers').get('managers')
+        self,
+        db_obj: Cafe,
+        obj_in: CafeUpdate,
+        session: AsyncSession,
+        user: Optional[User] = None,
+    ) -> Cafe:
+        """Обновление данных кафе и менеджеров через PATCH."""
+        update_data = obj_in.model_dump(
+            exclude_unset=True,
+            exclude={'managers'},
+        )
+        in_managers: list[int] = obj_in.model_dump(include={'managers'}).get(
+            'managers',
+            [],
+        )
 
-        for field in obj_data:
-            if field in update_data:
-                setattr(db_obj, field, update_data[field])
+        for field, value in update_data.items():
+            if value is not None:
+                setattr(db_obj, field, value)
 
-        db_obj_managers = (await session.scalars(
-            select(User).where(User.id.in_(in_managers)),
-        )).all()
-
-        db_obj.managers = db_obj_managers
+        if in_managers:
+            db_obj_managers = await session.scalars(
+                select(User).where(User.id.in_(in_managers)),
+            )
+            db_obj.managers = db_obj_managers.all()
 
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
+
+        project_log(
+            'info',
+            f'Обновлено кафе {db_obj.name} с id={db_obj.id}',
+            user=user,
+        )
         return db_obj
 
     async def get_by_name_address(
-            self,
-            name: str,
-            address: str,
-            session: AsyncSession,
-    ) -> Optional[Cafes]:
-        """Поиск кафе по имени и адресу."""
-        return (await session.scalars(select(Cafes).where(
-                and_(
-                    Cafes.name == name,
-                    Cafes.address == address,
-                )))
-                ).first()
+        self,
+        name: str,
+        address: str,
+        session: AsyncSession,
+    ) -> Optional[Cafe]:
+        """Получение кафе по имени и адресу."""
+        result = await session.scalars(
+            select(Cafe).where(
+                and_(Cafe.name == name, Cafe.address == address),
+            ),
+        )
+        cafe = result.first()
+        if cafe:
+            project_log('info', f'Найдено кафе {name} по адресу {address}')
+        return cafe

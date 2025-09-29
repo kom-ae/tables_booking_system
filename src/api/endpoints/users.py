@@ -1,21 +1,25 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Path, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.user import (
     current_user_get_responses,
+    current_user_id_get_responses,
     current_user_update_responses,
     user_create_responses,
     user_update_responses,
     users_list_responses,
 )
 from src.core.db import get_async_session
-from src.core.logger import log_endpoint, log_event
-from src.core.user import current_admin, current_user
-from src.crud.factory import get_user_crud
+from src.core.dependencies import (
+    current_admin,
+    current_user,
+    get_current_user_or_none,
+)
+from src.core.logger import log_endpoint, project_log
+from src.crud.factory import CRUDUser, get_user_crud
 from src.models.user import User
 from src.schemas.users import UserCreate, UserRead, UserUpdate
-
-user_crud = get_user_crud()
 
 router = APIRouter()
 
@@ -26,8 +30,8 @@ router = APIRouter()
 @router.get(
     '/me',
     response_model=UserRead,
-    summary='Получение данных текущего пользователя'
-    ' (доступно только текущему пользователю)',
+    summary='Получение данных текущего пользователя '
+    '(доступно только текущему пользователю)',
     responses=current_user_get_responses,
 )
 @log_endpoint('info')
@@ -35,42 +39,37 @@ async def get_current_user_endpoint(
     user: User = Depends(current_user),
 ) -> UserRead:
     """Возвращает текущего пользователя."""
-    log_event(
-        'info',
-        'Получены данные текущего пользователя',
-        username=user.username,
-        user_id=user.id,
-    )
+    project_log('info', 'Текущий пользователь получен', user=user)
     return user
 
 
 @router.patch(
     '/me',
     response_model=UserRead,
-    summary='Обновление данных текущего пользователя'
-    ' (доступно только текущему пользователю)',
+    summary='Обновление данных текущего пользователя '
+    '(доступно только текущему пользователю)',
     responses=current_user_update_responses,
 )
 @log_endpoint('info')
 async def update_current_user(
     user_update: UserUpdate,
     user: User = Depends(current_user),
-    session: AsyncSession = Depends(get_async_session),
+    user_crud: CRUDUser = Depends(get_user_crud),
+    session: get_async_session = Depends(),
 ) -> UserRead:
-    """Обновляет данные текущего пользователя."""
+    """Обновляет текущего пользователя."""
+    project_log(
+        'info',
+        f'Попытка обновления пользователя {user.id}',
+        user=user,
+    )
     updated_user = await user_crud.update(
         db_obj=user,
         obj_in=user_update,
         session=session,
-        user_id=user.id,
+        user=user,
     )
-
-    log_event(
-        'info',
-        f'Обновлены данные пользователя {user.id}',
-        username=user.username,
-        user_id=user.id,
-    )
+    project_log('info', f'Пользователь {user.id} обновлён', user=user)
     return updated_user
 
 
@@ -85,24 +84,26 @@ async def update_current_user(
 )
 @log_endpoint('info')
 async def get_users(
-    show_all: bool = Query(
-        False,
-        description='Показать всех пользователей; False — только активные',
-    ),
-    session: AsyncSession = Depends(get_async_session),
+    show_all: bool = Query(None, description='Показать всех пользователей'),
     admin: User = Depends(current_admin),
+    user_crud: CRUDUser = Depends(get_user_crud),
+    session: get_async_session = Depends(),
 ) -> list[UserRead]:
-    """Возвращает список пользователей с фильтром по активности."""
+    """Возвращает список пользователей."""
+    project_log(
+        'info',
+        f'Запрос списка пользователей, show_all={show_all}',
+        user=admin,
+    )
     users = await user_crud.get_users(
         session=session,
         show_all=show_all,
-        current_user=admin,
+        user=admin,
     )
-    log_event(
+    project_log(
         'info',
-        f'Получен список пользователей, show_all={show_all}',
-        username=admin.username,
-        user_id=admin.id,
+        f'Список пользователей получен, count={len(users)}',
+        user=admin,
     )
     return users
 
@@ -117,21 +118,29 @@ async def get_users(
     responses=user_create_responses,
     status_code=status.HTTP_201_CREATED,
 )
-@log_endpoint('info')
 async def create_user(
     user_create: UserCreate,
-    session: AsyncSession = Depends(get_async_session),
+    session: get_async_session = Depends(),
+    user_crud: CRUDUser = Depends(get_user_crud),
+    token_user: Optional[User] = Depends(get_current_user_or_none),
 ) -> UserRead:
-    """Создает нового пользователя (хэширование пароля выполняется в CRUD)."""
-    new_user = await user_crud.create(obj_in=user_create, session=session)
-
-    log_event(
-        'info',
-        f'Создан новый пользователь {new_user.id}',
-        username=new_user.username,
-        user_id=new_user.id,
+    """Создаёт нового пользователя."""
+    initiator_info = (
+        f'id={token_user.id}, username={token_user.username}'
+        if token_user
+        else 'Аноним'
     )
-    return new_user
+    project_log(
+        'info',
+        'Попытка создать пользователя '
+        f'{getattr(user_create, "email", None)} от {initiator_info}',
+        user=token_user,
+    )
+    return await user_crud.create(
+        obj_in=user_create,
+        session=session,
+        user=token_user,
+    )
 
 
 # -------------------
@@ -141,22 +150,19 @@ async def create_user(
     '/{user_id}',
     response_model=UserRead,
     summary='Получение пользователя по ID (только для администратора)',
-    responses=current_user_get_responses,
+    responses=current_user_id_get_responses,
 )
 @log_endpoint('info')
 async def get_user_by_id(
-    user_id: int = Path(..., title='ID пользователя'),
-    session: AsyncSession = Depends(get_async_session),
+    user_id: int = Path(..., description='ID пользователя'),
     admin: User = Depends(current_admin),
+    user_crud: CRUDUser = Depends(get_user_crud),
+    session: get_async_session = Depends(),
 ) -> UserRead:
-    """Возвращает пользователя по ID или 404."""
+    """Возвращает пользователя по ID."""
+    project_log('info', f'Запрошен пользователь {user_id}', user=admin)
     user = await user_crud.get_user_id_or_404(user_id, session)
-    log_event(
-        'info',
-        f'Получен пользователь {user.id}',
-        username=admin.username,
-        user_id=admin.id,
-    )
+    project_log('info', f'Пользователь {user.id} получен', user=admin)
     return user
 
 
@@ -173,23 +179,22 @@ async def get_user_by_id(
 async def update_user_by_id(
     user_update: UserUpdate,
     user_id: int = Path(..., description='ID пользователя'),
-    session: AsyncSession = Depends(get_async_session),
     admin: User = Depends(current_admin),
+    user_crud: CRUDUser = Depends(get_user_crud),
+    session: get_async_session = Depends(),
 ) -> UserRead:
-    """Обновляет данные пользователя по ID."""
+    """Обновляет пользователя по ID."""
+    project_log(
+        'info',
+        f'Попытка обновления пользователя {user_id}',
+        user=admin,
+    )
     user = await user_crud.get_user_id_or_404(user_id, session)
-
     updated_user = await user_crud.update(
         db_obj=user,
         obj_in=user_update,
         session=session,
-        user_id=admin.id,
+        user=admin,
     )
-
-    log_event(
-        'info',
-        f'Обновлены данные пользователя {user.id}',
-        username=admin.username,
-        user_id=admin.id,
-    )
+    project_log('info', f'Пользователь {user.id} обновлён', user=admin)
     return updated_user

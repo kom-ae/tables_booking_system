@@ -40,6 +40,21 @@ user_update_responses = {
     },
 }
 
+current_user_id_get_responses = {
+    status.HTTP_200_OK: {
+        'description': 'Данные пользователя',
+        'model': UserRead,
+    },
+    status.HTTP_401_UNAUTHORIZED: {
+        'description': 'Необходима авторизация',
+        'model': Error,
+    },
+    status.HTTP_404_NOT_FOUND: {
+        'description': 'Пользователь не найден',
+        'model': Error,
+    },
+}
+
 current_user_get_responses = {
     status.HTTP_200_OK: {
         'description': 'Данные пользователя',
