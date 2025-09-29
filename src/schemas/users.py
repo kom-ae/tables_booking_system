@@ -30,9 +30,6 @@ class UserCreate(UserBase):
     _validate_password = field_validator('password', mode='before')(
         password_validator,
     )
-    _validate_password = field_validator('password', mode='before')(
-        password_validator,
-    )
     _validate_phone = field_validator('phone', mode='before')(phone_validator)
     _validate_username = field_validator('username', mode='before')(
         username_validator,
