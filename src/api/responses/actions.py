@@ -1,12 +1,12 @@
 from fastapi import status
 
 from src.api.responses.constants import ACTIONS_RESPONSES
-from src.schemas.action import ActionsDB
+from src.schemas.action import ActionDB
 
 actions_list_responses = {
     status.HTTP_200_OK: {
         'description': 'Список акций',
-        'model': list[ActionsDB],
+        'model': list[ActionDB],
     },
     status.HTTP_401_UNAUTHORIZED: ACTIONS_RESPONSES[
         status.HTTP_401_UNAUTHORIZED

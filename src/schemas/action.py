@@ -1,12 +1,12 @@
 from datetime import datetime
 from typing import Any, Optional, Type
 
-from pydantic import BaseModel, Field, FieldValidationInfo, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from src.schemas.cafes import CafeShortDB
 
 
-class ActionsCreate(BaseModel):
+class ActionCreate(BaseModel):
     """Сехма для создания акций."""
 
     cafe: int = Field(..., description='ID Кафе')
@@ -17,7 +17,7 @@ class ActionsCreate(BaseModel):
     def set_cafe_id(
         cls: Type[Any],
         value: Any,
-        info: FieldValidationInfo,
+        info: ValidationInfo,
     ) -> Any:
         """Присваивает cafe_id из значения cafe."""
         if info.data:
@@ -25,7 +25,7 @@ class ActionsCreate(BaseModel):
         return value
 
 
-class ActionsUpdate(ActionsCreate):
+class ActionUpdate(ActionCreate):
     """Схема для изменения акций."""
 
     cafe: Optional[int] = Field(description='ID Кафе')
@@ -33,7 +33,7 @@ class ActionsUpdate(ActionsCreate):
     is_active: Optional[bool] = Field(None, description='Объект активен?')
 
 
-class ActionsDB(BaseModel):
+class ActionDB(BaseModel):
     """Возвращаемая схема акций."""
 
     id: int = Field(..., description='ID записи')

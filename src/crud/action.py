@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from src.crud.base import CRUDBase
 from src.models import Action, User
-from src.schemas.action import ActionsCreate, ActionsDB, ActionsUpdate
+from src.schemas.action import ActionCreate, ActionDB, ActionUpdate
 
 
 class ActionsCRUD(CRUDBase):
@@ -61,10 +61,10 @@ class ActionsCRUD(CRUDBase):
 
     async def create_action(
         self,
-        obj_in: ActionsCreate,
+        obj_in: ActionCreate,
         session: AsyncSession,
         user_id: Optional[int] = None,
-    ) -> ActionsDB:
+    ) -> ActionDB:
         """Создает акцию."""
         obj_in_data = obj_in.model_dump()
 
@@ -92,14 +92,14 @@ class ActionsCRUD(CRUDBase):
             .where(self.model.id == db_obj.id),
         )
         db_obj_fully_loaded = result.scalar_one()
-        return ActionsDB.model_validate(db_obj_fully_loaded)
+        return ActionDB.model_validate(db_obj_fully_loaded)
 
     async def update_action(
             self,
             db_obj: Action,
-            obj_in: ActionsUpdate,
+            obj_in: ActionUpdate,
             session: AsyncSession,
-    ) -> ActionsDB:
+    ) -> ActionDB:
         """Обновляет акцию."""
         update_data = obj_in.model_dump(exclude_unset=True)
 
@@ -122,7 +122,7 @@ class ActionsCRUD(CRUDBase):
             .where(self.model.id == db_obj.id),
         )
         db_obj_fully_loaded = result.scalar_one()
-        return ActionsDB.model_validate(db_obj_fully_loaded)
+        return ActionDB.model_validate(db_obj_fully_loaded)
 
 
 actions_crud = ActionsCRUD(Action)

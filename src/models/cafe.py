@@ -42,7 +42,7 @@ class Cafe(BaseModel):
         cascade='all, delete-orphan',
     )
     actions: Mapped[list['Action']] = relationship(
-        'Actions',
+        'Action',
         back_populates='cafe',
         lazy='selectin',
         cascade='all, delete-orphan',

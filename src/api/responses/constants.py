@@ -1,4 +1,4 @@
-from src.schemas.action import ActionsDB
+from src.schemas.action import ActionDB
 from src.schemas.base import Error
 from src.schemas.cafes import CafeDB
 
@@ -30,11 +30,11 @@ CAFE_RESPONSES = {
 ACTIONS_RESPONSES = {
     200: {
         'description': 'Данные акции',
-        'model': ActionsDB,
+        'model': ActionDB,
     },
     201: {
         'description': 'Данные созданной акции',
-        'model': ActionsDB,
+        'model': ActionDB,
     },
     400: {
         'description': 'Неверный формат запроса',
