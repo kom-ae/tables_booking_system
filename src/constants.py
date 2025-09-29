@@ -29,7 +29,7 @@ EMAIL_MAX_LENGTH = 255
 PASSWORD_MAX_LENGTH = 128
 PHONE_MAX_LENGTH = 15
 TG_ID_MIN_LENGTH = 5
-TG_ID_MAX_LENGTH = 32
+TG_ID_MAX_LENGTH = 15
 ROLE_MAX_LENGTH = 10
 
 # Регулярка для проверки международного формата телефона
@@ -47,7 +47,7 @@ USERNAME_REGEX = re.compile(r'^[a-zA-Z0-9_]+$')
 EMAIL_REGEX = re.compile(r'^[\w.%+-]+@[\w.-]+\.[A-Za-z]{2,}$')
 
 # Регулярка длоя проверки tg_id
-TG_ID_REGEX = re.compile(r'^@[a-zA-Z0-9_]{5,32}$')
+TG_ID_REGEX = re.compile(r'^\d{5,15}$')
 
 
 # -------------------

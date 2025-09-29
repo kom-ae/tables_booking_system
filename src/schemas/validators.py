@@ -95,12 +95,21 @@ def email_validator(email: Any, user: Optional[Any] = None) -> str:
 def telegram_id_validator(
     tg_id: Optional[Any],
     user: Optional[Any] = None,
-) -> Optional[str]:
-    """Валидация Telegram ID."""
+) -> Optional[int]:
+    """Валидация Telegram ID (числовой)."""
     if tg_id is None:
         return None
 
-    tg_id_str = is_not_null(tg_id, 'telegram_id')
+    try:
+        tg_id_int = int(tg_id)
+    except (TypeError, ValueError):
+        logger.warning(
+            f'Некорректный тип Telegram ID: {tg_id}',
+            user=user,
+        )
+        raise InvalidTelegramIDException('Telegram ID должен быть числом.')
+
+    tg_id_str = str(tg_id_int)
 
     if not (TG_ID_MIN_LENGTH <= len(tg_id_str) <= TG_ID_MAX_LENGTH):
         logger.warning(
@@ -108,8 +117,8 @@ def telegram_id_validator(
             user=user,
         )
         raise InvalidTelegramIDException(
-            f'Telegram ID должен быть от {TG_ID_MIN_LENGTH} '
-            f'до {TG_ID_MAX_LENGTH} символов.',
+            f'Telegram ID должен содержать от {TG_ID_MIN_LENGTH} '
+            f'до {TG_ID_MAX_LENGTH} цифр.',
         )
 
     if TG_ID_REGEX and not TG_ID_REGEX.match(tg_id_str):
@@ -118,11 +127,11 @@ def telegram_id_validator(
             user=user,
         )
         raise InvalidTelegramIDException(
-            'Telegram ID может содержать только цифры и символ @',
+            'Telegram ID может содержать только цифры.',
         )
 
     logger.info(f'Telegram ID успешно прошёл проверку: {tg_id_str}', user=user)
-    return tg_id_str
+    return tg_id_int
 
 
 def cafe_update_field_is_not_null(value: Any) -> Any:

@@ -18,7 +18,7 @@ class UserBase(BaseModel):
     username: str = Field(..., description='Имя пользователя.')
     email: Optional[EmailStr] = Field(None, description='Email пользователя.')
     phone: Optional[str] = Field(None, description='Телефон.')
-    tg_id: Optional[str] = Field(None, description='Telegram ID.')
+    tg_id: Optional[int] = Field(None, description='Telegram ID.')
 
 
 class UserCreate(UserBase):
