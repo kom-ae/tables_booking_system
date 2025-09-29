@@ -1,7 +1,6 @@
 from typing import Any, Callable, List, Optional, Union
 
 from fastapi import HTTPException, status
-from fastapi.exceptions import RequestValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.cafes import cafe_check_duplicate_responses
@@ -19,13 +18,22 @@ async def check_duplicate_cafe(
     session: AsyncSession,
 ) -> None:
     """Проверить на существование дубликата кафе."""
+    db_obj = await handler_run_crud_cafe(
+        cafe_crud.get_by_name_address,
+        crud_args={
+            'name': cafe.name,
+            'address': cafe.address,
+            'session': session,
+        },
+        msg_log='Поиск дубликата кафе.',
+    )
     db_obj = await cafe_crud.get_by_name_address(
         name=cafe.name,
         address=cafe.address,
         session=session,
     )
     if db_obj:
-        logger.warning(
+        logger.error(
             f'Попытка создать дубликат кафе: {cafe.name}, {cafe.address}',
             user=None,
         )
@@ -53,36 +61,35 @@ async def handler_run_crud_cafe(
     func: Callable[..., Any],
     **kwargs: Any,
 ) -> Union[CafeDB, List[CafeDB]]:
-    """Запуск корутины CRUD и логирование результата через logger."""
+    """Запуск корутины CRUD и логирование результата через logger.
+
+    Аргументы:
+        func: функция CRUD
+        crud_args: словарь аргументов для функции
+        msg_log: сообщение для логирования
+        user: пользователь, инициирующий операцию
+    """
     crud_args: dict = kwargs.get('crud_args', {})
     msg_log: str = kwargs.get('msg_log', '')
     user: Optional[User] = kwargs.get('user', None)
 
-    try:
-        obj = await func(**crud_args)
+    logger.info(msg=f'Попытка: "{msg_log}"', user=user)
 
-        if obj is not None:
+    try:
+        if obj := await func(**crud_args):
             msg_log_full = msg_log
-            if hasattr(obj, 'id'):
-                msg_log_full += str(obj.id)
-            msg_log_full += '. Успешно.'
+            if not isinstance(obj, list):
+                msg_log_full += f' ID={str(obj.id)}.'
+            msg_log_full += ' Успешно.'
+
             logger.info(msg_log_full, user=user)
 
         return obj
 
-    except RequestValidationError as err:
-        logger.error(
-            f'Ошибка валидации при выполнении {func.__name__}: {err.body}',
-            user=user,
-        )
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail='Ошибка валидации данных.',
-        )
-
     except Exception as err:
         logger.error(
-            f'Ошибка при выполнении {func.__name__} '
+            f'Операция "{msg_log}": '
+            f'Ошибка выполнения функции {func.__name__} '
             f'в модуле {func.__module__}: {str(err)}',
             user=user,
         )
