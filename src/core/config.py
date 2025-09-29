@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 
-from pydantic import EmailStr, Field, field_validator
+from pydantic import ConfigDict, EmailStr, Field, field_validator
 from pydantic_settings import BaseSettings
 
 from src.core.logger import temp_logger
@@ -42,6 +42,18 @@ try:
         db_password: str = Field(..., env='DB_PASSWORD')
 
         # -------------------
+        # Настройки повторных попыток БД
+        # -------------------
+        db_retry_max_attempts: int = Field(
+            default=3,
+            env='DB_RETRY_MAX_ATTEMPTS',
+        )
+        db_retry_delay_seconds: float = Field(
+            default=0.1,
+            env='DB_RETRY_DELAY_SECONDS',
+        )
+
+        # -------------------
         # JWT / безопасность
         # -------------------
         secret: str = Field(..., env='SECRET')
@@ -54,25 +66,17 @@ try:
         # -------------------
         # Первый суперпользователь
         # -------------------
-        first_superuser_name: Optional[EmailStr] = None
+        first_superuser_name: Optional[str] = None
         first_superuser_email: Optional[EmailStr] = None
         first_superuser_password: Optional[str] = None
         first_superuser_role: Optional[str] = None
         first_superuser_phone_number: Optional[str] = None
 
         # -------------------
-        # Логирование
-        # -------------------
-        log_file: str = Field(..., env='LOG_FILE')
-        max_bytes: int = Field(..., env='MAX_BYTES')
-        backup_count: int = Field(..., env='BACKUP_COUNT')
-
-        # -------------------
         # Методы
         # -------------------
         def get_database_uri(self) -> str:
             """Возвращает URI для подключения к базе данных."""
-            # Проверка, если database_uri есть как поле
             if hasattr(self, 'database_uri') and getattr(
                 self,
                 'database_uri',
@@ -119,12 +123,11 @@ try:
                 )
             return value_clean
 
-        class Config:
-            """Конфигурация Pydantic для работы с переменными окружения."""
-
-            env_file = '.env'
-            extra = 'allow'
-            case_sensitive = False
+        model_config = ConfigDict(
+            env_file='.env',
+            extra='allow',
+            case_sensitive=False,
+        )
 
     settings = Settings()
     """Глобальный объект конфигурации приложения."""

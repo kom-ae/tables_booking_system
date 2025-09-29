@@ -14,6 +14,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
+from src.models.user import User
 from tests.conftest import (
     INVALID_DATA,
     VALID_PASSWORD,
@@ -21,8 +22,6 @@ from tests.conftest import (
     assert_success_response,
     get_auth_headers,
 )
-
-from src.models.user import User
 
 
 class TestUsersList:
@@ -67,7 +66,9 @@ class TestUsersList:
 
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            '/users?show_all=true', headers=headers)
+            '/users?show_all=true',
+            headers=headers,
+        )
 
         assert_success_response(response)
         data = response.json()
@@ -94,7 +95,9 @@ class TestUsersList:
 
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            '/users?show_all=false', headers=headers)
+            '/users?show_all=false',
+            headers=headers,
+        )
 
         assert_success_response(response)
         data = response.json()
@@ -289,7 +292,9 @@ class TestUserById:
         """Тест получения пользователя по ID администратором."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            f'/users/{normal_user.id}', headers=headers)
+            f'/users/{normal_user.id}',
+            headers=headers,
+        )
 
         assert_success_response(response)
         data = response.json()
@@ -319,7 +324,9 @@ class TestUserById:
         """Тест получения пользователя по ID не-администратором."""
         headers = get_auth_headers(user_token)
         response = await client_fixture.get(
-            f'/users/{normal_user.id}', headers=headers)
+            f'/users/{normal_user.id}',
+            headers=headers,
+        )
 
         assert_error_response(response, status.HTTP_403_FORBIDDEN)
 
@@ -430,7 +437,10 @@ class TestCurrentUser:
         }
 
         response = await client_fixture.patch(
-            '/users/me', json=payload, headers=headers)
+            '/users/me',
+            json=payload,
+            headers=headers,
+        )
 
         assert_success_response(response)
         data = response.json()
@@ -448,7 +458,10 @@ class TestCurrentUser:
         payload = {'password': 'NewPassword123!'}
 
         response = await client_fixture.patch(
-            '/users/me', json=payload, headers=headers)
+            '/users/me',
+            json=payload,
+            headers=headers,
+        )
 
         assert_success_response(response)
         # Пароль не должен возвращаться в ответе
@@ -469,7 +482,10 @@ class TestCurrentUser:
         }
 
         response = await client_fixture.patch(
-            '/users/me', json=payload, headers=headers)
+            '/users/me',
+            json=payload,
+            headers=headers,
+        )
 
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 

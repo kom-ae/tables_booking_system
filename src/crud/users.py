@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, List, Optional
 
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.logger import project_log
+from src.core.logger import logger
 from src.crud.base import CRUDBase
 from src.exceptions.user import UserNotFoundException
 from src.models.user import User
@@ -13,11 +13,15 @@ from src.services.auth import PasswordService
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
-    """CRUD для User с человекочитаемыми ошибками."""
+    """CRUD для работы с пользователями."""
 
-    async def get_by_name(self, db: AsyncSession, name: str) -> Optional[User]:
-        """Получение пользователя по имени или телефону."""
-        result = await db.execute(
+    async def get_by_name(
+        self,
+        session: AsyncSession,
+        name: str,
+    ) -> Optional[User]:
+        """Получение пользователя по email или телефону."""
+        result = await session.execute(
             select(User).where(or_(User.email == name, User.phone == name)),
         )
         return result.scalars().first()
@@ -27,100 +31,89 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         obj_id: int,
         session: AsyncSession,
     ) -> User:
-        """Получение пользователя по ID или 404."""
+        """Получение пользователя по ID или ошибка 404."""
         user = await self.get(obj_id, session)
         if not user:
-            project_log(
-                'warning',
+            logger.warning(
                 f'Попытка получить несуществующего пользователя {obj_id}',
                 user=None,
             )
             raise UserNotFoundException()
         return user
 
-    async def update_last_used(self, db: AsyncSession, user: User) -> User:
+    async def update_last_used(
+        self,
+        session: AsyncSession,
+        user: User,
+    ) -> User:
         """Обновление времени последнего использования пользователя."""
         user.last_used = datetime.now(timezone.utc)
-        await db.commit()
-        await db.refresh(user)
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
         return user
 
     async def create(
         self,
         obj_in: UserCreate,
         session: AsyncSession,
-        user: Optional[User] = None,  # пользователь, который создаёт нового
+        user: Optional[User] = None,
     ) -> User:
-        """Создание нового пользователя."""
-        hashed_password = PasswordService.hash_password(obj_in.password)
-        obj_in_data = obj_in.model_copy(update={'password': hashed_password})
+        """Создание нового пользователя с хэшированием пароля."""
+        hashed_password: str = PasswordService.hash_password(obj_in.password)
+        obj_in_data: UserCreate = obj_in.model_copy(
+            update={'password': hashed_password},
+        )
 
-        db_user = await super().create(
+        db_user: User = await super().create(
             obj_in=obj_in_data,
             session=session,
             user=user,
         )
 
-        initiator_info = (
-            f'id={user.id}, username={user.username}' if user else 'SYSTEM'
-        )
-        project_log(
-            'info',
-            f'Пользователь {initiator_info} создал нового пользователя '
-            f'id={db_user.id}, username={db_user.username}',
+        logger.info(
+            f'Создан новый пользователь id={db_user.id}, '
+            f'username={db_user.username}',
             user=user,
         )
 
         return db_user
 
-    async def update(
+    async def _update_impl(
         self,
         db_obj: User,
         obj_in: UserUpdate,
         session: AsyncSession,
-        user: Optional[User] = None,  # пользователь, который делает обновление
+        user: Optional[Any] = None,
     ) -> User:
-        """Обновление данных пользователя."""
         update_data = obj_in.model_dump(exclude_unset=True)
-        if update_data.get('password'):
+
+        if 'password' in update_data:
             update_data['password'] = PasswordService.hash_password(
                 update_data['password'],
             )
 
-        updated_user = await super().update(
-            db_obj=db_obj,
-            obj_in=obj_in.model_copy(update=update_data),
-            session=session,
-            user=user,
+        return await super()._update_impl(
+            db_obj,
+            obj_in.__class__(**update_data),
+            session,
+            user,
         )
-
-        initiator_info = (
-            f'id={user.id}, username={user.username}' if user else 'SYSTEM'
-        )
-        project_log(
-            'info',
-            f'Пользователь {initiator_info} обновил пользователя '
-            f'id={db_obj.id}, username={db_obj.username}',
-            user=user,
-        )
-
-        return updated_user
 
     async def get_users(
         self,
         session: AsyncSession,
         show_all: bool = False,
         user: Optional[User] = None,
-    ) -> list[User]:
-        """Возвращает список пользователей через базовый CRUD."""
-        users: list[User]
+    ) -> List[User]:
+        """Получение списка пользователей (активные или все)."""
+        users: List[User]
         if show_all:
             users = await self.get_multi_all(session)
         else:
             users = await self.get_multi_active(session)
 
-        project_log(
-            'info',
+        logger.info(
             f'Получен список пользователей, show_all={show_all}',
             user=user,
         )

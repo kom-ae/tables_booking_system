@@ -3,7 +3,20 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.schemas.base import DishBase
+from src.schemas.base import BaseSchema
+
+
+class DishBase(BaseSchema):
+    """Базовая схема для блюд."""
+
+    cafe_id: int = Field(..., description='Кафе')
+    name: str = Field(..., description='Название блюда')
+    description: str = Field(..., description='Описание блюда')
+    price: Decimal | None = Field(None, description='Цена')
+    photo: str | None = Field(
+        None,
+        description='Фото блюда в формате base64',
+    )
 
 
 class DishCreate(DishBase):

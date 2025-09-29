@@ -90,7 +90,8 @@ class TestActionsList:
         """Тест получения акций с фильтром по кафе."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            f'/actions?cafe_id={test_cafe.id}', headers=headers,
+            f'/actions?cafe_id={test_cafe.id}',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -108,7 +109,8 @@ class TestActionsList:
         """Тест получения всех акций включая неактивные."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            '/actions?show_all=true', headers=headers,
+            '/actions?show_all=true',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -124,7 +126,8 @@ class TestActionsList:
         """Тест получения только активных акций."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            '/actions?show_all=false', headers=headers,
+            '/actions?show_all=false',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -162,7 +165,9 @@ class TestActionCreate:
         }
 
         response = await client_fixture.post(
-            '/actions', json=payload, headers=headers,
+            '/actions',
+            json=payload,
+            headers=headers,
         )
 
         assert_success_response(response, status.HTTP_201_CREATED)
@@ -188,7 +193,9 @@ class TestActionCreate:
         }
 
         response = await client_fixture.post(
-            '/actions', json=payload, headers=headers,
+            '/actions',
+            json=payload,
+            headers=headers,
         )
 
         assert_success_response(response, status.HTTP_201_CREATED)
@@ -208,7 +215,9 @@ class TestActionCreate:
         }
 
         response = await client_fixture.post(
-            '/actions', json=payload, headers=headers,
+            '/actions',
+            json=payload,
+            headers=headers,
         )
 
         assert_error_response(response, status.HTTP_403_FORBIDDEN)
@@ -227,7 +236,9 @@ class TestActionCreate:
             'description': 'Action without cafe',
         }
         response = await client_fixture.post(
-            '/actions', json=payload, headers=headers,
+            '/actions',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -236,7 +247,9 @@ class TestActionCreate:
             'cafe': '1',
         }
         response = await client_fixture.post(
-            '/actions', json=payload, headers=headers,
+            '/actions',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -254,7 +267,9 @@ class TestActionCreate:
         }
 
         response = await client_fixture.post(
-            '/actions', json=payload, headers=headers,
+            '/actions',
+            json=payload,
+            headers=headers,
         )
 
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
@@ -274,7 +289,9 @@ class TestActionCreate:
         }
 
         response = await client_fixture.post(
-            '/actions', json=payload, headers=headers,
+            '/actions',
+            json=payload,
+            headers=headers,
         )
 
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
@@ -293,7 +310,8 @@ class TestActionById:
         """Тест получения акции по ID администратором."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            f'/actions/{test_action.id}', headers=headers,
+            f'/actions/{test_action.id}',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -311,7 +329,8 @@ class TestActionById:
         """Тест получения активной акции по ID пользователем."""
         headers = get_auth_headers(user_token)
         response = await client_fixture.get(
-            f'/actions/{test_action.id}', headers=headers,
+            f'/actions/{test_action.id}',
+            headers=headers,
         )
 
         if test_action.is_active:
@@ -422,7 +441,9 @@ class TestActionValidation:
             'description': 'x' * 2000,  # Очень длинное описание
         }
         response = await client_fixture.post(
-            '/actions', json=payload, headers=headers,
+            '/actions',
+            json=payload,
+            headers=headers,
         )
         # Может быть принято или отклонено в зависимости от ограничений
         assert response.status_code in [
@@ -445,7 +466,9 @@ class TestActionValidation:
         }
 
         response = await client_fixture.post(
-            '/actions', json=payload, headers=headers,
+            '/actions',
+            json=payload,
+            headers=headers,
         )
 
         assert_success_response(response, status.HTTP_201_CREATED)
@@ -473,7 +496,9 @@ class TestActionIntegration:
         }
 
         create_response = await client_fixture.post(
-            '/actions', json=create_payload, headers=headers,
+            '/actions',
+            json=create_payload,
+            headers=headers,
         )
         assert_success_response(create_response, status.HTTP_201_CREATED)
 
@@ -490,7 +515,8 @@ class TestActionIntegration:
 
         # Получаем акцию по ID
         get_response = await client_fixture.get(
-            f'/actions/{action_id}', headers=headers,
+            f'/actions/{action_id}',
+            headers=headers,
         )
         assert_success_response(get_response)
 
@@ -521,10 +547,14 @@ class TestActionIntegration:
         }
 
         response1 = await client_fixture.post(
-            '/actions', json=action1_payload, headers=headers,
+            '/actions',
+            json=action1_payload,
+            headers=headers,
         )
         response2 = await client_fixture.post(
-            '/actions', json=action2_payload, headers=headers,
+            '/actions',
+            json=action2_payload,
+            headers=headers,
         )
 
         assert_success_response(response1, status.HTTP_201_CREATED)

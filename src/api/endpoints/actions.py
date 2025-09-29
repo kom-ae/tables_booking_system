@@ -13,7 +13,7 @@ from src.api.responses.actions import (
 from src.api.validators import check_action_exist
 from src.core.db import get_async_session
 from src.core.dependencies import current_admin, current_manager, current_user
-from src.core.logger import log_endpoint, project_log
+from src.core.logger import log_endpoint, logger
 from src.crud.action import actions_crud
 from src.models import User
 from src.schemas.action import ActionCreate, ActionDB, ActionUpdate
@@ -30,7 +30,7 @@ router = APIRouter()
     summary='Получение списка акций'
     ' (только для администратора, пользователь - только активные).',
 )
-@log_endpoint('info')
+@log_endpoint
 async def get_actions(
     session: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(current_user),
@@ -44,8 +44,7 @@ async def get_actions(
     ),
 ) -> list[ActionDB]:
     """Получение списка акций."""
-    project_log(
-        'info',
+    logger.info(
         f'Запрошен список акций, show_all={show_all}',
         user=current_user,
     )
@@ -55,8 +54,7 @@ async def get_actions(
         cafe_id=cafe_id,
         show_all=show_all,
     )
-    project_log(
-        'info',
+    logger.info(
         f'Список акций получен по cafe_id={cafe_id}.',
         user=current_user,
     )
@@ -71,23 +69,27 @@ async def get_actions(
     response_description='Данные созданной акции',
     responses=action_create_responses,
     dependencies=[Depends(current_manager)],
-    summary='Создание акций'
-    ' (только для администратора и менеджера).',
+    summary='Создание акций (только для администратора и менеджера).',
 )
-@log_endpoint('info')
+@log_endpoint
 async def create_action(
     action: ActionCreate,
     session: AsyncSession = Depends(get_async_session),
     admin: User = Depends(current_admin),
 ) -> ActionDB:
     """Создание акций."""
-    new_action = await actions_crud.create_action(
-        obj_in=action, session=session,
+    logger.info(
+        'Создание новой акции',
+        user=admin,
     )
 
-    project_log(
-        'info',
-        'Создание новой акции',
+    new_action = await actions_crud.create_action(
+        obj_in=action,
+        session=session,
+    )
+
+    logger.info(
+        f'Акция создана с ID: {new_action.id}',
         user=admin,
     )
 
@@ -103,15 +105,14 @@ async def create_action(
     ' (только для администратора и менеджера, пользователь - только активные)',
     dependencies=[Depends(current_user)],
 )
-@log_endpoint('info')
+@log_endpoint
 async def get_action_by_id(
     action_id: int,
     session: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(current_user),
 ) -> ActionDB:
     """Получение акции по ID."""
-    project_log(
-        'info',
+    logger.info(
         f'Запрошена акция {action_id}',
         user=current_user,
     )
@@ -124,8 +125,7 @@ async def get_action_by_id(
     if action is None:
         raise HTTPException(**action_not_found)
 
-    project_log(
-        'info',
+    logger.info(
         f'Акция {action_id} получена',
         user=current_user,
     )
@@ -141,7 +141,7 @@ async def get_action_by_id(
     summary='Обновление акции по ID (только для администратора и менеджера)',
     dependencies=[Depends(current_manager)],
 )
-@log_endpoint('info')
+@log_endpoint
 async def update_action_by_id(
     action_id: int,
     update_data: ActionUpdate,
@@ -149,9 +149,8 @@ async def update_action_by_id(
     admin: User = Depends(current_admin),
 ) -> ActionDB:
     """Обновление акции по ID."""
-    project_log(
-        'info',
-        f'Попытка обновление акции {action_id}',
+    logger.info(
+        f'Попытка обновления акции {action_id}',
         user=admin,
     )
 
@@ -165,8 +164,8 @@ async def update_action_by_id(
         obj_in=update_data,
         session=session,
     )
-    project_log(
-        'info',
+
+    logger.info(
         f'Акция {action_id} обновлена',
         user=admin,
     )

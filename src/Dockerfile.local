@@ -1,36 +1,19 @@
-# -------------------
-# Build stage
-# -------------------
-FROM python:3.11-alpine AS build
-
-RUN apk add --no-cache build-base libffi-dev postgresql-dev openssl-dev
-
-WORKDIR /app
-
-# Копируем только requirements
-COPY requirements.txt .
-
-RUN pip wheel --no-cache-dir -r requirements.txt -w /wheels
-
-# -------------------
-# Final stage
-# -------------------
 FROM python:3.11-alpine
 
-RUN apk add --no-cache libffi postgresql-libs openssl
-
 WORKDIR /app
 
-COPY --from=build /wheels /wheels
-RUN pip install --no-cache-dir /wheels/*
-RUN pip install --no-cache-dir asyncpg
+# Устанавливаем зависимости для postgresql клиентов (для psql если понадобится)
+RUN apk add --no-cache postgresql-libs && \
+    apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev
 
-# Копируем исходники приложения
-COPY src ./src
-COPY alembic ./alembic
-COPY alembic.ini .
-COPY .env .
+COPY src/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 8000
+# Удаляем build dependencies
+RUN apk del .build-deps
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY . .
+
+ENV PYTHONUNBUFFERED=1
+
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

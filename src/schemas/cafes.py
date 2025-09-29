@@ -11,11 +11,42 @@ from src.constants import (
     MIN_NAME_CAFE,
     MIN_TEL,
 )
-from src.schemas.base import CafeBase
+from src.schemas.users import UserShort
 from src.schemas.validators import (
     cafe_update_field_is_not_null,
     phone_validator,
 )
+
+
+class CafeBase(BaseModel):
+    """Базовая схема для кафе."""
+
+    name: str = Field(
+        ...,
+        title='Название кафе',
+        min_length=MIN_NAME_CAFE,
+        max_length=MAX_NAME_CAFE,
+    )
+    address: str = Field(
+        ...,
+        title='Адрес кафе',
+        min_length=MIN_ADDRESS,
+        max_length=MAX_ADDRESS,
+    )
+    phone: str = Field(
+        ...,
+        title='Телефон кафе',
+        min_length=MIN_TEL,
+        max_length=MAX_TEL,
+    )
+    description: Optional[str] = Field(None, title='Описание кафе')
+    photo: Optional[str] = Field(None, title='Фото кафе в формате base64')
+    managers: Optional[list[UserShort]] = Field(None, title='ID менеджера')
+
+    class Config:
+        """Конфиг класса."""
+
+        extra = 'forbid'
 
 
 class CafeDB(CafeBase):

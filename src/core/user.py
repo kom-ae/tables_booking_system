@@ -5,7 +5,7 @@ from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
-from src.core.logger import project_log
+from src.core.logger import logger
 from src.exceptions.auth import ExpiredTokenException, InvalidTokenException
 from src.exceptions.user import UserNotFoundException
 from src.models.user import User
@@ -16,18 +16,47 @@ async def get_current_user_logic(
     user_crud: Any,
     db: AsyncSession,
 ) -> User:
-    """Возвращает пользователя по JWT."""
+    """Валидация JWT токена и получение пользователя.
+
+    Основная логика аутентификации:
+    1. Декодирование и верификация JWT токена
+    2. Проверка срока действия токена
+    3. Поиск пользователя в базе данных
+    4. Обработка различных сценариев ошибок
+
+    Args:
+        token_str: JWT токен из заголовка Authorization
+        user_crud: CRUD объект для работы с пользователями
+        db: Асинхронная сессия базы данных
+
+    Returns:
+        User: Аутентифицированный пользователь
+
+    Raises:
+        InvalidTokenException: Невалидный или поврежденный токен
+        ExpiredTokenException: Просроченный токен
+        UserNotFoundException: Пользователь не найден в базе
+
+    """
     try:
+        # Декодирование JWT токена с использованием секретного ключа
         payload = jwt.decode(
             token_str,
             settings.secret,
             algorithms=[settings.jwt_algorithm],
         )
-        user_id = int(payload.get('sub'))
-        token_last_used_ts = payload.get('last_used')
+
+        # Извлечение данных из payload
+        user_id = int(payload.get('sub'))  # ID пользователя
+        token_last_used_ts = payload.get(
+            'last_used',
+        )  # Время последнего использования
 
         if not user_id or token_last_used_ts is None:
-            project_log('warning', 'Недействительный токен', user=None)
+            logger.warning(
+                'Недействительный токен: отсутствуют обязательные поля',
+                user=None,
+            )
             raise InvalidTokenException()
 
         now = datetime.now(timezone.utc)
@@ -35,26 +64,27 @@ async def get_current_user_logic(
             token_last_used_ts,
             timezone.utc,
         )
-
         if now - token_last_used > timedelta(
             minutes=settings.access_token_expire_minutes,
         ):
-            project_log('warning', 'Токен просрочен', user=None)
+            logger.warning(
+                f'Токен просрочен для пользователя {user_id}',
+                user=None,
+            )
             raise ExpiredTokenException()
 
-    except (JWTError, ValueError):
-        project_log('warning', 'Ошибка при декодировании токена', user=None)
+    except (JWTError, ValueError) as error:
+        logger.warning(f'Ошибка при декодировании токена: {error}', user=None)
         raise InvalidTokenException()
-
     user: Optional[User] = await user_crud.get(user_id, db)
     if not user:
-        project_log(
-            'warning',
-            f'Пользователь с ID {user_id} не найден',
+        logger.warning(
+            f'Пользователь с ID {user_id} не найден в базе',
             user=None,
         )
         raise UserNotFoundException()
 
+    logger.info(f'Успешная аутентификация пользователя c id:{user.id}')
     return user
 
 
@@ -63,10 +93,15 @@ async def get_user_by_name(
     db: AsyncSession,
     user_crud: Any,
 ) -> Optional[User]:
-    """Возвращает пользователя по имени/email/телефону."""
+    """Поиск пользователя по имени, email или телефону."""
     user: Optional[User] = await user_crud.get_by_name(db, name)
+
     if user:
-        project_log('info', f'Поиск пользователя по имени: {name}', user=user)
+        logger.info(
+            f'Пользователь найден по идентификатору: {name}',
+            user=user,
+        )
     else:
-        project_log('info', f'Пользователь {name} не найден', user=None)
+        logger.info('Пользователь не найден по идентификатору', user=None)
+
     return user

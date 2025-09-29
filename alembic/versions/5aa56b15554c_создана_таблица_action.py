@@ -1,12 +1,13 @@
 """Создана таблица Action
 
 Revision ID: 5aa56b15554c
-Revises: 
+Revises:
 Create Date: 2025-09-19 17:12:10.788082
 
 """
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 
 # revision identifiers, used by Alembic.

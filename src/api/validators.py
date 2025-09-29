@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.cafes import cafe_check_duplicate_responses
-from src.core.logger import project_log
+from src.core.logger import logger
 from src.crud.action import actions_crud
 from src.crud.factory import get_cafe_crud
 from src.models import Action, User
@@ -25,8 +25,7 @@ async def check_duplicate_cafe(
         session=session,
     )
     if db_obj:
-        project_log(
-            'warning',
+        logger.warning(
             f'Попытка создать дубликат кафе: {cafe.name}, {cafe.address}',
             user=None,
         )
@@ -34,12 +33,13 @@ async def check_duplicate_cafe(
 
 
 async def check_action_exist(
-        action_id: int,
-        session: AsyncSession,
+    action_id: int,
+    session: AsyncSession,
 ) -> Action:
     """Проверяет на наличие доступа и акции."""
     action = await actions_crud.get(
-        obj_id=action_id, session=session,
+        obj_id=action_id,
+        session=session,
     )
     if action is None:
         raise HTTPException(
@@ -53,14 +53,7 @@ async def handler_run_crud_cafe(
     func: Callable[..., Any],
     **kwargs: Any,
 ) -> Union[CafeDB, List[CafeDB]]:
-    """Запуск корутины CRUD и логирование результата через project_log.
-
-    Аргументы:
-        func: функция CRUD
-        crud_args: словарь аргументов для функции
-        msg_log: сообщение для логирования
-        user: пользователь, инициирующий операцию
-    """
+    """Запуск корутины CRUD и логирование результата через logger."""
     crud_args: dict = kwargs.get('crud_args', {})
     msg_log: str = kwargs.get('msg_log', '')
     user: Optional[User] = kwargs.get('user', None)
@@ -73,13 +66,12 @@ async def handler_run_crud_cafe(
             if hasattr(obj, 'id'):
                 msg_log_full += str(obj.id)
             msg_log_full += '. Успешно.'
-            project_log('info', msg_log_full, user=user)
+            logger.info(msg_log_full, user=user)
 
         return obj
 
     except RequestValidationError as err:
-        project_log(
-            'error',
+        logger.error(
             f'Ошибка валидации при выполнении {func.__name__}: {err.body}',
             user=user,
         )
@@ -89,8 +81,7 @@ async def handler_run_crud_cafe(
         )
 
     except Exception as err:
-        project_log(
-            'error',
+        logger.error(
             f'Ошибка при выполнении {func.__name__} '
             f'в модуле {func.__module__}: {str(err)}',
             user=user,
