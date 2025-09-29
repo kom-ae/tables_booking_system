@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.crud.base import CRUDBase
-from src.models import Actions, User
+from src.models import Action, User
 from src.schemas.action import ActionsCreate, ActionsDB, ActionsUpdate
 
 
@@ -18,18 +18,18 @@ class ActionsCRUD(CRUDBase):
             current_user: User,
             cafe_id: Optional[int] = None,
             show_all: bool | None = None,
-    ) -> list[Actions]:
+    ) -> list[Action]:
         """Получает все акции."""
-        query = select(Actions)
+        query = select(Action)
 
         is_admin_is_manager = (current_user.is_admin() or
                                current_user.is_manager())
 
         if cafe_id is not None:
-            query = query.where(Actions.cafe_id == cafe_id)
+            query = query.where(Action.cafe_id == cafe_id)
 
         if not (is_admin_is_manager and show_all):
-            query = query.where(Actions.is_active)
+            query = query.where(Action.is_active)
 
         response = await session.execute(query)
         return response.scalars().all()
@@ -39,21 +39,21 @@ class ActionsCRUD(CRUDBase):
             session: AsyncSession,
             action_id: int,
             current_user: User,
-    ) -> Optional[Actions]:
+    ) -> Optional[Action]:
         """Возвращает акция по его ID."""
-        db_obj = select(Actions)
+        db_obj = select(Action)
 
         is_admin_is_manager = (current_user.is_admin() or
                                current_user.is_manager())
 
         if not is_admin_is_manager:
             db_obj = db_obj.where(and_(
-                Actions.id == action_id,
-                Actions.is_active,
+                Action.id == action_id,
+                Action.is_active,
             ))
         else:
             db_obj = db_obj.where(
-                Actions.id == action_id,
+                Action.id == action_id,
             )
         response = await session.execute(db_obj)
 
@@ -96,7 +96,7 @@ class ActionsCRUD(CRUDBase):
 
     async def update_action(
             self,
-            db_obj: Actions,
+            db_obj: Action,
             obj_in: ActionsUpdate,
             session: AsyncSession,
     ) -> ActionsDB:
@@ -125,4 +125,4 @@ class ActionsCRUD(CRUDBase):
         return ActionsDB.model_validate(db_obj_fully_loaded)
 
 
-actions_crud = ActionsCRUD(Actions)
+actions_crud = ActionsCRUD(Action)
