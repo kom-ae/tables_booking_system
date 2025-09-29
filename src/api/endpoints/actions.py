@@ -57,7 +57,7 @@ async def get_actions(
     )
     project_log(
         'info',
-        'Список акций получен по cafe_id={cafe_id}.',
+        f'Список акций получен по cafe_id={cafe_id}.',
         user=current_user,
     )
 
