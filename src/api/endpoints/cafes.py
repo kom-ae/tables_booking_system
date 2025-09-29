@@ -42,7 +42,7 @@ async def get_cafes(
     session: AsyncSession = Depends(get_async_session),
 ) -> list[CafeDB]:
     """Получение списка кафе."""
-    log_message = log_message = f'{get_cafes.__doc__} show_all: {show_all}.'
+    log_message = f'{get_cafes.__doc__} show_all: {show_all}.'
 
     if user.is_admin() and show_all:
         return await handler_run_crud_cafe(

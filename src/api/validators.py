@@ -33,10 +33,7 @@ async def check_duplicate_cafe(
         session=session,
     )
     if db_obj:
-        logger.error(
-            f'Попытка создать дубликат кафе: {cafe.name}, {cafe.address}',
-            user=None,
-        )
+        logger.error('Попытка создать дубликат кафе', info_dict=db_obj)
         raise HTTPException(**cafe_check_duplicate_responses)
 
 
