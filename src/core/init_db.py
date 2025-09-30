@@ -29,7 +29,7 @@ async def init_db_and_superuser() -> None:
                 settings.first_superuser_password,
             )
             superuser = User(
-                username=settings.first_superuser_username,
+                username=settings.first_superuser_name,
                 email=settings.first_superuser_email,
                 password=password_hashed,
                 phone=settings.first_superuser_phone_number,

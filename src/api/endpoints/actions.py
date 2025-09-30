@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.actions import (
@@ -70,6 +70,7 @@ async def get_actions(
     response_model_exclude_none=True,
     response_description='Данные созданной акции',
     responses=action_create_responses,
+    status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(current_manager)],
     summary='Создание акций'
     ' (только для администратора и менеджера).',
@@ -78,7 +79,7 @@ async def get_actions(
 async def create_action(
     action: ActionCreate,
     session: AsyncSession = Depends(get_async_session),
-    admin: User = Depends(current_admin),
+    admin: User = Depends(current_manager),
 ) -> ActionDB:
     """Создание акций."""
     new_action = await actions_crud.create_action(

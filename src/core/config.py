@@ -54,7 +54,7 @@ try:
         # -------------------
         # Первый суперпользователь
         # -------------------
-        first_superuser_name: Optional[EmailStr] = None
+        first_superuser_name: Optional[str] = None
         first_superuser_email: Optional[EmailStr] = None
         first_superuser_password: Optional[str] = None
         first_superuser_role: Optional[str] = None
