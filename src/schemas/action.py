@@ -10,7 +10,7 @@ class ActionCreate(BaseModel):
     """Сехма для создания акций."""
 
     cafe: int = Field(..., description='ID Кафе')
-    description: str = Field(..., description='Описание акции')
+    description: str = Field(..., description='Описание акции', min_length=1)
 
     @field_validator('cafe', mode='before')
     @classmethod

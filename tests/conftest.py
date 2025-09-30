@@ -13,12 +13,15 @@ from starlette import status
 
 from src.core.db import engine, get_async_session
 from src.crud.factory import get_cafe_crud
+from src.crud.action import actions_crud
 from src.main import app
 from src.models.base import BaseModel
 from src.models.cafe import Cafe
 from src.models.user import User
+from src.models.action import Action
 from src.schemas.auth import Auth
 from src.schemas.cafes import CafeCreate
+from src.schemas.action import ActionCreate
 from src.services.auth import PasswordService
 
 # -----------------------
@@ -139,6 +142,13 @@ TEST_CAFES: Dict[str, Dict[str, str]] = {
     },
 }
 
+TEST_ACTIONS: Dict[str, Dict[str, Any]] = {
+    'action1': {
+        'cafe': 1,
+        'description': 'Скидка 20% на все бургеры по вторникам',
+    }
+}
+
 # Невалидные данные для тестов валидации
 INVALID_DATA = {
     'invalid_email': 'not-an-email',
@@ -148,6 +158,7 @@ INVALID_DATA = {
     'long_username': 'x' * 300,
     'invalid_phone_format': '123456789',
 }
+
 
 # -----------------------
 # Базовые фикстуры
@@ -495,10 +506,21 @@ async def test_time_slot(
 
 
 @pytest_asyncio.fixture
-async def test_action(session_fixture: AsyncSession, test_cafe: Cafe) -> None:
+async def test_action(session_fixture: AsyncSession, test_cafe: Cafe) -> Action:
     """Фикстура для тестовой акции (когда будет реализовано)."""
-    # TODO: Реализовать когда модель Action будет готова
-    pass
+    action_data = dict(TEST_ACTIONS['action1'])
+
+    action_in = ActionCreate(
+        cafe=test_cafe.id,
+        description=action_data['description']
+    )
+
+    action = await actions_crud.create_action(
+        obj_in=action_in,
+        session=session_fixture,
+    )
+
+    return action
 
 
 @pytest_asyncio.fixture
