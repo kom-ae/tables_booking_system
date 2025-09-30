@@ -3,8 +3,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.dependencies import current_manager, current_user
 from src.core.db import get_async_session
+from src.core.dependencies import current_manager, current_user
 from src.core.logger import log_endpoint
 from src.crud.cafes import CRUDCafe
 from src.crud.factory import get_cafe_crud, get_table_crud

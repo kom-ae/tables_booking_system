@@ -1,6 +1,6 @@
 from src.crud.cafes import CRUDCafe
-from src.crud.users import CRUDUser
 from src.crud.tables import CRUDTable
+from src.crud.users import CRUDUser
 from src.models import Cafe, Dishe, Tables, User  # noqa
 
 
