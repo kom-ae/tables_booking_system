@@ -13,15 +13,14 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
+from src.models.cafe import Cafe
+from src.models.user import User
 from tests.conftest import (
     INVALID_DATA,
     assert_error_response,
     assert_success_response,
     get_auth_headers,
 )
-
-from src.models.cafe import Cafe
-from src.models.user import User
 
 
 class TestCafesList:
@@ -76,15 +75,17 @@ class TestCafesList:
         """Тест получения всех кафе включая неактивные."""
         # Деактивируем кафе
         await session_fixture.execute(
-            text("UPDATE cafes SET is_active = false WHERE id = :cafe_id"),
-            {"cafe_id": test_cafe.id},
+            text('UPDATE cafe SET is_active = false WHERE id = :cafe_id'),
+            {'cafe_id': test_cafe.id},
         )
         await session_fixture.commit()
 
         headers = get_auth_headers(admin_token)
         params = {'show_all': True}
         response = await client_fixture.get(
-            '/cafes/', headers=headers, params=params,
+            '/cafes/',
+            headers=headers,
+            params=params,
         )
 
         assert_success_response(response)
@@ -105,15 +106,17 @@ class TestCafesList:
         """Тест получения кафе с параметром show_all=false."""
         # Деактивируем кафе
         await session_fixture.execute(
-            text("UPDATE cafes SET is_active = false WHERE id = :cafe_id"),
-            {"cafe_id": test_cafe.id},
+            text('UPDATE cafe SET is_active = false WHERE id = :cafe_id'),
+            {'cafe_id': test_cafe.id},
         )
         await session_fixture.commit()
 
         headers = get_auth_headers(admin_token)
         params = {'show_all': False}
         response = await client_fixture.get(
-            '/cafes/', headers=headers, params=params,
+            '/cafes/',
+            headers=headers,
+            params=params,
         )
 
         assert_success_response(response)
@@ -153,6 +156,7 @@ class TestCafeCreate:
     ) -> None:
         """Тест успешного создания кафе администратором."""
         import time
+
         timestamp = int(time.time() * 1000)  # Миллисекунды для уникальности
 
         headers = get_auth_headers(admin_token)
@@ -165,7 +169,9 @@ class TestCafeCreate:
         }
 
         response = await client_fixture.post(
-            '/cafes/', json=payload, headers=headers,
+            '/cafes/',
+            json=payload,
+            headers=headers,
         )
 
         assert_success_response(response, status.HTTP_201_CREATED)
@@ -188,8 +194,9 @@ class TestCafeCreate:
         normal_user: User,
     ) -> None:
         """Тест создания кафе с менеджерами."""
-        import time
         import random
+        import time
+
         timestamp = int(time.time() * 1000)
         random_suffix = random.randint(1000, 9999)
 
@@ -204,7 +211,9 @@ class TestCafeCreate:
         }
 
         response = await client_fixture.post(
-            '/cafes/', json=payload, headers=headers,
+            '/cafes/',
+            json=payload,
+            headers=headers,
         )
 
         assert_success_response(response, status.HTTP_201_CREATED)
@@ -222,8 +231,9 @@ class TestCafeCreate:
         admin_token: str,
     ) -> None:
         """Тест создания кафе с минимальными данными."""
-        import time
         import random
+        import time
+
         timestamp = int(time.time() * 1000)
         random_suffix = random.randint(1000, 9999)
 
@@ -237,7 +247,9 @@ class TestCafeCreate:
         }
 
         response = await client_fixture.post(
-            '/cafes/', json=payload, headers=headers,
+            '/cafes/',
+            json=payload,
+            headers=headers,
         )
 
         assert_success_response(response, status.HTTP_201_CREATED)
@@ -263,7 +275,9 @@ class TestCafeCreate:
         }
 
         response = await client_fixture.post(
-            '/cafes/', json=payload, headers=headers,
+            '/cafes/',
+            json=payload,
+            headers=headers,
         )
 
         assert_error_response(response, status.HTTP_403_FORBIDDEN)
@@ -285,20 +299,32 @@ class TestCafeCreate:
         assert_error_response(response, status.HTTP_401_UNAUTHORIZED)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("missing_field,payload", [
-        ('name', {
-            'address': 'Test Address 123',
-            'phone': '+70000000083',
-        }),
-        ('address', {
-            'name': 'Test Cafe',
-            'phone': '+70000000082',
-        }),
-        ('phone', {
-            'name': 'Test Cafe',
-            'address': 'Test Address 123',
-        }),
-    ])
+    @pytest.mark.parametrize(
+        'missing_field,payload',
+        [
+            (
+                'name',
+                {
+                    'address': 'Test Address 123',
+                    'phone': '+70000000083',
+                },
+            ),
+            (
+                'address',
+                {
+                    'name': 'Test Cafe',
+                    'phone': '+70000000082',
+                },
+            ),
+            (
+                'phone',
+                {
+                    'name': 'Test Cafe',
+                    'address': 'Test Address 123',
+                },
+            ),
+        ],
+    )
     async def test_create_cafe_missing_required_fields(
         self,
         client_fixture: AsyncClient,
@@ -309,25 +335,42 @@ class TestCafeCreate:
         """Тест создания кафе без обязательных полей."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.post(
-            '/cafes/', json=payload, headers=headers,
+            '/cafes/',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("field,invalid_value,valid_fields", [
-        ('name', 'A', {
-            'address': 'Test Address 123',
-            'phone': '+70000000081',
-        }),
-        ('address', 'A', {
-            'name': 'Test Cafe',
-            'phone': '+70000000080',
-        }),
-        ('phone', '123', {
-            'name': 'Test Cafe',
-            'address': 'Test Address 123',
-        }),
-    ])
+    @pytest.mark.parametrize(
+        'field,invalid_value,valid_fields',
+        [
+            (
+                'name',
+                'A',
+                {
+                    'address': 'Test Address 123',
+                    'phone': '+70000000081',
+                },
+            ),
+            (
+                'address',
+                'A',
+                {
+                    'name': 'Test Cafe',
+                    'phone': '+70000000080',
+                },
+            ),
+            (
+                'phone',
+                '123',
+                {
+                    'name': 'Test Cafe',
+                    'address': 'Test Address 123',
+                },
+            ),
+        ],
+    )
     async def test_create_cafe_invalid_data(
         self,
         client_fixture: AsyncClient,
@@ -340,7 +383,9 @@ class TestCafeCreate:
         headers = get_auth_headers(admin_token)
         payload = {**valid_fields, field: invalid_value}
         response = await client_fixture.post(
-            '/cafes/', json=payload, headers=headers,
+            '/cafes/',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -361,7 +406,9 @@ class TestCafeCreate:
         }
 
         response = await client_fixture.post(
-            '/cafes/', json=payload, headers=headers,
+            '/cafes/',
+            json=payload,
+            headers=headers,
         )
 
         # Невалидный формат телефона должен возвращать ошибку валидации
@@ -385,7 +432,9 @@ class TestCafeCreate:
         }
 
         response = await client_fixture.post(
-            '/cafes/', json=payload, headers=headers,
+            '/cafes/',
+            json=payload,
+            headers=headers,
         )
 
         # Это может быть ошибка валидации или успех с игнорированием
@@ -399,24 +448,39 @@ class TestCafeValidation:
     """Тесты валидации данных кафе."""
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("field,invalid_value,valid_fields", [
-        ('name', 'x' * 300, {
-            'address': 'Test Address 123',
-            'phone': '+70000000078',
-            'photo': '',
-        }),
-        ('address', 'x' * 300, {
-            'name': 'Test Cafe',
-            'phone': '+70000000077',
-            'photo': '',
-        }),
-        ('phone', 'x' * 20, {
-            'name': 'Test Cafe',
-            'address': 'Test Address 123',
-            'description': 'Test description',
-            'photo': '',
-        }),
-    ])
+    @pytest.mark.parametrize(
+        'field,invalid_value,valid_fields',
+        [
+            (
+                'name',
+                'x' * 300,
+                {
+                    'address': 'Test Address 123',
+                    'phone': '+70000000078',
+                    'photo': '',
+                },
+            ),
+            (
+                'address',
+                'x' * 300,
+                {
+                    'name': 'Test Cafe',
+                    'phone': '+70000000077',
+                    'photo': '',
+                },
+            ),
+            (
+                'phone',
+                'x' * 20,
+                {
+                    'name': 'Test Cafe',
+                    'address': 'Test Address 123',
+                    'description': 'Test description',
+                    'photo': '',
+                },
+            ),
+        ],
+    )
     async def test_cafe_field_validation(
         self,
         client_fixture: AsyncClient,
@@ -429,7 +493,9 @@ class TestCafeValidation:
         headers = get_auth_headers(admin_token)
         payload = {**valid_fields, field: invalid_value}
         response = await client_fixture.post(
-            '/cafes/', json=payload, headers=headers,
+            '/cafes/',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -444,8 +510,9 @@ class TestCafeIntegration:
         admin_token: str,
     ) -> None:
         """Тест создания кафе и его получения."""
-        import time
         import random
+        import time
+
         timestamp = int(time.time() * 1000)
         random_suffix = random.randint(1000, 9999)
 
@@ -461,7 +528,9 @@ class TestCafeIntegration:
         }
 
         create_response = await client_fixture.post(
-            '/cafes/', json=create_payload, headers=headers,
+            '/cafes/',
+            json=create_payload,
+            headers=headers,
         )
         assert_success_response(create_response, status.HTTP_201_CREATED)
 
@@ -491,8 +560,9 @@ class TestCafeIntegration:
         normal_user: User,
     ) -> None:
         """Тест ассоциации менеджеров с кафе."""
-        import time
         import random
+        import time
+
         timestamp = int(time.time() * 1000)
         random_suffix = random.randint(1000, 9999)
 
@@ -509,7 +579,9 @@ class TestCafeIntegration:
         }
 
         response = await client_fixture.post(
-            '/cafes/', json=payload, headers=headers,
+            '/cafes/',
+            json=payload,
+            headers=headers,
         )
         assert_success_response(response, status.HTTP_201_CREATED)
 

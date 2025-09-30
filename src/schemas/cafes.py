@@ -72,6 +72,8 @@ class CafeUpdate(BaseModel):
         'phone',
         'is_active',
         'managers',
+        'description',
+        'photo',
         mode='before',
     )(cafe_update_field_is_not_null)
 

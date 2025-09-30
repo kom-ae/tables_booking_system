@@ -13,12 +13,15 @@ from starlette import status
 
 from src.core.db import engine, get_async_session
 from src.crud.factory import get_cafe_crud
+from src.crud.action import actions_crud
 from src.main import app
 from src.models.base import BaseModel
 from src.models.cafe import Cafe
 from src.models.user import User
+from src.models.action import Action
 from src.schemas.auth import Auth
 from src.schemas.cafes import CafeCreate
+from src.schemas.action import ActionCreate
 from src.services.auth import PasswordService
 
 # -----------------------
@@ -139,6 +142,13 @@ TEST_CAFES: Dict[str, Dict[str, str]] = {
     },
 }
 
+TEST_ACTIONS: Dict[str, Dict[str, Any]] = {
+    'action1': {
+        'cafe': 1,
+        'description': 'Скидка 20% на все бургеры по вторникам',
+    }
+}
+
 # Невалидные данные для тестов валидации
 INVALID_DATA = {
     'invalid_email': 'not-an-email',
@@ -148,6 +158,7 @@ INVALID_DATA = {
     'long_username': 'x' * 300,
     'invalid_phone_format': '123456789',
 }
+
 
 # -----------------------
 # Базовые фикстуры
@@ -184,11 +195,11 @@ async def cleanup_db(
     # Очищаем в правильном порядке из-за внешних ключей
     tables_to_clean = [
         'cafe_manager',  # Ассоциативная таблица
-        'booking',       # Когда будет реализовано
-        'dishes',        # Когда будет реализовано
-        'tables',        # Когда будет реализовано
-        'time_slots',    # Когда будет реализовано
-        'actions',       # Когда будет реализовано
+        'booking',  # Когда будет реализовано
+        'dishes',  # Когда будет реализовано
+        'tables',  # Когда будет реализовано
+        'time_slots',  # Когда будет реализовано
+        'actions',  # Когда будет реализовано
         'cafes',
         'user',
     ]
@@ -254,6 +265,7 @@ async def client_fixture(
 # -----------------------
 # Фикстуры пользователей
 # -----------------------
+
 
 @pytest_asyncio.fixture
 async def admin_user(session_fixture: AsyncSession) -> User:
@@ -331,6 +343,7 @@ async def another_user(session_fixture: AsyncSession) -> User:
 # Фикстуры кафе
 # -----------------------
 
+
 @pytest_asyncio.fixture
 async def test_cafe(session_fixture: AsyncSession) -> Cafe:
     """Создаём тестовое кафе."""
@@ -372,6 +385,7 @@ async def test_cafe2(session_fixture: AsyncSession) -> Cafe:
 # -----------------------
 # Фикстуры аутентификации
 # -----------------------
+
 
 @pytest_asyncio.fixture
 async def admin_token(
@@ -422,13 +436,16 @@ async def user_token(
 # Утилиты для тестов
 # -----------------------
 
+
 def get_auth_headers(token: str) -> Dict[str, str]:
     """Возвращает заголовки авторизации для запросов."""
     return {'Authorization': f'Bearer {token}'}
 
 
 def assert_error_response(
-    response: Any, expected_status: int, expected_message: str | None = None,
+    response: Any,
+    expected_status: int,
+    expected_message: str | None = None,
 ) -> None:
     """Проверяет ответ с ошибкой."""
     assert response.status_code == expected_status
@@ -438,7 +455,8 @@ def assert_error_response(
 
 
 def assert_success_response(
-    response: Any, expected_status: int = status.HTTP_200_OK,
+    response: Any,
+    expected_status: int = status.HTTP_200_OK,
 ) -> None:
     """Проверяет успешный ответ."""
     assert response.status_code == expected_status
@@ -469,6 +487,7 @@ def get_user_endpoint_url(action: str, user_id: int, **kwargs) -> str:
 
 # Эти фикстуры будут использоваться когда компоненты будут реализованы
 
+
 @pytest_asyncio.fixture
 async def test_table(session_fixture: AsyncSession, test_cafe: Cafe) -> None:
     """Фикстура для тестового стола (когда будет реализовано)."""
@@ -478,7 +497,8 @@ async def test_table(session_fixture: AsyncSession, test_cafe: Cafe) -> None:
 
 @pytest_asyncio.fixture
 async def test_time_slot(
-    session_fixture: AsyncSession, test_cafe: Cafe,
+    session_fixture: AsyncSession,
+    test_cafe: Cafe,
 ) -> None:
     """Фикстура для тестового временного слота (когда будет реализовано)."""
     # TODO: Реализовать когда модель TimeSlot будет готова
@@ -486,15 +506,28 @@ async def test_time_slot(
 
 
 @pytest_asyncio.fixture
-async def test_action(session_fixture: AsyncSession, test_cafe: Cafe) -> None:
+async def test_action(session_fixture: AsyncSession, test_cafe: Cafe) -> Action:
     """Фикстура для тестовой акции (когда будет реализовано)."""
-    # TODO: Реализовать когда модель Action будет готова
-    pass
+    action_data = dict(TEST_ACTIONS['action1'])
+
+    action_in = ActionCreate(
+        cafe=test_cafe.id,
+        description=action_data['description']
+    )
+
+    action = await actions_crud.create_action(
+        obj_in=action_in,
+        session=session_fixture,
+    )
+
+    return action
 
 
 @pytest_asyncio.fixture
 async def test_booking(
-    session_fixture: AsyncSession, normal_user: User, test_cafe: Cafe,
+    session_fixture: AsyncSession,
+    normal_user: User,
+    test_cafe: Cafe,
 ) -> None:
     """Фикстура для тестового бронирования (когда будет реализовано)."""
     # TODO: Реализовать когда модель Booking будет готова

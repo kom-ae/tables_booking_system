@@ -7,15 +7,14 @@ import pytest
 from httpx import AsyncClient
 from starlette import status
 
+from src.models.cafe import Cafe
+from src.models.user import User
 from tests.conftest import (
     VALID_PASSWORD,
     assert_error_response,
     assert_success_response,
     get_auth_headers,
 )
-
-from src.models.cafe import Cafe
-from src.models.user import User
 
 
 class TestUserRegistrationFlow:
@@ -36,7 +35,8 @@ class TestUserRegistrationFlow:
         }
 
         registration_response = await client_fixture.post(
-            '/users', json=registration_payload,
+            '/users',
+            json=registration_payload,
         )
         assert_success_response(registration_response, status.HTTP_201_CREATED)
 
@@ -50,7 +50,8 @@ class TestUserRegistrationFlow:
         }
 
         login_response = await client_fixture.post(
-            '/auth/login', json=login_payload,
+            '/auth/login',
+            json=login_payload,
         )
         assert_success_response(login_response)
 
@@ -73,7 +74,9 @@ class TestUserRegistrationFlow:
         }
 
         update_response = await client_fixture.patch(
-            '/users/me', json=update_payload, headers=headers,
+            '/users/me',
+            json=update_payload,
+            headers=headers,
         )
         assert_success_response(update_response)
 
@@ -88,13 +91,15 @@ class TestUserRegistrationFlow:
         }
 
         new_login_response = await client_fixture.post(
-            '/auth/login', json=new_login_payload,
+            '/auth/login',
+            json=new_login_payload,
         )
         assert_success_response(new_login_response)
 
         # 6. Логаут
         logout_response = await client_fixture.post(
-            '/auth/logout', headers=headers,
+            '/auth/logout',
+            headers=headers,
         )
         assert_success_response(logout_response)
 
@@ -121,7 +126,8 @@ class TestUserRegistrationFlow:
         }
 
         email_response = await client_fixture.post(
-            '/auth/login', json=email_login,
+            '/auth/login',
+            json=email_login,
         )
         assert_success_response(email_response)
         email_token = email_response.json()['token']
@@ -133,7 +139,8 @@ class TestUserRegistrationFlow:
         }
 
         phone_response = await client_fixture.post(
-            '/auth/login', json=phone_login,
+            '/auth/login',
+            json=phone_login,
         )
         assert_success_response(phone_response)
         phone_token = phone_response.json()['token']
@@ -143,10 +150,12 @@ class TestUserRegistrationFlow:
         phone_headers = get_auth_headers(phone_token)
 
         email_me_response = await client_fixture.get(
-            '/users/me', headers=email_headers,
+            '/users/me',
+            headers=email_headers,
         )
         phone_me_response = await client_fixture.get(
-            '/users/me', headers=phone_headers,
+            '/users/me',
+            headers=phone_headers,
         )
 
         assert_success_response(email_me_response)
@@ -180,7 +189,8 @@ class TestAdminWorkflow:
         }
 
         create_response = await client_fixture.post(
-            '/users', json=create_payload,
+            '/users',
+            json=create_payload,
         )
         assert_success_response(create_response, status.HTTP_201_CREATED)
 
@@ -189,7 +199,8 @@ class TestAdminWorkflow:
 
         # 2. Получаем список всех пользователей
         list_response = await client_fixture.get(
-            '/users?show_all=true', headers=headers,
+            '/users?show_all=true',
+            headers=headers,
         )
         assert_success_response(list_response)
 
@@ -199,7 +210,8 @@ class TestAdminWorkflow:
 
         # 3. Получаем конкретного пользователя по ID
         get_response = await client_fixture.get(
-            f'/users/{user_id}', headers=headers,
+            f'/users/{user_id}',
+            headers=headers,
         )
         assert_success_response(get_response)
 
@@ -232,8 +244,9 @@ class TestAdminWorkflow:
         manager_user: User,
     ) -> None:
         """Тест полного цикла управления кафе администратором."""
-        import time
         import random
+        import time
+
         timestamp = int(time.time() * 1000)
         random_suffix = random.randint(1000, 9999)
 
@@ -250,7 +263,9 @@ class TestAdminWorkflow:
         }
 
         create_response = await client_fixture.post(
-            '/cafes/', json=cafe_payload, headers=headers,
+            '/cafes/',
+            json=cafe_payload,
+            headers=headers,
         )
 
         # Проверяем что создание прошло успешно
@@ -261,8 +276,8 @@ class TestAdminWorkflow:
         else:
             # Если создание не удалось, пропускаем остальные проверки
             pytest.skip(
-                f"Cafe creation failed with status "
-                f"{create_response.status_code}"
+                f'Cafe creation failed with status '
+                f'{create_response.status_code}',
             )
 
         # 2. Получаем список кафе
@@ -298,7 +313,8 @@ class TestSecurityAndPermissions:
 
         # Попытка получить пользователя по ID
         response = await client_fixture.get(
-            f'/users/{normal_user.id}', headers=headers,
+            f'/users/{normal_user.id}',
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_403_FORBIDDEN)
 
@@ -317,8 +333,9 @@ class TestSecurityAndPermissions:
         user_token: str,
     ) -> None:
         """Тест что обычный пользователь не может создавать кафе."""
-        import time
         import random
+        import time
+
         timestamp = int(time.time() * 1000)
         random_suffix = random.randint(1000, 9999)
 
@@ -332,7 +349,9 @@ class TestSecurityAndPermissions:
         }
 
         response = await client_fixture.post(
-            '/cafes/', json=cafe_payload, headers=headers,
+            '/cafes/',
+            json=cafe_payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_403_FORBIDDEN)
 
@@ -350,7 +369,8 @@ class TestSecurityAndPermissions:
         }
 
         login_response = await client_fixture.post(
-            '/auth/login', json=login_payload,
+            '/auth/login',
+            json=login_payload,
         )
         token = login_response.json()['token']
 
@@ -362,7 +382,8 @@ class TestSecurityAndPermissions:
         # Проверяем что невалидный токен не работает
         invalid_headers = get_auth_headers('invalid_token')
         response = await client_fixture.get(
-            '/users/me', headers=invalid_headers,
+            '/users/me',
+            headers=invalid_headers,
         )
         assert_error_response(response, status.HTTP_401_UNAUTHORIZED)
 
@@ -389,7 +410,8 @@ class TestDataConsistency:
         }
 
         login_response = await client_fixture.post(
-            '/auth/login', json=login_payload,
+            '/auth/login',
+            json=login_payload,
         )
         token = login_response.json()['token']
         headers = get_auth_headers(token)
@@ -464,7 +486,8 @@ class TestErrorHandling:
         """Тест корректной обработки ошибок."""
         # Невалидный JSON
         response = await client_fixture.post(
-            '/auth/login', json={'invalid': 'data'},
+            '/auth/login',
+            json={'invalid': 'data'},
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 

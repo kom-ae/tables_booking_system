@@ -17,13 +17,12 @@ import pytest
 from httpx import AsyncClient
 from starlette import status
 
+from src.models.cafe import Cafe
 from tests.conftest import (
     assert_error_response,
     assert_success_response,
     get_auth_headers,
 )
-
-from src.models.cafe import Cafe
 
 # Эти тесты будут работать когда будут реализованы:
 # 1. Модель Table в src/models/table.py
@@ -32,7 +31,7 @@ from src.models.cafe import Cafe
 # 4. Схемы TableCreate, TableUpdate, Table
 
 # Пропускаем все тесты до реализации эндпоинтов
-# pytestmark = pytest.mark.skip(reason="Tables эндпоинты не реализованы")
+# pytestmark = pytest.mark.skip(reason='Tables эндпоинты не реализованы')
 
 
 class TestTablesList:
@@ -48,7 +47,8 @@ class TestTablesList:
         """Тест получения списка столов администратором."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            f'/cafe/{test_cafe.id}/tables', headers=headers,
+            f'/cafe/{test_cafe.id}/tables',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -65,7 +65,8 @@ class TestTablesList:
         """Тест получения списка столов менеджером."""
         headers = get_auth_headers(manager_token)
         response = await client_fixture.get(
-            f'/cafe/{test_cafe.id}/tables', headers=headers,
+            f'/cafe/{test_cafe.id}/tables',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -82,7 +83,8 @@ class TestTablesList:
         """Тест получения списка столов обычным пользователем (активные)."""
         headers = get_auth_headers(user_token)
         response = await client_fixture.get(
-            f'/cafe/{test_cafe.id}/tables', headers=headers,
+            f'/cafe/{test_cafe.id}/tables',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -100,7 +102,8 @@ class TestTablesList:
         """Тест получения столов для несуществующего кафе."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            '/cafe/99999/tables', headers=headers,
+            '/cafe/99999/tables',
+            headers=headers,
         )
 
         assert_error_response(response, status.HTTP_404_NOT_FOUND)

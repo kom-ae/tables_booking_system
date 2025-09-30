@@ -17,13 +17,12 @@ import pytest
 from httpx import AsyncClient
 from starlette import status
 
+from src.models.cafe import Cafe
 from tests.conftest import (
     assert_error_response,
     assert_success_response,
     get_auth_headers,
 )
-
-from src.models.cafe import Cafe
 
 # Эти тесты будут работать когда будут реализованы:
 # 1. Модель TimeSlot в src/models/slot.py
@@ -32,7 +31,7 @@ from src.models.cafe import Cafe
 # 4. Схемы TimeSlotCreate, TimeSlotUpdate, TimeSlot
 
 # Пропускаем все тесты до реализации эндпоинтов
-pytestmark = pytest.mark.skip(reason="Time slots эндпоинты не реализованы")
+pytestmark = pytest.mark.skip(reason='Time slots эндпоинты не реализованы')
 
 
 class TestTimeSlotsList:
@@ -48,7 +47,8 @@ class TestTimeSlotsList:
         """Тест получения списка временных слотов администратором."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            f'/cafe/{test_cafe.id}/time_slots', headers=headers,
+            f'/cafe/{test_cafe.id}/time_slots',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -83,7 +83,8 @@ class TestTimeSlotsList:
         """Тест получения временных слотов обычным пользователем (активные)."""
         headers = get_auth_headers(user_token)
         response = await client_fixture.get(
-            f'/cafe/{test_cafe.id}/time_slots', headers=headers,
+            f'/cafe/{test_cafe.id}/time_slots',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -101,7 +102,8 @@ class TestTimeSlotsList:
         """Тест получения временных слотов для несуществующего кафе."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            '/cafe/99999/time_slots', headers=headers,
+            '/cafe/99999/time_slots',
+            headers=headers,
         )
 
         assert_error_response(response, status.HTTP_404_NOT_FOUND)
