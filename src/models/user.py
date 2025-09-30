@@ -3,15 +3,14 @@ from enum import Enum
 from typing import Optional
 
 from sqlalchemy import (
+    BigInteger,
     CheckConstraint,
     DateTime,
     String,
     func,
     text,
 )
-from sqlalchemy import (
-    Enum as EnumSQL,
-)
+from sqlalchemy import Enum as EnumSQL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.constants import (
@@ -19,7 +18,6 @@ from src.constants import (
     PASSWORD_MAX_LENGTH,
     PHONE_MAX_LENGTH,
     PHONE_REGEX,
-    TG_ID_MAX_LENGTH,
     USERNAME_MAX_LENGTH,
     USERNAME_REGEX,
 )
@@ -48,7 +46,7 @@ class User(BaseModel):
     email: Mapped[str] = mapped_column(
         String(EMAIL_MAX_LENGTH),
         unique=True,
-        nullable=False,
+        nullable=True,
     )
     password: Mapped[str] = mapped_column(
         String(PASSWORD_MAX_LENGTH),
@@ -60,8 +58,8 @@ class User(BaseModel):
         unique=True,
         nullable=False,
     )
-    tg_id: Mapped[Optional[str]] = mapped_column(
-        String(TG_ID_MAX_LENGTH),
+    tg_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger,
         nullable=True,
         unique=True,
     )

@@ -1,5 +1,4 @@
 from datetime import datetime
-from decimal import Decimal
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -22,19 +21,6 @@ class BaseSchema(BaseModel):
     created_at: Optional[datetime] = Field(None, description='Дата создания')
     updated_at: Optional[datetime] = Field(None, description='Дата обновления')
     is_active: bool = Field(None, description='Активен ли пользователь.')
-
-
-class DishBase(BaseSchema):
-    """Базовая схема для блюд."""
-
-    cafe_id: int = Field(..., description='Кафе')
-    name: str = Field(..., description='Название блюда')
-    description: str = Field(..., description='Описание блюда')
-    price: Decimal | None = Field(None, description='Цена')
-    photo: str | None = Field(
-        None,
-        description='Фото блюда в формате base64',
-    )
 
 
 class CafeBase(BaseModel):

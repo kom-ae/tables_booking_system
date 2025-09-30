@@ -5,7 +5,7 @@ target-version = 'py311'
 preview = true
 
 # Содержимое папки alembic-а в проверку не включаем
-exclude = ['src/alembic', 'alembic', 'venv', '.git', '__pycache__']
+exclude = ['src/alembic', 'alembic', 'venv', '.git', '__pycache__', 'tests']
 
 [format]
 # Enable reformatting of code snippets in docstrings.

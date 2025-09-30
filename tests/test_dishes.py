@@ -16,13 +16,12 @@ import pytest
 from httpx import AsyncClient
 from starlette import status
 
+from src.models.cafe import Cafe
 from tests.conftest import (
     assert_error_response,
     assert_success_response,
     get_auth_headers,
 )
-
-from src.models.cafe import Cafe
 
 # Эти тесты будут работать когда будут реализованы:
 # 1. Эндпоинты в src/api/endpoints/dishes.py
@@ -30,7 +29,7 @@ from src.models.cafe import Cafe
 # 3. Исправление модели Dish (добавление поля is_active)
 
 # Пропускаем все тесты до реализации эндпоинтов
-pytestmark = pytest.mark.skip(reason="Dishes эндпоинты не реализованы")
+pytestmark = pytest.mark.skip(reason='Dishes эндпоинты не реализованы')
 
 
 class TestDishesList:
@@ -93,7 +92,8 @@ class TestDishesList:
         """Тест получения блюд с фильтром по кафе."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            f'/dishes?cafe_id={test_cafe.id}', headers=headers,
+            f'/dishes?cafe_id={test_cafe.id}',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -111,7 +111,8 @@ class TestDishesList:
         """Тест получения всех блюд включая неактивные."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            '/dishes?show_all=true', headers=headers,
+            '/dishes?show_all=true',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -126,7 +127,7 @@ class TestDishesList:
     ) -> None:
         """Тест получения только активных блюд."""
         headers = get_auth_headers(admin_token)
-        url = "/dishes?show_all=false"
+        url = '/dishes?show_all=false'
         response = await client_fixture.get(url, headers=headers)
 
         assert_success_response(response)
@@ -167,7 +168,9 @@ class TestDishCreate:
         }
 
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
 
         assert_success_response(response, status.HTTP_201_CREATED)
@@ -198,7 +201,9 @@ class TestDishCreate:
         }
 
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
 
         assert_success_response(response, status.HTTP_201_CREATED)
@@ -220,7 +225,9 @@ class TestDishCreate:
         }
 
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
 
         assert_error_response(response, status.HTTP_403_FORBIDDEN)
@@ -241,7 +248,9 @@ class TestDishCreate:
             'price': 100.00,
         }
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -252,7 +261,9 @@ class TestDishCreate:
             'price': 100.00,
         }
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -263,7 +274,9 @@ class TestDishCreate:
             'price': 100.00,
         }
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -274,7 +287,9 @@ class TestDishCreate:
             'description': 'Description',
         }
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -296,7 +311,9 @@ class TestDishCreate:
             'price': -10.00,
         }
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -308,7 +325,9 @@ class TestDishCreate:
             'price': 0.00,
         }
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
         # Может быть разрешено или запрещено в зависимости от бизнес-логики
         assert response.status_code in [
@@ -332,7 +351,9 @@ class TestDishCreate:
         }
 
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
 
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
@@ -351,7 +372,8 @@ class TestDishById:
         """Тест получения блюда по ID администратором."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            f'/dishes/{test_dish.id}', headers=headers,
+            f'/dishes/{test_dish.id}',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -370,7 +392,8 @@ class TestDishById:
         """Тест получения активного блюда по ID пользователем."""
         headers = get_auth_headers(user_token)
         response = await client_fixture.get(
-            f'/dishes/{test_dish.id}', headers=headers,
+            f'/dishes/{test_dish.id}',
+            headers=headers,
         )
 
         if test_dish.is_active:
@@ -489,7 +512,9 @@ class TestDishValidation:
             'price': 100.00,
         }
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -511,7 +536,9 @@ class TestDishValidation:
             'price': 100.00,
         }
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
         # Может быть принято или отклонено в зависимости от ограничений
         assert response.status_code in [
@@ -537,7 +564,9 @@ class TestDishValidation:
             'price': 123.456789,  # Много знаков после запятой
         }
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
 
         if response.status_code == status.HTTP_201_CREATED:
@@ -564,7 +593,9 @@ class TestDishValidation:
         }
 
         response = await client_fixture.post(
-            '/dishes', json=payload, headers=headers,
+            '/dishes',
+            json=payload,
+            headers=headers,
         )
 
         assert_success_response(response, status.HTTP_201_CREATED)
@@ -596,7 +627,9 @@ class TestDishIntegration:
         }
 
         create_response = await client_fixture.post(
-            '/dishes', json=create_payload, headers=headers,
+            '/dishes',
+            json=create_payload,
+            headers=headers,
         )
         assert_success_response(create_response, status.HTTP_201_CREATED)
 
@@ -613,7 +646,8 @@ class TestDishIntegration:
 
         # Получаем блюдо по ID
         get_response = await client_fixture.get(
-            f'/dishes/{dish_id}', headers=headers,
+            f'/dishes/{dish_id}',
+            headers=headers,
         )
         assert_success_response(get_response)
 
@@ -649,10 +683,14 @@ class TestDishIntegration:
         }
 
         response1 = await client_fixture.post(
-            '/dishes', json=dish1_payload, headers=headers,
+            '/dishes',
+            json=dish1_payload,
+            headers=headers,
         )
         response2 = await client_fixture.post(
-            '/dishes', json=dish2_payload, headers=headers,
+            '/dishes',
+            json=dish2_payload,
+            headers=headers,
         )
 
         assert_success_response(response1, status.HTTP_201_CREATED)

@@ -17,14 +17,13 @@ import pytest
 from httpx import AsyncClient
 from starlette import status
 
+from src.models.cafe import Cafe
+from src.models.user import User
 from tests.conftest import (
     assert_error_response,
     assert_success_response,
     get_auth_headers,
 )
-
-from src.models.cafe import Cafe
-from src.models.user import User
 
 # Эти тесты будут работать когда будут реализованы:
 # 1. Модель Booking в src/models/booking.py
@@ -34,7 +33,7 @@ from src.models.user import User
 # 5. Все связанные модели: Table, TimeSlot, Dish
 
 # Пропускаем все тесты до реализации эндпоинтов
-pytestmark = pytest.mark.skip(reason="Bookings эндпоинты не реализованы")
+pytestmark = pytest.mark.skip(reason='Bookings эндпоинты не реализованы')
 
 
 class TestBookingsList:
@@ -97,7 +96,8 @@ class TestBookingsList:
         """Тест получения бронирований с фильтром по кафе."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            f'/booking?cafe_id={test_cafe.id}', headers=headers,
+            f'/booking?cafe_id={test_cafe.id}',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -116,7 +116,8 @@ class TestBookingsList:
         """Тест получения бронирований с фильтром по пользователю."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            f'/booking?user_id={normal_user.id}', headers=headers,
+            f'/booking?user_id={normal_user.id}',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -134,7 +135,8 @@ class TestBookingsList:
         """Тест получения всех бронирований включая неактивные."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            '/booking?show_all=true', headers=headers,
+            '/booking?show_all=true',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -150,7 +152,8 @@ class TestBookingsList:
         """Тест получения только активных бронирований."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            '/booking?show_all=false', headers=headers,
+            '/booking?show_all=false',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -197,7 +200,9 @@ class TestBookingCreate:
         }
 
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
 
         assert_success_response(response, status.HTTP_201_CREATED)
@@ -238,7 +243,9 @@ class TestBookingCreate:
         }
 
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
 
         assert_success_response(response, status.HTTP_201_CREATED)
@@ -267,7 +274,9 @@ class TestBookingCreate:
         }
 
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
 
         assert_success_response(response, status.HTTP_201_CREATED)
@@ -292,7 +301,9 @@ class TestBookingCreate:
             'guests_number': 4,
         }
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -304,7 +315,9 @@ class TestBookingCreate:
             'guests_number': 4,
         }
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -316,7 +329,9 @@ class TestBookingCreate:
             'guests_number': 4,
         }
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -328,7 +343,9 @@ class TestBookingCreate:
             'guests_number': 4,
         }
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -340,7 +357,9 @@ class TestBookingCreate:
             'slots': [1],
         }
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -364,7 +383,9 @@ class TestBookingCreate:
             'guests_number': -1,
         }
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -377,7 +398,9 @@ class TestBookingCreate:
             'guests_number': 0,
         }
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -400,7 +423,9 @@ class TestBookingCreate:
             'guests_number': 4,
         }
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -413,7 +438,9 @@ class TestBookingCreate:
             'guests_number': 4,
         }
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -449,7 +476,8 @@ class TestBookingById:
         """Тест получения бронирования по ID администратором."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            f'/booking/{test_booking.id}', headers=headers,
+            f'/booking/{test_booking.id}',
+            headers=headers,
         )
 
         assert_success_response(response)
@@ -470,12 +498,14 @@ class TestBookingById:
         # Если бронирование принадлежит пользователю
         if test_booking.user_id == normal_user.id:
             response = await client_fixture.get(
-                f'/booking/{test_booking.id}', headers=headers,
+                f'/booking/{test_booking.id}',
+                headers=headers,
             )
             assert_success_response(response)
         else:
             response = await client_fixture.get(
-                f'/booking/{test_booking.id}', headers=headers,
+                f'/booking/{test_booking.id}',
+                headers=headers,
             )
             assert_error_response(response, status.HTTP_403_FORBIDDEN)
 
@@ -644,7 +674,9 @@ class TestBookingValidation:
             'note': 'x' * 2000,  # Очень длинный комментарий
         }
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
         # Может быть принято или отклонено в зависимости от ограничений
         assert response.status_code in [
@@ -674,7 +706,9 @@ class TestBookingValidation:
             + 10,  # Больше вместимости
         }
         response = await client_fixture.post(
-            '/booking', json=payload, headers=headers,
+            '/booking',
+            json=payload,
+            headers=headers,
         )
         # Может быть разрешено или запрещено в зависимости от бизнес-логики
         assert response.status_code in [
@@ -714,7 +748,9 @@ class TestBookingIntegration:
         }
 
         create_response = await client_fixture.post(
-            '/booking', json=create_payload, headers=user_headers,
+            '/booking',
+            json=create_payload,
+            headers=user_headers,
         )
         assert_success_response(create_response, status.HTTP_201_CREATED)
 
@@ -724,7 +760,8 @@ class TestBookingIntegration:
 
         # 2. Пользователь может просмотреть свое бронирование
         get_response = await client_fixture.get(
-            f'/booking/{booking_id}', headers=user_headers,
+            f'/booking/{booking_id}',
+            headers=user_headers,
         )
         assert_success_response(get_response)
 
@@ -745,7 +782,8 @@ class TestBookingIntegration:
 
         # 4. Администратор может видеть бронирование
         admin_get_response = await client_fixture.get(
-            f'/booking/{booking_id}', headers=admin_headers,
+            f'/booking/{booking_id}',
+            headers=admin_headers,
         )
         assert_success_response(admin_get_response)
 
@@ -788,7 +826,9 @@ class TestBookingIntegration:
         }
 
         response1 = await client_fixture.post(
-            '/booking', json=payload1, headers=headers,
+            '/booking',
+            json=payload1,
+            headers=headers,
         )
         assert_success_response(response1, status.HTTP_201_CREATED)
 
@@ -802,7 +842,9 @@ class TestBookingIntegration:
         }
 
         response2 = await client_fixture.post(
-            '/booking', json=payload2, headers=headers,
+            '/booking',
+            json=payload2,
+            headers=headers,
         )
         # Должно быть отклонено из-за конфликта
         assert_error_response(response2, status.HTTP_400_BAD_REQUEST)

@@ -11,14 +11,13 @@ import pytest
 from httpx import AsyncClient
 from starlette import status
 
+from src.schemas.auth import Auth
 from tests.conftest import (
     VALID_PASSWORD,
     assert_error_response,
     assert_success_response,
     get_auth_headers,
 )
-
-from src.schemas.auth import Auth
 
 
 class TestAuthLogin:
@@ -148,13 +147,15 @@ class TestAuthLogin:
         """Тест авторизации без обязательных полей."""
         # Без поля name
         response = await client_fixture.post(
-            '/auth/login', json={'password': VALID_PASSWORD},
+            '/auth/login',
+            json={'password': VALID_PASSWORD},
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
         # Без поля password
         response = await client_fixture.post(
-            '/auth/login', json={'name': 'test@example.com'},
+            '/auth/login',
+            json={'name': 'test@example.com'},
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -169,7 +170,8 @@ class TestAuthLogin:
     ) -> None:
         """Тест авторизации с невалидным JSON."""
         response = await client_fixture.post(
-            '/auth/login', json={'invalid': 'data'},
+            '/auth/login',
+            json={'invalid': 'data'},
         )
         assert_error_response(response, status.HTTP_400_BAD_REQUEST)
 
@@ -288,7 +290,8 @@ class TestAuthIntegration:
         ).model_dump()
 
         login_response = await client_fixture.post(
-            '/auth/login', json=login_payload,
+            '/auth/login',
+            json=login_payload,
         )
         assert_success_response(login_response)
 
@@ -297,7 +300,8 @@ class TestAuthIntegration:
         # Логаут
         headers = get_auth_headers(token)
         logout_response = await client_fixture.post(
-            '/auth/logout', headers=headers,
+            '/auth/logout',
+            headers=headers,
         )
         assert_success_response(logout_response)
 
@@ -315,7 +319,8 @@ class TestAuthIntegration:
         ).model_dump()
 
         login_response = await client_fixture.post(
-            '/auth/login', json=login_payload,
+            '/auth/login',
+            json=login_payload,
         )
         token = login_response.json()['token']
 
@@ -347,13 +352,15 @@ class TestAuthIntegration:
         ).model_dump()
 
         response1 = await client_fixture.post(
-            '/auth/login', json=login_payload,
+            '/auth/login',
+            json=login_payload,
         )
         token1 = response1.json()['token']
 
         # Второй логин
         response2 = await client_fixture.post(
-            '/auth/login', json=login_payload,
+            '/auth/login',
+            json=login_payload,
         )
         token2 = response2.json()['token']
 
