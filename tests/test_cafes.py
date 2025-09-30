@@ -75,7 +75,7 @@ class TestCafesList:
         """Тест получения всех кафе включая неактивные."""
         # Деактивируем кафе
         await session_fixture.execute(
-            text('UPDATE cafes SET is_active = false WHERE id = :cafe_id'),
+            text('UPDATE cafe SET is_active = false WHERE id = :cafe_id'),
             {'cafe_id': test_cafe.id},
         )
         await session_fixture.commit()
@@ -106,7 +106,7 @@ class TestCafesList:
         """Тест получения кафе с параметром show_all=false."""
         # Деактивируем кафе
         await session_fixture.execute(
-            text('UPDATE cafes SET is_active = false WHERE id = :cafe_id'),
+            text('UPDATE cafe SET is_active = false WHERE id = :cafe_id'),
             {'cafe_id': test_cafe.id},
         )
         await session_fixture.commit()
