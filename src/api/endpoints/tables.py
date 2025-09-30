@@ -5,10 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.factory import get_table_crud, get_cafe_crud
 from src.core.logger import log_endpoint
-from src.schemas.tables import TableCreate, TableDB, TableUpdate
+from src.schemas.table import TableCreate, TableDB, TableUpdate
+from src.core.dependencies import current_admin, current_user
 from src.core.db import get_async_session
 from src.crud.tables import CRUDTable
 from src.crud.cafes import CRUDCafe
+from src.models import User
 
 
 router = APIRouter()
@@ -22,6 +24,7 @@ router = APIRouter()
 @log_endpoint()
 async def get_tables(
     cafe_id: int,
+    user: User = Depends(current_user),
     session: AsyncSession = Depends(get_async_session),
     tables_crud: CRUDTable = Depends(get_table_crud),
     cafe_crud: CRUDCafe = Depends(get_cafe_crud),

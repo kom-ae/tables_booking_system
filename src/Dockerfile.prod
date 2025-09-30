@@ -1,32 +1,44 @@
-# ---- Build stage ----
-FROM python:3.11-alpine AS build
+# -------------------
+# Build stage
+# -------------------
+FROM python:3.11-alpine AS build # noqa
 
-RUN apk add --no-cache \
-    build-base \
-    postgresql-dev \
-    libffi-dev \
-    && pip install --upgrade pip
+# Системные зависимости для сборки пакетов
+RUN apk add --no-cache build-base libffi-dev postgresql-dev openssl-dev
 
 WORKDIR /app
 
-COPY src/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Копируем только requirements
+COPY ../requirements.txt .
 
-# ---- Final stage ----
+# Собираем wheel-пакеты
+RUN pip wheel --no-cache-dir -r requirements.txt -w /wheels
+
+# -------------------
+# Final stage
+# -------------------
 FROM python:3.11-alpine
 
+# Системные зависимости для работы
+RUN apk add --no-cache libffi postgresql-libs openssl
+
 WORKDIR /app
 
-COPY --from=build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=build /usr/local/bin /usr/local/bin
+# Устанавливаем зависимости из wheel
+COPY --from=build /wheels /wheels
+RUN pip install --no-cache-dir /wheels/*
 
-COPY ...src/ ./src/
-COPY ../alembic/ ./alembic/
+# ВАЖНО: устанавливаем asyncpg отдельно
+RUN pip install --no-cache-dir asyncpg
+
+# Копируем исходники приложения
+COPY ../src ./src
+COPY ../alembic ./alembic
 COPY ../alembic.ini .
 COPY ../.env .
 
-ENV PYTHONUNBUFFERED=1
-ENV DATABASE_URL=postgresql://user:password@db:5432/dbname
+# Пробрасываем порт для uvicorn
+EXPOSE 8000
 
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "src.main:app", \
-     "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120"]
+# Запуск приложения
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

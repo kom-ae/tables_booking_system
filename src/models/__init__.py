@@ -1,5 +1,5 @@
-from .action import Actions  # noqa
-from .cafes import Cafes  # noqa
-from .dish import Dishes  # noqa
+from .action import Action  # noqa
+from .cafe import Cafe  # noqa
+from .dish import Dishe  # noqa
 from .user import User  # noqa
-from .tables import Tables  # noqa
+from .table import Tables  # noqa

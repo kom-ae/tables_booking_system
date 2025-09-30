@@ -1,12 +1,13 @@
-from typing import Any, Generic, Optional, Type, TypeVar
+from typing import Any, Generic, List, Optional, Type, TypeVar
 
 from pydantic import BaseModel
 from sqlalchemy import and_, select
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.config import settings
 from src.core.db import Base
-from src.core.logger import log_event
+from src.core.logger import project_log
+from src.exceptions.db import DBException, DBIntegrityException
 
 ModelType = TypeVar('ModelType', bound=Base)  # type: ignore
 CreateSchemaType = TypeVar('CreateSchemaType', bound=BaseModel)
@@ -14,60 +15,87 @@ UpdateSchemaType = TypeVar('UpdateSchemaType', bound=BaseModel)
 
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
-    """Базовый CRUD с логированием успешных и неуспешных операций."""
+    """Базовый CRUD с логированием."""
 
     def __init__(self, model: Type[ModelType]) -> None:
-        """Инициализация CRUD с указанием модели."""
+        """Инициализация CRUD."""
         self.model = model
+
+    async def _commit(
+        self,
+        session: AsyncSession,
+        user: Optional[Any] = None,
+    ) -> None:
+        """Коммит с обработкой ошибок."""
+        try:
+            await session.commit()
+        except IntegrityError as error:
+            await session.rollback()
+            msg = str(error.orig)
+            project_log('warning', f'Ошибка БД: {msg}', user=user)
+            raise DBIntegrityException(msg)
+        except SQLAlchemyError as error:
+            await session.rollback()
+            project_log('error', f'Ошибка БД: {error}', user=user)
+            raise DBException('Ошибка базы данных')
+        except Exception as error:
+            await session.rollback()
+            project_log('error', f'Неизвестная ошибка БД: {error}', user=user)
+            raise DBException('Внутренняя ошибка базы данных')
 
     async def _check_unique(
         self,
         session: AsyncSession,
         model: Type[ModelType],
         current_obj: Optional[ModelType] = None,
+        user: Optional[Any] = None,
         **fields: Any,
     ) -> None:
-        """Проверка уникальности полей для любой модели через **kwargs."""
+        """Проверка уникальности полей."""
         for field_name, value in fields.items():
             if value is None:
                 continue
-
-            stmt = select(model).where(getattr(model, field_name) == value)
-            result = await session.execute(stmt)
-            existing = result.scalars().first()
-
-            if existing and getattr(existing, 'id', None) != getattr(
+            exists = await session.scalar(
+                model.__table__.select()
+                .where(getattr(model, field_name) == value)
+                .limit(1),
+            )
+            if exists and getattr(exists, 'id', None) != getattr(
                 current_obj,
                 'id',
                 None,
             ):
-                log_event(
+                project_log(
                     'warning',
-                    f'Попытка создать/обновить {model.__name__} '
-                    f'с уже существующим {field_name}: {value}',
-                    username=getattr(
-                        current_obj,
-                        'username',
-                        settings.system_username,
-                    ),
-                    user_id=getattr(
-                        current_obj,
-                        'id',
-                        settings.default_user_id,
-                    ),
+                    f'Дубликат {model.__name__}: {field_name}={value}',
+                    user=user,
                 )
-                raise Exception(f'{field_name} {value} уже существует')
+                raise DBIntegrityException(
+                    f"{field_name} '{value}' уже существует",
+                )
 
     async def get(
         self,
         obj_id: int,
         session: AsyncSession,
     ) -> Optional[ModelType]:
-        """Получение объекта по ID."""
-        db_obj = await session.execute(
+        """Получить объект по id."""
+        result = await session.execute(
             select(self.model).where(self.model.id == obj_id),
         )
-        return db_obj.scalars().one_or_none()
+        return result.scalars().first()
+
+    async def get_multi_all(self, session: AsyncSession) -> List[ModelType]:
+        """Получить все объекты."""
+        result = await session.execute(select(self.model))
+        return result.scalars().all()
+
+    async def get_multi_active(self, session: AsyncSession) -> List[ModelType]:
+        """Получить все активные объекты."""
+        result = await session.execute(
+            select(self.model).where(getattr(self.model, 'is_active', True)),
+        )
+        return result.scalars().all()
 
     async def get_active(
         self,
@@ -85,106 +113,64 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         )
         return db_obj.scalars().one_or_none()
 
-    async def get_multi_all(
-        self,
-        session: AsyncSession,
-    ) -> list[ModelType]:
-        """Получение всех объектов."""
-        return (await session.scalars(select(self.model))).all()
-
-    async def get_multi_active(
-        self,
-        session: AsyncSession,
-    ) -> list[ModelType]:
-        """Получение только активных объектов."""
-        return (await session.scalars(
-            select(self.model).where(self.model.is_active),
-        )).all()
-
     async def create(
         self,
         obj_in: CreateSchemaType,
         session: AsyncSession,
-        user_id: Optional[int] = None,
+        user: Optional[Any] = None,
     ) -> ModelType:
-        """Создание объекта с логированием успешных и неуспешных попыток."""
+        """Создать объект."""
         obj_in_data = obj_in.model_dump()
-        if user_id is not None:
-            obj_in_data['user_id'] = user_id
-
+        project_log('info', f'Создание {self.model.__name__}', user=user)
         try:
             db_obj = self.model(**obj_in_data)
             session.add(db_obj)
-            await session.commit()
+            await self._commit(session, user)
             await session.refresh(db_obj)
-
-            log_event(
+            project_log(
                 'info',
-                f'Создан объект {self.model.__name__} id={db_obj.id} '
-                f'с данными {obj_in_data}',
-                username=(
-                    settings.system_username
-                    if not user_id
-                    else f'user_{user_id}'
-                ),
-                user_id=user_id or settings.default_user_id,
+                f'Создан {self.model.__name__} id={db_obj.id}',
+                user=user,
             )
             return db_obj
-        except Exception as error:
-            log_event(
-                'warning',
-                'Не удалось создать объект'
-                f'{self.model.__name__}: {str(error)}',
-                username=(
-                    settings.system_username
-                    if not user_id
-                    else f'user_{user_id}'
-                ),
-                user_id=user_id or settings.default_user_id,
-            )
+        except DBIntegrityException:
             raise
+        except Exception as error:
+            project_log(
+                'error',
+                f'Ошибка при создании {self.model.__name__}: {error}',
+                user=user,
+            )
+            raise DBException('Ошибка при создании объекта')
 
     async def update(
         self,
         db_obj: ModelType,
         obj_in: UpdateSchemaType,
         session: AsyncSession,
-        user_id: Optional[int] = None,
+        user: Optional[Any] = None,
     ) -> ModelType:
-        """Обновление объекта с логированием успешных и неуспешных попыток."""
+        """Обновить объект."""
         update_data = obj_in.model_dump(exclude_unset=True)
-
         for field, value in update_data.items():
             setattr(db_obj, field, value)
-
         try:
             session.add(db_obj)
-            await session.commit()
+            await self._commit(session, user)
             await session.refresh(db_obj)
-
-            log_event(
+            project_log(
                 'info',
-                f'Обновлен объект {self.model.__name__} id={db_obj.id} '
-                f'с данными {update_data}',
-                username=(
-                    settings.system_username
-                    if not user_id
-                    else f'user_{user_id}'
-                ),
-                user_id=user_id or settings.default_user_id,
+                f'Обновлён {self.model.__name__} id={db_obj.id}',
+                user=user,
             )
             return db_obj
-        except Exception as error:
-            log_event(
-                'warning',
-                'Не удалось обновить объект '
-                f'{self.model.__name__} '
-                f'id={getattr(db_obj, "id", None)}: {str(error)}',
-                username=(
-                    settings.system_username
-                    if not user_id
-                    else f'user_{user_id}'
-                ),
-                user_id=user_id or settings.default_user_id,
-            )
+        except DBIntegrityException:
             raise
+        except Exception as error:
+            project_log(
+                'error',
+                f'Ошибка при обновлении {self.model.__name__} '
+                f'id={getattr(db_obj, "id", None)}: {error}',
+                user=user,
+            )
+            raise DBException('Ошибка при обновлении объекта')

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.constants import MAX_DESCRIPTION
 from src.models.base import BaseModel
-from src.models.cafes import Cafes
+from src.models.cafe import Cafe
 
 
 class Tables(BaseModel):
@@ -14,7 +14,7 @@ class Tables(BaseModel):
     __tablename__ = 'tables'
 
     cafe_id: Mapped[int] = mapped_column(
-        ForeignKey('cafes.id', ondelete='CASCADE'),
+        ForeignKey('cafe.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
     )
@@ -27,7 +27,7 @@ class Tables(BaseModel):
         String(MAX_DESCRIPTION),
         nullable=True,
     )
-    cafe: Mapped['Cafes'] = relationship(
+    cafe: Mapped['Cafe'] = relationship(
         back_populates='tables',
         lazy='selectin',
         )

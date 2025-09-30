@@ -1,22 +1,31 @@
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, List, Optional
+from typing import Optional
 
-from sqlalchemy import DateTime, String, func, text
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    String,
+    func,
+    text,
+)
+from sqlalchemy import (
+    Enum as EnumSQL,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.constants import (
     EMAIL_MAX_LENGTH,
     PASSWORD_MAX_LENGTH,
     PHONE_MAX_LENGTH,
-    ROLE_MAX_LENGTH,
+    PHONE_REGEX,
     TG_ID_MAX_LENGTH,
     USERNAME_MAX_LENGTH,
+    USERNAME_REGEX,
 )
+from src.core.config import settings
 from src.models.base import BaseModel
-
-if TYPE_CHECKING:
-    from src.models.cafes import Cafes
+from src.models.cafe import Cafe
 
 
 class UserRole(str, Enum):
@@ -56,8 +65,8 @@ class User(BaseModel):
         nullable=True,
         unique=True,
     )
-    role: Mapped[str] = mapped_column(
-        String(ROLE_MAX_LENGTH),
+    role: Mapped[UserRole] = mapped_column(
+        EnumSQL(UserRole, name='user_role_enum'),
         default=UserRole.USER,
         nullable=False,
     )
@@ -67,12 +76,24 @@ class User(BaseModel):
         onupdate=func.now(),
         nullable=False,
     )
-    managed_cafes: Mapped[List['Cafes']] = relationship(
-        'Cafes',
+    managed_cafes: Mapped[list['Cafe']] = relationship(
+        'Cafe',
         secondary='cafe_manager',
         back_populates='managers',
         lazy='selectin',
     )
+
+    if settings.db_engine == 'postgres':
+        __table_args__ = (
+            CheckConstraint(
+                f"username ~ '{USERNAME_REGEX.pattern}'",
+                name='username_pattern',
+            ),
+            CheckConstraint(
+                f"phone ~ '{PHONE_REGEX.pattern}'",
+                name='phone_pattern',
+            ),
+        )
 
     # -------------------
     # Методы проверки ролей

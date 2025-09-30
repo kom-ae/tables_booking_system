@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 
-from pydantic import EmailStr, field_validator
+from pydantic import EmailStr, Field, field_validator
 from pydantic_settings import BaseSettings
 
 from src.core.logger import temp_logger
@@ -31,20 +31,25 @@ try:
         # -------------------
         # Настройки БД
         # -------------------
-        database_uri: Optional[str] = None
-        db_engine: str = DBEngine.SQLITE.value
-        db_host: Optional[str] = None
-        db_port: Optional[int] = None
-        db_name: str = 'fastapi.db'
-        db_user: Optional[str] = None
-        db_password: Optional[str] = None
+        db_engine: str = Field(
+            default=DBEngine.POSTGRES.value,
+            env='DB_ENGINE',
+        )
+        db_host: str = Field(..., env='DB_HOST')
+        db_port: int = Field(..., env='DB_PORT')
+        db_name: str = Field(..., env='DB_NAME')
+        db_user: str = Field(..., env='DB_USER')
+        db_password: str = Field(..., env='DB_PASSWORD')
 
         # -------------------
         # JWT / безопасность
         # -------------------
-        secret: str = 'SECRET'
-        jwt_algorithm: str = 'HS256'
-        access_token_expire_minutes: int = 120
+        secret: str = Field(..., env='SECRET')
+        jwt_algorithm: str = Field(..., env='JWT_ALGORITHM')
+        access_token_expire_minutes: int = Field(
+            ...,
+            env='ACCESS_TOKEN_EXPIRE_MINUTES',
+        )
 
         # -------------------
         # Первый суперпользователь
@@ -58,24 +63,21 @@ try:
         # -------------------
         # Логирование
         # -------------------
-        log_file: Optional[str] = None
-        max_bytes: Optional[int] = None
-        backup_count: Optional[int] = None
-        system_username: Optional[str] = None
-
-        # -------------------
-        # Прочие
-        # -------------------
-        default_user_id: Optional[int] = None
+        log_file: str = Field(..., env='LOG_FILE')
+        max_bytes: int = Field(..., env='MAX_BYTES')
+        backup_count: int = Field(..., env='BACKUP_COUNT')
 
         # -------------------
         # Методы
         # -------------------
-
-        @property
         def get_database_uri(self) -> str:
-            """Возвращает полный URI для подключения к базе данных."""
-            if self.database_uri:
+            """Возвращает URI для подключения к базе данных."""
+            # Проверка, если database_uri есть как поле
+            if hasattr(self, 'database_uri') and getattr(
+                self,
+                'database_uri',
+                None,
+            ):
                 return self.database_uri
 
             if self.db_engine in (
@@ -91,15 +93,12 @@ try:
 
         def _get_postgresql_uri(self) -> str:
             """Возвращает URI для PostgreSQL."""
-            if not all([
-                self.db_host,
-                self.db_name,
-                self.db_user,
-                self.db_password,
-            ]):
+            if not all(
+                [self.db_host, self.db_name, self.db_user, self.db_password],
+            ):
                 raise ValueError(
-                    'Для PostgreSQL необходимо указать host, name, user, '
-                    'password',
+                    'Для PostgreSQL необходимо указать '
+                    'host, name, user, password',
                 )
 
             port = f':{self.db_port}' if self.db_port else ''
@@ -112,24 +111,27 @@ try:
         @classmethod
         def validate_db_engine(cls, value: str) -> str:
             """Проверяет допустимый тип базы данных."""
-            if value.lower() not in [enum.value for enum in DBEngine]:
+            value_clean = value.strip().lower()
+            if value_clean not in [enum.value for enum in DBEngine]:
                 raise ValueError(
                     'DB engine должен быть одним из: '
                     f'{", ".join(enum.value for enum in DBEngine)}',
                 )
-
-            return value.lower()
+            return value_clean
 
         class Config:
             """Конфигурация Pydantic для работы с переменными окружения."""
 
             env_file = '.env'
             extra = 'allow'
+            case_sensitive = False
 
-    settings: Settings
-    """Глобальный объект конфигурации приложения."""
     settings = Settings()
-
+    """Глобальный объект конфигурации приложения."""
+    logger.info(
+        'Settings loaded. DB URI: %s',
+        settings.get_database_uri().replace(settings.db_password, '***'),
+    )
 except Exception as error:
     logger.exception(f'Ошибка при создании Settings: {error}')
     raise

@@ -177,6 +177,7 @@ test
 
 # База данных
 fastapi.db
+/infra/pgdata/
 
 # Black
 pyproject.toml
