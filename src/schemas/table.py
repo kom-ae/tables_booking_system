@@ -28,6 +28,8 @@ class TableBase(BaseModel):
     )
 
     class Config:
+        """Конфиг класса."""
+
         extra = 'forbid'
 
 
@@ -44,7 +46,7 @@ class TableUpdate(BaseModel):
         None,
         ge=MIN_SEATS_NUMBER,
         le=MAX_SEATS_NUMBER,
-        title='Количество мест'
+        title='Количество мест',
     )
     description: Optional[str] = Field(
         None,
@@ -57,6 +59,8 @@ class TableUpdate(BaseModel):
     )
 
     class Config:
+        """Конфиг класса."""
+
         extra = 'forbid'
 
 
@@ -70,4 +74,6 @@ class TableDB(TableBase):
     updated_at: datetime = Field(..., title='Дата обновления')
 
     class Config(TableBase.Config):
+        """Конфиг класса."""
+
         from_attributes = True

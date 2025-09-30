@@ -47,7 +47,7 @@ class CRUDTable(CRUDBase[Tables, TableCreate, TableUpdate]):
     ) -> Optional[Tables]:
         """Получить стол по cafe_id и table_id."""
         query = select(self.model).where(
-            and_(self.model.id == table_id, self.model.cafe_id == cafe_id)
+            and_(self.model.id == table_id, self.model.cafe_id == cafe_id),
         )
         if only_active:
             query = query.where(self.model.is_active)

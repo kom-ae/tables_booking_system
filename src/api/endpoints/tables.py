@@ -28,7 +28,9 @@ async def get_tables(
     user: User = Depends(current_user),
     tables_crud: CRUDTable = Depends(get_table_crud),
     cafe_crud: CRUDCafe = Depends(get_cafe_crud),
-):
+) -> List[TableDB]:
+    """Получить все столы кафе."""
+
     cafe = await cafe_crud.get_active(cafe_id, session)
     if not cafe:
         raise HTTPException(status_code=404, detail='Кафе не найдено')
@@ -37,7 +39,7 @@ async def get_tables(
     return await tables_crud.get_tables_by_cafe_id(
         cafe_id,
         session,
-        only_active=only_active
+        only_active=only_active,
     )
 
 
@@ -55,7 +57,9 @@ async def create_table(
     user: User = Depends(current_manager),
     tables_crud: CRUDTable = Depends(get_table_crud),
     cafe_crud: CRUDCafe = Depends(get_cafe_crud),
-):
+) -> TableDB:
+    """Создать стол."""
+
     cafe = await cafe_crud.get_active(cafe_id, session)
     if not cafe:
         raise HTTPException(status_code=404, detail='Кафе не найдено')
@@ -75,10 +79,12 @@ async def get_table(
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_user),
     tables_crud: CRUDTable = Depends(get_table_crud),
-):
+) -> TableDB:
+    """Получить стол по ID."""
+
     only_active = user.role == 'user'
     table = await tables_crud.get_by_id_and_cafe(
-        table_id, cafe_id, session, only_active=only_active
+        table_id, cafe_id, session, only_active=only_active,
     )
     if not table:
         raise HTTPException(status_code=404, detail='Стол не найден')
@@ -98,9 +104,11 @@ async def update_table(
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_manager),
     tables_crud: CRUDTable = Depends(get_table_crud),
-):
+) -> TableDB:
+    """Обновить стол."""
+
     table = await tables_crud.get_by_id_and_cafe(
-        table_id, cafe_id, session, only_active=False
+        table_id, cafe_id, session, only_active=False,
     )
     if not table:
         raise HTTPException(status_code=404, detail='Стол не найден')

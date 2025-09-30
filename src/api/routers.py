@@ -37,5 +37,5 @@ main_router.include_router(
 main_router.include_router(
     tables_router,
     prefix='/cafe/{cafe_id}/tables',
-    tags=['Столы']
+    tags=['Столы'],
 )
