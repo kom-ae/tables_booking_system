@@ -29,7 +29,6 @@ class TableBase(BaseModel):
 
     class Config:
         """Конфиг класса."""
-
         extra = 'forbid'
 
 
@@ -75,5 +74,4 @@ class TableDB(TableBase):
 
     class Config(TableBase.Config):
         """Конфиг класса."""
-
         from_attributes = True
