@@ -30,4 +30,4 @@ class Tables(BaseModel):
     cafe: Mapped['Cafe'] = relationship(
         back_populates='tables',
         lazy='selectin',
-        )
+    )

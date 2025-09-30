@@ -1,18 +1,20 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.factory import get_table_crud, get_cafe_crud
-from src.core.logger import log_endpoint
-from src.schemas.table import TableCreate, TableDB, TableUpdate
+from src.core.dependencies import current_manager, current_user
 from src.core.db import get_async_session
-from src.crud.tables import CRUDTable
+from src.core.logger import log_endpoint
 from src.crud.cafes import CRUDCafe
+from src.crud.factory import get_cafe_crud, get_table_crud
+from src.crud.tables import CRUDTable
 from src.models.user import User
-from src.core.dependencies import current_user, current_manager
+from src.schemas.table import TableCreate, TableDB, TableUpdate
+
 
 router = APIRouter()
+
 
 @router.get(
     '',
@@ -38,6 +40,7 @@ async def get_tables(
         only_active=only_active
     )
 
+
 @router.post(
     '',
     response_model=TableDB,
@@ -59,6 +62,7 @@ async def create_table(
 
     return await tables_crud.create_table(cafe_id, table_in, session)
 
+
 @router.get(
     '/{table_id}',
     response_model=TableDB,
@@ -79,6 +83,7 @@ async def get_table(
     if not table:
         raise HTTPException(status_code=404, detail='Стол не найден')
     return table
+
 
 @router.patch(
     '/{table_id}',
