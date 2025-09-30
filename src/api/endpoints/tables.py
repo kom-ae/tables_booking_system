@@ -12,7 +12,6 @@ from src.crud.tables import CRUDTable
 from src.models.user import User
 from src.schemas.table import TableCreate, TableDB, TableUpdate
 
-
 router = APIRouter()
 
 
