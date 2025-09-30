@@ -35,8 +35,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         user = await self.get(obj_id, session)
         if not user:
             logger.warning(
-                f'Попытка получить несуществующего пользователя {obj_id}',
-                user=None,
+                f'Попытка получить несуществующего пользователя. ID: {obj_id}',
             )
             raise UserNotFoundException()
         return user
@@ -72,8 +71,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         )
 
         logger.info(
-            f'Создан новый пользователь id={db_user.id}, '
-            f'username={db_user.username}',
+            f'{CRUDUser.create.__doc__} ID: {db_user.id} '
+            f'username: {db_user.username}',
             user=user,
         )
 
@@ -114,7 +113,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             users = await self.get_multi_active(session)
 
         logger.info(
-            f'Получен список пользователей, show_all={show_all}',
+            f'{CRUDUser.get_users.__doc__} show_all={show_all}',
             user=user,
         )
         return users

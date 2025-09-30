@@ -11,15 +11,20 @@ from src.services.auth import PasswordService
 async def init_db_and_superuser() -> None:
     """Инициализация базы данных и суперпользователя."""
     if not settings.debug:
-        logger.info('Prod mode: ничего не создаём', user=None)
+        logger.info(
+            f'{init_db_and_superuser.__doc__} Пропущено. '
+            f'DEBUG: {settings.debug}',
+        )
         return
 
     try:
         async with engine.begin() as conn:
             await conn.run_sync(BaseModel.metadata.create_all)
-            logger.info('Таблицы созданы (dev mode)', user=None)
+            logger.info(f'{init_db_and_superuser.__doc__}')
     except Exception as error:
-        logger.warning(f'Таблицы уже существуют: {error}', user=None)
+        logger.warning(
+            f'{init_db_and_superuser.__doc__} Таблицы уже существуют: {error}',
+        )
         return
 
     try:
@@ -59,7 +64,4 @@ async def init_db_and_superuser() -> None:
                     user=user,
                 )
     except Exception as error:
-        logger.error(
-            f'Ошибка при создании суперпользователя: {error}',
-            user=None,
-        )
+        logger.error(f'Ошибка при создании суперпользователя: {error}')

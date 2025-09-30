@@ -132,7 +132,7 @@ try:
     settings = Settings()
     """Глобальный объект конфигурации приложения."""
     logger.info(
-        'Settings loaded. DB URI: %s',
+        'Настройки загружены. DB URI: %s',
         settings.get_database_uri().replace(settings.db_password, '***'),
     )
 except Exception as error:

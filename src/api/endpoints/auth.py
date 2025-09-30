@@ -38,7 +38,7 @@ async def login(
         raise InvalidCredentialsException()
 
     await user_crud.update_last_used(db, user)
-    logger.info(f'Успешный вход в систему: пользователь с id:{user.id}')
+    logger.info(f'{login.__doc__} USER_NAME: {auth.name}')
 
     token: str = TokenService.create_access_token(data={'sub': str(user.id)})
     return {'token': token}

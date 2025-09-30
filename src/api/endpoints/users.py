@@ -40,8 +40,8 @@ router = APIRouter()
 async def get_current_user_endpoint(
     user: User = Depends(current_user),
 ) -> UserRead:
-    """Возвращает текущего пользователя."""
-    logger.info(f'Текущий пользователь c id:{user.id} получен', user=user)
+    """Получает текущего пользователя."""
+    logger.info(f'{get_current_user_endpoint.__doc__}', user=user)
     return user
 
 
@@ -60,7 +60,11 @@ async def update_current_user(
     session: AsyncSession = Depends(get_async_session),
 ) -> UserRead:
     """Обновляет текущего пользователя."""
-    logger.info(f'Попытка обновления пользователя с id:{user.id}', user=user)
+    logger.info(
+        f'{update_current_user.__doc__} Данные',
+        user=user,
+        info_dict=user_update,
+    )
 
     return await user_crud.update(
         db_obj=user,
@@ -86,21 +90,14 @@ async def get_users(
     user_crud: CRUDUser = Depends(get_user_crud),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[UserRead]:
-    """Возвращает список пользователей."""
-    logger.info(
-        f'Запрос списка пользователей, show_all={show_all}',
-        user=admin,
-    )
-    users = await user_crud.get_users(
+    """Получает список пользователей."""
+    logger.info(f'{get_users.__doc__} show_all={show_all}', user=admin)
+
+    return await user_crud.get_users(
         session=session,
         show_all=show_all,
         user=admin,
     )
-    logger.info(
-        f'Список пользователей получен, count={len(users)}',
-        user=admin,
-    )
-    return users
 
 
 # -------------------
@@ -122,7 +119,7 @@ async def create_user(
 ) -> UserRead:
     """Создаёт нового пользователя."""
     initiator_info = (
-        f'id={token_user.id}, username={token_user.username}'
+        f'ID: {token_user.id}, username: {token_user.username}'
         if token_user
         else 'Аноним'
     )
@@ -162,10 +159,8 @@ async def get_user_by_id(
     session: AsyncSession = Depends(get_async_session),
 ) -> UserRead:
     """Возвращает пользователя по ID."""
-    logger.info(f'Запрошен пользователь {user_id}', user=admin)
-    user = await user_crud.get_user_id_or_404(user_id, session)
-    logger.info(f'Пользователь c id:{user.id} получен', user=admin)
-    return user
+    logger.info(f'{get_user_by_id.__doc__} ID: {user_id}', user=admin)
+    return await user_crud.get_user_id_or_404(user_id, session)
 
 
 # -------------------
@@ -188,7 +183,7 @@ async def update_user_by_id(
 ) -> UserRead:
     """Обновляет пользователя по ID."""
     initiator_info = (
-        f'id={token_user.id}, username={token_user.username}'
+        f'ID: {token_user.id}, username: {token_user.username}'
         if token_user
         else 'Аноним'
     )

@@ -16,11 +16,11 @@ from starlette import status
 
 from src.models.user import User
 from tests.conftest import (
-    INVALID_DATA,
-    VALID_PASSWORD,
     assert_error_response,
     assert_success_response,
     get_auth_headers,
+    INVALID_DATA,
+    VALID_PASSWORD,
 )
 
 
