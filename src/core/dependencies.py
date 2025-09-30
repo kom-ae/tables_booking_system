@@ -10,7 +10,12 @@ from src.core.db import get_async_session
 from src.core.logger import logger
 from src.core.user import get_current_user_logic
 from src.crud.factory import CRUDUser, get_user_crud
-from src.exceptions.auth import PermissionDeniedException
+from src.exceptions.auth import (
+    ExpiredTokenException,
+    InvalidTokenException,
+    PermissionDeniedException,
+)
+from src.exceptions.user import UserNotFoundException
 from src.models.user import User
 
 bearer_scheme: HTTPBearer = HTTPBearer(auto_error=False)
@@ -43,7 +48,6 @@ async def current_user(
         HTTPException: 401 если токен отсутствует или невалиден
 
     """
-    # Проверка наличия токена
     if not token:
         logger.warning('Отсутствует токен при доступе', user=None)
         raise HTTPException(
@@ -52,49 +56,62 @@ async def current_user(
         )
 
     try:
-        # Валидация токена и получение пользователя
         user: User = await get_current_user_logic(
             token.credentials,
             user_crud,
             db,
         )
-    except Exception as error:
-        # Единообразная ошибка для избежания утечки информации
+    except (
+        InvalidTokenException,
+        ExpiredTokenException,
+        UserNotFoundException,
+    ) as error:
         logger.warning(f'Ошибка аутентификации: {error}', user=None)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Неверный или просроченный токен',
         )
+    except Exception as error:
+        logger.error(f'Неожиданная ошибка аутентификации: {error}', user=None)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Ошибка аутентификации',
+        )
 
-    # Сохранение информации о пользователе в request.state
-    # для middleware и логов
     request.state.username = user.username
     request.state.user_id = user.id
 
-    # Обновление времени последней активности с защитой от частых записей в БД
     last_used: datetime = user.last_used
     if last_used.tzinfo is None:
-        # Приведение времени к UTC если нет информации о таймзоне
         last_used = last_used.replace(tzinfo=timezone.utc)
 
     current_time = datetime.now(timezone.utc)
-    # Обновляем last_used только если прошло достаточно времени
     if current_time - last_used > timedelta(
         seconds=MIN_UPDATE_INTERVAL_SECONDS,
     ):
         try:
             await user_crud.update_last_used(db, user)
-            logger.info(f'Обновлен last_used пользователя c id:{user.id}')
+            logger.debug(f'Обновлен last_used пользователя c id:{user.id}')
         except Exception as error:
-            # Не прерываем выполнение если не удалось обновить last_used
             logger.error(f'Ошибка обновления last_used: {error}', user=user)
 
-    logger.info('Пользователь аутентифицирован')
+    logger.info('Пользователь аутентифицирован', user=user)
     return user
 
 
 async def current_admin(user: User = Depends(current_user)) -> User:
-    """Dependency: проверяет права администратора."""
+    """Dependency: проверяет права администратора.
+
+    Args:
+        user: Текущий аутентифицированный пользователь
+
+    Returns:
+        User: Пользователь с правами администратора
+
+    Raises:
+        PermissionDeniedException: Если пользователь не администратор
+
+    """
     if not user.is_admin():
         logger.warning(
             'Недостаточно прав для администратора',
@@ -110,7 +127,18 @@ async def current_admin(user: User = Depends(current_user)) -> User:
 
 
 async def current_manager(user: User = Depends(current_user)) -> User:
-    """Dependency: проверяет права менеджера или администратора."""
+    """Dependency: проверяет права менеджера или администратора.
+
+    Args:
+        user: Текущий аутентифицированный пользователь
+
+    Returns:
+        User: Пользователь с правами менеджера или администратора
+
+    Raises:
+        PermissionDeniedException: Если пользователь не менеджер или админ
+
+    """
     if not user.is_manager():
         logger.warning(
             'Недостаточно прав для менеджера',
@@ -159,13 +187,24 @@ async def get_current_user_or_none(
         user = await get_current_user_logic(token_str, user_crud, db)
         logger.debug(
             'Получен пользователь по опциональному токену.'
-            f'd пользователя:{user.id}',
+            f'ID пользователя: {user.id}',
+            user=user,
         )
         return user
 
-    except Exception as error:
+    except (
+        InvalidTokenException,
+        ExpiredTokenException,
+        UserNotFoundException,
+    ) as error:
         logger.debug(
             f'Не удалось получить пользователя по токену: {error}',
+            user=None,
+        )
+        return None
+    except Exception as error:
+        logger.error(
+            f'Неожиданная ошибка при опциональной аутентификации: {error}',
             user=None,
         )
         return None

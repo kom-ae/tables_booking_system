@@ -13,17 +13,18 @@ class ActionsCRUD(CRUDBase):
     """CRUD-логика для Акций."""
 
     async def get_all_actions(
-            self,
-            session: AsyncSession,
-            current_user: User,
-            cafe_id: Optional[int] = None,
-            show_all: bool | None = None,
+        self,
+        session: AsyncSession,
+        current_user: User,
+        cafe_id: Optional[int] = None,
+        show_all: bool | None = None,
     ) -> list[Action]:
         """Получает все акции."""
         query = select(Action)
 
-        is_admin_is_manager = (current_user.is_admin() or
-                               current_user.is_manager())
+        is_admin_is_manager = (
+            current_user.is_admin() or current_user.is_manager()
+        )
 
         if cafe_id is not None:
             query = query.where(Action.cafe_id == cafe_id)
@@ -35,22 +36,25 @@ class ActionsCRUD(CRUDBase):
         return response.scalars().all()
 
     async def get_action(
-            self,
-            session: AsyncSession,
-            action_id: int,
-            current_user: User,
+        self,
+        session: AsyncSession,
+        action_id: int,
+        current_user: User,
     ) -> Optional[Action]:
         """Возвращает акция по его ID."""
         db_obj = select(Action)
 
-        is_admin_is_manager = (current_user.is_admin() or
-                               current_user.is_manager())
+        is_admin_is_manager = (
+            current_user.is_admin() or current_user.is_manager()
+        )
 
         if not is_admin_is_manager:
-            db_obj = db_obj.where(and_(
-                Action.id == action_id,
-                Action.is_active,
-            ))
+            db_obj = db_obj.where(
+                and_(
+                    Action.id == action_id,
+                    Action.is_active,
+                ),
+            )
         else:
             db_obj = db_obj.where(
                 Action.id == action_id,
@@ -95,10 +99,10 @@ class ActionsCRUD(CRUDBase):
         return ActionDB.model_validate(db_obj_fully_loaded)
 
     async def update_action(
-            self,
-            db_obj: Action,
-            obj_in: ActionUpdate,
-            session: AsyncSession,
+        self,
+        db_obj: Action,
+        obj_in: ActionUpdate,
+        session: AsyncSession,
     ) -> ActionDB:
         """Обновляет акцию."""
         update_data = obj_in.model_dump(exclude_unset=True)

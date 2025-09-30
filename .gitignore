@@ -185,3 +185,4 @@ pyproject.toml
 app.log
 src.log
 app_temp.log
+logs

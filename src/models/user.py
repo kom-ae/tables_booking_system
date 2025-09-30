@@ -7,7 +7,6 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     String,
-    func,
     text,
 )
 from sqlalchemy import Enum as EnumSQL
@@ -71,7 +70,6 @@ class User(BaseModel):
     last_used: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text('CURRENT_TIMESTAMP'),
-        onupdate=func.now(),
         nullable=False,
     )
     managed_cafes: Mapped[list['Cafe']] = relationship(

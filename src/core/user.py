@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from jose import JWTError, jwt
@@ -22,7 +21,8 @@ async def get_current_user_logic(
     1. Декодирование и верификация JWT токена
     2. Проверка срока действия токена
     3. Поиск пользователя в базе данных
-    4. Обработка различных сценариев ошибок
+    4. Обновление времени последнего использования
+    5. Обработка различных сценариев ошибок
 
     Args:
         token_str: JWT токен из заголовка Authorization
@@ -39,50 +39,42 @@ async def get_current_user_logic(
 
     """
     try:
-        # Декодирование JWT токена с использованием секретного ключа
         payload = jwt.decode(
             token_str,
             settings.secret,
             algorithms=[settings.jwt_algorithm],
         )
 
-        # Извлечение данных из payload
-        user_id = int(payload.get('sub'))  # ID пользователя
-        token_last_used_ts = payload.get(
-            'last_used',
-        )  # Время последнего использования
+        # Извлечение ID пользователя из payload
+        user_id = int(payload.get('sub'))
 
-        if not user_id or token_last_used_ts is None:
+        if not user_id:
             logger.warning(
-                'Недействительный токен: отсутствуют обязательные поля',
+                'Недействительный токен: отсутствует ID пользователя',
                 user=None,
             )
             raise InvalidTokenException()
 
-        now = datetime.now(timezone.utc)
-        token_last_used = datetime.fromtimestamp(
-            token_last_used_ts,
-            timezone.utc,
+    except jwt.ExpiredSignatureError:
+        logger.warning(
+            'Просроченный токен',
+            user=None,
         )
-        if now - token_last_used > timedelta(
-            minutes=settings.access_token_expire_minutes,
-        ):
-            logger.warning(
-                f'Токен просрочен для пользователя {user_id}',
-                user=None,
-            )
-            raise ExpiredTokenException()
-
+        raise ExpiredTokenException()
     except (JWTError, ValueError) as error:
         logger.warning(f'Ошибка при декодировании токена: {error}', user=None)
         raise InvalidTokenException()
+
     user: Optional[User] = await user_crud.get(user_id, db)
+
     if not user:
         logger.warning(
             f'Пользователь с ID {user_id} не найден в базе',
             user=None,
         )
         raise UserNotFoundException()
+
+    user = await user_crud.update_last_used(db, user)
 
     logger.info(f'Успешная аутентификация пользователя c id:{user.id}')
     return user

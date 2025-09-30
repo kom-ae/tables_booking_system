@@ -1,3 +1,4 @@
+import os
 import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
@@ -44,20 +45,14 @@ class PasswordService:
     @classmethod
     def dummy_verify(cls) -> None:
         """Фиктивная проверка пароля для защиты от timing attack."""
-        # Создаем случайные данные для фиктивной проверки
-        import os
-
-        # Генерируем случайный пароль и хеш
         dummy_password: str = os.urandom(16).hex()
         dummy_hash: str = cls._pwd_context.hash(dummy_password)
 
-        # Выполняем фиктивную проверку с фиксированным временем
         start_time: float = time.time()
         cls._pwd_context.verify(dummy_password, dummy_hash)
         elapsed: float = time.time() - start_time
 
-        # Добавляем небольшую задержку для consistency
-        target_time: float = 0.1  # 100ms target
+        target_time: float = 0.1
         if elapsed < target_time:
             time.sleep(target_time - elapsed)
 
@@ -84,7 +79,11 @@ class TokenService:
             expires_delta or timedelta(minutes=cls.ACCESS_TOKEN_EXPIRE_MINUTES)
         )
         to_encode: Dict[str, Any] = data.copy()
-        to_encode.update({'exp': expire, 'last_used': now.timestamp()})
+        to_encode.update({
+            'exp': expire,
+            'iat': now.timestamp(),
+            'last_used': now.timestamp(),
+        })
         token: str = jwt.encode(
             to_encode,
             cls.SECRET_KEY,
