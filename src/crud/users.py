@@ -71,7 +71,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         )
 
         logger.info(
-            f'{CRUDBase.create.__doc__} ID: {db_user.id} '
+            f'{CRUDUser.create.__doc__} ID: {db_user.id} '
             f'username: {db_user.username}',
             user=user,
         )
