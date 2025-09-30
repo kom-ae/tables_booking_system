@@ -23,6 +23,7 @@ from tests.conftest import (
     get_auth_headers,
 )
 
+
 # Эти тесты будут работать когда будут реализованы:
 # 1. Эндпоинты в src/api/endpoints/dishes.py
 # 2. CRUD операции для блюд

@@ -9,7 +9,9 @@ from sqlalchemy import (
     String,
     text,
 )
-from sqlalchemy import Enum as EnumSQL
+from sqlalchemy import (
+    Enum as EnumSQL,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.constants import (
@@ -63,7 +65,11 @@ class User(BaseModel):
         unique=True,
     )
     role: Mapped[UserRole] = mapped_column(
-        EnumSQL(UserRole, name='user_role_enum'),
+        EnumSQL(
+            UserRole,
+            name='user_role_enum',
+            values_callable=lambda x: [member.value for member in x],
+        ),
         default=UserRole.USER,
         nullable=False,
     )
@@ -96,8 +102,8 @@ class User(BaseModel):
     # -------------------
     def is_admin(self) -> bool:
         """Проверка, является ли пользователь администратором."""
-        return self.role == UserRole.ADMIN.value
+        return self.role == UserRole.ADMIN
 
     def is_manager(self) -> bool:
         """Проверка, является ли пользователь менеджером или админином."""
-        return self.role in (UserRole.MANAGER.value, UserRole.ADMIN.value)
+        return self.role in (UserRole.MANAGER, UserRole.ADMIN)

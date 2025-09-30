@@ -79,11 +79,13 @@ class TokenService:
             expires_delta or timedelta(minutes=cls.ACCESS_TOKEN_EXPIRE_MINUTES)
         )
         to_encode: Dict[str, Any] = data.copy()
-        to_encode.update({
-            'exp': expire,
-            'iat': now.timestamp(),
-            'last_used': now.timestamp(),
-        })
+        to_encode.update(
+            {
+                'exp': expire,
+                'iat': now.timestamp(),
+                'last_used': now.timestamp(),
+            },
+        )
         token: str = jwt.encode(
             to_encode,
             cls.SECRET_KEY,

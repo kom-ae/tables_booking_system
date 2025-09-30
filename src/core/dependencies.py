@@ -49,7 +49,7 @@ async def current_user(
 
     """
     if not token:
-        logger.warning('Отсутствует токен при доступе', user=None)
+        logger.warning('Отсутствует токен при доступе')
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Токен отсутствует',
@@ -61,12 +61,14 @@ async def current_user(
             user_crud,
             db,
         )
+
     except (
         InvalidTokenException,
         ExpiredTokenException,
         UserNotFoundException,
     ) as error:
         logger.warning(f'Ошибка аутентификации: {error}', user=None)
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Неверный или просроченный токен',
@@ -113,10 +115,7 @@ async def current_admin(user: User = Depends(current_user)) -> User:
 
     """
     if not user.is_admin():
-        logger.warning(
-            'Недостаточно прав для администратора',
-            user=user,
-        )
+        logger.warning('Недостаточно прав для администратора', user=user)
         raise PermissionDeniedException()
 
     logger.info(
@@ -140,16 +139,10 @@ async def current_manager(user: User = Depends(current_user)) -> User:
 
     """
     if not user.is_manager():
-        logger.warning(
-            'Недостаточно прав для менеджера',
-            user=user,
-        )
+        logger.warning(f'{current_manager.__doc__} Отказано', user=user)
         raise PermissionDeniedException()
 
-    logger.info(
-        'Пользователь прошел проверку manager/admin',
-        user=user,
-    )
+    logger.info(f'{current_manager.__doc__} Успешно', user=user)
     return user
 
 

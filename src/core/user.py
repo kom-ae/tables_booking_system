@@ -50,8 +50,7 @@ async def get_current_user_logic(
 
         if not user_id:
             logger.warning(
-                'Недействительный токен: отсутствует ID пользователя',
-                user=None,
+                'Недействительный токен: отсутствуют обязательные поля',
             )
             raise InvalidTokenException()
 
@@ -60,18 +59,17 @@ async def get_current_user_logic(
             'Просроченный токен',
             user=None,
         )
+
         raise ExpiredTokenException()
+
     except (JWTError, ValueError) as error:
-        logger.warning(f'Ошибка при декодировании токена: {error}', user=None)
+        logger.warning(f'Ошибка при декодировании токена: {error}')
         raise InvalidTokenException()
 
     user: Optional[User] = await user_crud.get(user_id, db)
 
     if not user:
-        logger.warning(
-            f'Пользователь с ID {user_id} не найден в базе',
-            user=None,
-        )
+        logger.warning(f'Пользователь ID: {user_id} не найден')
         raise UserNotFoundException()
 
     user = await user_crud.update_last_used(db, user)
@@ -90,10 +88,10 @@ async def get_user_by_name(
 
     if user:
         logger.info(
-            f'Пользователь найден по идентификатору: {name}',
+            f'{get_user_by_name.__doc__} {name}',
             user=user,
         )
     else:
-        logger.info('Пользователь не найден по идентификатору', user=None)
+        logger.info('Пользователь не найден по идентификатору')
 
     return user

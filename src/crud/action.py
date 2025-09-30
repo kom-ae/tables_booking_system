@@ -1,11 +1,12 @@
 from typing import Optional
 
+from fastapi import HTTPException, status
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.crud.base import CRUDBase
-from src.models import Action, User
+from src.models import Action, Cafe, User
 from src.schemas.action import ActionCreate, ActionDB, ActionUpdate
 
 
@@ -74,6 +75,22 @@ class ActionsCRUD(CRUDBase):
 
         cafe_id = obj_in.cafe
 
+        if cafe_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='Нет такого кафе',
+            )
+        cafe = await session.execute(
+            select(Cafe).where(Cafe.id == cafe_id),
+        )
+        cafe = cafe.scalar_one_or_none()
+
+        if cafe is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f'Кафе с ID {cafe_id} не найдено.',
+            )
+
         if user_id is not None:
             obj_in_data['user_id'] = user_id
 
@@ -109,6 +126,18 @@ class ActionsCRUD(CRUDBase):
 
         if 'cafe' in update_data:
             cafe_id = update_data['cafe']
+
+            if cafe_id is not None:
+                cafe_exist = await session.execute(
+                    select(Cafe).where(Cafe.id == cafe_id),
+                )
+                cafe = cafe_exist.scalar_one_or_none()
+                if cafe is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f'Кафе с ID {cafe_id} не найдено.',
+                    )
+
             del update_data['cafe']
             update_data['cafe_id'] = cafe_id
 
