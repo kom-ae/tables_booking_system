@@ -1,7 +1,7 @@
 from src.crud.cafes import CRUDCafe
 from src.crud.users import CRUDUser
 from src.crud.tables import CRUDTable
-from src.models import Cafe, Dishe, User, Tables  # noqa
+from src.models import Cafe, Dishe, Tables, User  # noqa
 
 
 def get_user_crud() -> CRUDUser:

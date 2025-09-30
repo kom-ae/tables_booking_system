@@ -30,7 +30,6 @@ async def get_tables(
     cafe_crud: CRUDCafe = Depends(get_cafe_crud),
 ) -> List[TableDB]:
     """Получить все столы кафе."""
-
     cafe = await cafe_crud.get_active(cafe_id, session)
     if not cafe:
         raise HTTPException(status_code=404, detail='Кафе не найдено')
@@ -59,7 +58,6 @@ async def create_table(
     cafe_crud: CRUDCafe = Depends(get_cafe_crud),
 ) -> TableDB:
     """Создать стол."""
-
     cafe = await cafe_crud.get_active(cafe_id, session)
     if not cafe:
         raise HTTPException(status_code=404, detail='Кафе не найдено')
@@ -81,7 +79,6 @@ async def get_table(
     tables_crud: CRUDTable = Depends(get_table_crud),
 ) -> TableDB:
     """Получить стол по ID."""
-
     only_active = user.role == 'user'
     table = await tables_crud.get_by_id_and_cafe(
         table_id, cafe_id, session, only_active=only_active,
@@ -106,7 +103,6 @@ async def update_table(
     tables_crud: CRUDTable = Depends(get_table_crud),
 ) -> TableDB:
     """Обновить стол."""
-
     table = await tables_crud.get_by_id_and_cafe(
         table_id, cafe_id, session, only_active=False,
     )

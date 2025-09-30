@@ -10,8 +10,8 @@ from src.models.base import BaseModel
 if TYPE_CHECKING:
     from src.models.action import Action
     from src.models.dish import Dishe
-    from src.models.user import User
     from src.models.table import Tables
+    from src.models.user import User
 
 
 cafe_manager = Table(

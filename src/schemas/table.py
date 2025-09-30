@@ -1,15 +1,14 @@
 from datetime import datetime
 from typing import Optional
 
-from src.schemas.cafes import CafeShortDB
-
 from pydantic import BaseModel, Field
 
 from src.constants import (
     MAX_DESCRIPTION,
-    MIN_SEATS_NUMBER,
     MAX_SEATS_NUMBER,
+    MIN_SEATS_NUMBER,
 )
+from src.schemas.cafes import CafeShortDB
 
 
 class TableBase(BaseModel):
@@ -29,6 +28,7 @@ class TableBase(BaseModel):
 
     class Config:
         """Конфиг класса."""
+
         extra = 'forbid'
 
 
@@ -74,4 +74,5 @@ class TableDB(TableBase):
 
     class Config(TableBase.Config):
         """Конфиг класса."""
+
         from_attributes = True
