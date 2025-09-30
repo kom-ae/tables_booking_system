@@ -1,22 +1,26 @@
-from typing import Any, List, Optional, Union
+from __future__ import annotations
+
+from typing import Any, Callable, List, Optional, Union
 
 from fastapi import Depends, HTTPException, Path, status
-from fastapi.exceptions import RequestValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.cafes import cafe_check_duplicate_responses
 from src.constants import ID_MIN
 from src.core.db import get_async_session
-from src.core.logger import log_event
+from src.core.logger import logger
+from src.crud.action import actions_crud
+from src.core.dependencies import (
+    current_user,
+    current_manager,
+    get_current_user_or_none,
+)
 from src.crud.factory import get_cafe_crud, get_slot_crud
-from src.exceptions.auth import PermissionDeniedException
 from src.exceptions.slots import (
     CafeOrSlotNotFoundException,
     SlotNotFoundException,
 )
-from src.models.cafes import Cafes
-from src.models.slots import Slots
-from src.models.user import User
+from src.models import Cafe, Slot, User, Action
 from src.schemas.cafes import CafeCreate, CafeDB
 
 cafe_crud = get_cafe_crud()
@@ -34,75 +38,89 @@ async def check_duplicate_cafe(
         session=session,
     )
     if db_obj:
+        logger.error(
+            'Попытка создать дубликат кафе',
+            info_dict={'name': cafe.name, 'address': cafe.address},
+        )
         raise HTTPException(**cafe_check_duplicate_responses)
 
 
+async def check_action_exist(
+    action_id: int,
+    session: AsyncSession,
+) -> Action:
+    """Проверяет на наличие доступа и акции."""
+    action = await actions_crud.get(
+        obj_id=action_id,
+        session=session,
+    )
+    if action is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Акция не найдена',
+        )
+    return action
+
+
 async def handler_run_crud_cafe(
-    func: callable,
+    func: Callable[..., Any],
     **kwargs: Any,
 ) -> Union[CafeDB, List[CafeDB]]:
-    """Запуск корутины и логирование результатов."""
+    """Запуск корутины CRUD и логирование результата через logger.
+
+    Аргументы:
+        func: функция CRUD
+        crud_args: словарь аргументов для функции
+        msg_log: сообщение для логирования
+        user: пользователь, инициирующий операцию
+    """
     crud_args: dict = kwargs.get('crud_args', {})
     msg_log: str = kwargs.get('msg_log', '')
     user: Optional[User] = kwargs.get('user', None)
-    user_log: dict = (
-        {'username': user.username, 'user_id': user.id} if user else {}
-    )
+
+    logger.info(msg=f'Попытка: "{msg_log}"', user=user)
+
     try:
         if obj := await func(**crud_args):
-            msg_log_full = (
-                msg_log
-                + (str(obj.id) if not isinstance(obj, list) else '')
-                + '. Успешно.'
-            )
-            log_event('info', msg_log_full, **user_log)
-    except RequestValidationError as err:
-        log_event(
-            'error',
-            f'При выполнении функции {func.__name__}. '
-            f'Ошибка валидации данных: {err.body}',
-            **user_log,
-        )
-        raise
+            msg_log_full = msg_log
+            if not isinstance(obj, list):
+                msg_log_full += f' ID={str(obj.id)}.'
+            msg_log_full += ' Успешно.'
+            logger.info(msg_log_full, user=user)
+        return obj
+
     except Exception as err:
-        log_event(
-            'error',
-            f'При выполнении функции {func.__name__} в модуле '
-            f'{func.__module__}. Произошла ошибка: {str(err)}',
-            **user_log,
+        logger.error(
+            f'Операция "{msg_log}": Ошибка выполнения функции {func.__name__} '
+            f'в модуле {func.__module__}: {str(err)}',
+            user=user,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Ошибка сервера.',
+            detail='Внутренняя ошибка сервера.',
         )
-    return obj
 
 
 async def cafe_exists(
     cafe_id: int = Path(..., ge=ID_MIN, description='ID кафе'),
     session: AsyncSession = Depends(get_async_session),
-) -> Cafes:
-    """Возвращает кафе по ID или 404."""
+) -> Cafe:
+    """Вернуть кафе по ID или 404."""
     cafe = await cafe_crud.get(obj_id=cafe_id, session=session)
     if not cafe:
         raise CafeOrSlotNotFoundException('Кафе не найдено')
     return cafe
 
-
-async def require_admin_or_manager(user: User = Depends()) -> User:
-    """Разрешить только superuser/admin/manager."""
-    role = getattr(user, "role", None)
-    is_superuser = bool(getattr(user, 'is_superuser', False))
-    if is_superuser or role in {'admin', 'manager'}:
-        return user
-    raise PermissionDeniedException()
+current_user_dep = Depends(current_user)
+current_manager_dep = Depends(current_manager)
+current_user_or_none_dep = Depends(get_current_user_or_none)
 
 
 async def slot_in_cafe_exists(
     cafe_id: int = Path(..., ge=ID_MIN, description='ID кафе'),
     time_slot_id: int = Path(..., ge=ID_MIN, description='ID слота'),
     session: AsyncSession = Depends(get_async_session),
-) -> Slots:
+) -> Slot:
     """Слот существует и относится к указанному кафе, иначе 404."""
     slot = await slot_crud.get(obj_id=time_slot_id, session=session)
     if not slot or slot.cafe_id != cafe_id:
@@ -114,18 +132,15 @@ async def visible_slot_for_user(
     cafe_id: int = Path(..., ge=ID_MIN, description='ID кафе'),
     time_slot_id: int = Path(..., ge=ID_MIN, description='ID слота'),
     session: AsyncSession = Depends(get_async_session),
-    user: User = Depends(),
-) -> Slots:
-    """Возвращает слот для просмотра.
-
-    - admin/manager/superuser видят любой слот;
-    - обычные пользователи видят только активный,
-      иначе 404 (чтобы не палить наличие неактивного).
+    user: Optional[User] = current_user_or_none_dep,
+) -> Slot:
+    """
+    Правила видимости слота:
+    - superuser/admin/manager видят любой слот;
+    - остальные — только активный (иначе 404).
     """
     slot = await slot_in_cafe_exists(cafe_id, time_slot_id, session)
-    role = getattr(user, 'role', None)
-    is_superuser = bool(getattr(user, 'is_superuser', False))
-    if is_superuser or role in {'admin', 'manager'}:
+    if user and (user.is_superuser or user.is_admin() or user.is_manager()):
         return slot
     if not bool(slot.is_active):
         raise SlotNotFoundException()

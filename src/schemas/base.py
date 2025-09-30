@@ -1,9 +1,17 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
-from src.constants import MAX_LENGTH_USERNAME, MIN_LENGTH_USERNAME
+from src.constants import (
+    MAX_ADDRESS,
+    MAX_NAME_CAFE,
+    MAX_TEL,
+    MIN_ADDRESS,
+    MIN_NAME_CAFE,
+    MIN_TEL,
+)
+from src.schemas.users import UserShort
 
 
 class BaseSchema(BaseModel):
@@ -14,24 +22,36 @@ class BaseSchema(BaseModel):
     updated_at: Optional[datetime] = Field(None, description='Дата обновления')
     is_active: bool = Field(None, description='Активен ли пользователь.')
 
-    class Config:
-        """Конфигурация Pydantic."""
 
-        from_attributes = True
+class CafeBase(BaseModel):
+    """Базовая схема для кафе."""
 
-
-class UserBase(BaseModel):
-    """Базовая схема пользователя."""
-
-    username: str = Field(
+    name: str = Field(
         ...,
-        description='Имя пользователя.',
-        min_length=MIN_LENGTH_USERNAME,
-        max_length=MAX_LENGTH_USERNAME,
+        title='Название кафе',
+        min_length=MIN_NAME_CAFE,
+        max_length=MAX_NAME_CAFE,
     )
-    email: Optional[EmailStr] = Field(None, description='Email пользователя.')
-    phone: Optional[str] = Field(None, description='Телефон.')
-    tg_id: Optional[str] = Field(None, description='Telegram ID.')
+    address: str = Field(
+        ...,
+        title='Адрес кафе',
+        min_length=MIN_ADDRESS,
+        max_length=MAX_ADDRESS,
+    )
+    phone: str = Field(
+        ...,
+        title='Телефон кафе',
+        min_length=MIN_TEL,
+        max_length=MAX_TEL,
+    )
+    description: Optional[str] = Field(None, title='Описание кафе')
+    photo: Optional[str] = Field(None, title='Фото кафе в формате base64')
+    managers: Optional[list[UserShort]] = Field(None, title='ID менеджера')
+
+    class Config:
+        """Конфиг класса."""
+
+        extra = 'forbid'
 
 
 class Error(BaseModel):

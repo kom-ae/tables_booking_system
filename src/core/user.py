@@ -1,59 +1,61 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Any, Optional
 
-from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import jwt
+from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.constants import MIN_UPDATE_INTERVAL_SECONDS
 from src.core.config import settings
-from src.core.db import get_async_session
-from src.core.logger import log_event
-from src.crud.factory import get_user_crud
-from src.exceptions.auth import (
-    ExpiredTokenException,
-    InvalidTokenException,
-    PermissionDeniedException,
-)
+from src.core.logger import logger
+from src.exceptions.auth import ExpiredTokenException, InvalidTokenException
 from src.exceptions.user import UserNotFoundException
 from src.models.user import User
 
-user_crud = get_user_crud()
-bearer_scheme = HTTPBearer(auto_error=False)
 
-
-async def get_current_user(
-    request: Request,
-    token: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    db: AsyncSession = Depends(get_async_session),
+async def get_current_user_logic(
+    token_str: str,
+    user_crud: Any,
+    db: AsyncSession,
 ) -> User:
-    """Возвращает текущего пользователя по JWT, обновляет last_used."""
-    username = settings.system_username
-    user_id = settings.default_user_id
+    """Валидация JWT токена и получение пользователя.
 
-    if not token:
-        log_event(
-            'warning',
-            'Отсутствует токен при доступе',
-            username,
-            user_id,
-        )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Токен отсутствует',
-        )
+    Основная логика аутентификации:
+    1. Декодирование и верификация JWT токена
+    2. Проверка срока действия токена
+    3. Поиск пользователя в базе данных
+    4. Обработка различных сценариев ошибок
 
+    Args:
+        token_str: JWT токен из заголовка Authorization
+        user_crud: CRUD объект для работы с пользователями
+        db: Асинхронная сессия базы данных
+
+    Returns:
+        User: Аутентифицированный пользователь
+
+    Raises:
+        InvalidTokenException: Невалидный или поврежденный токен
+        ExpiredTokenException: Просроченный токен
+        UserNotFoundException: Пользователь не найден в базе
+
+    """
     try:
+        # Декодирование JWT токена с использованием секретного ключа
         payload = jwt.decode(
-            token.credentials,
+            token_str,
             settings.secret,
             algorithms=[settings.jwt_algorithm],
         )
-        user_id = int(payload.get('sub'))
-        token_last_used_ts = payload.get('last_used')
+
+        # Извлечение данных из payload
+        user_id = int(payload.get('sub'))  # ID пользователя
+        token_last_used_ts = payload.get(
+            'last_used',
+        )  # Время последнего использования
+
         if not user_id or token_last_used_ts is None:
-            log_event('warning', 'Недействительный токен', username, user_id)
+            logger.warning(
+                'Недействительный токен: отсутствуют обязательные поля',
+            )
             raise InvalidTokenException()
 
         now = datetime.now(timezone.utc)
@@ -64,101 +66,35 @@ async def get_current_user(
         if now - token_last_used > timedelta(
             minutes=settings.access_token_expire_minutes,
         ):
-            log_event('warning', 'Токен просрочен', username, user_id)
+            logger.warning(f'Токен просрочен. ID: {user_id}')
             raise ExpiredTokenException()
-    except (jwt.JWTError, ValueError):
-        log_event(
-            'warning',
-            'Ошибка при декодировании токена',
-            username,
-            user_id,
-        )
-        raise InvalidTokenException()
 
-    user = await user_crud.get(user_id, db)
+    except (JWTError, ValueError) as error:
+        logger.warning(f'Ошибка при декодировании токена: {error}')
+        raise InvalidTokenException()
+    user: Optional[User] = await user_crud.get(user_id, db)
     if not user:
-        log_event(
-            'warning',
-            f'Пользователь с ID {user_id} не найден',
-            username,
-            user_id,
-        )
+        logger.warning(f'Пользователь ID: {user_id} не найден')
         raise UserNotFoundException()
 
-    username = user.username
-    user_id = user.id
-    request.state.username = username
-    request.state.user_id = user_id
-
-    last_used = user.last_used
-    if last_used.tzinfo is None:
-        last_used = last_used.replace(tzinfo=timezone.utc)
-
-    if datetime.now(timezone.utc) - last_used > timedelta(
-        seconds=MIN_UPDATE_INTERVAL_SECONDS,
-    ):
-        await user_crud.update_last_used(db, user)
-        log_event(
-            'info',
-            'Обновлено last_used для пользователя',
-            username,
-            user_id,
-        )
-
-    log_event('info', 'Доступ к эндпоинту подтверждён', username, user_id)
+    logger.info(f'Успешная аутентификация пользователя c id:{user.id}')
     return user
 
 
-current_user = get_current_user
+async def get_user_by_name(
+    name: str,
+    db: AsyncSession,
+    user_crud: Any,
+) -> Optional[User]:
+    """Поиск пользователя по имени, email или телефону."""
+    user: Optional[User] = await user_crud.get_by_name(db, name)
 
-
-async def current_admin(user: User = Depends(current_user)) -> User:
-    """Проверяет, что текущий пользователь — админ."""
-    if not user.is_admin():
-        log_event(
-            'warning',
-            f'Пользователь {user.username} недостаточно прав',
-            user.username,
-            user.id,
+    if user:
+        logger.info(
+            f'{get_user_by_name.__doc__} {name}',
+            user=user,
         )
-        raise PermissionDeniedException()
-    log_event(
-        'info',
-        f'Пользователь {user.username} прошёл проверку admin',
-        user.username,
-        user.id,
-    )
-    return user
+    else:
+        logger.info('Пользователь не найден по идентификатору')
 
-
-async def current_manager(user: User = Depends(current_user)) -> User:
-    """Проверяет, что текущий пользователь — менеджер или админ."""
-    if not user.is_manager():
-        log_event(
-            'warning',
-            f'Пользователь {user.username} недостаточно прав',
-            user.username,
-            user.id,
-        )
-        raise PermissionDeniedException()
-    log_event(
-        'info',
-        f'Пользователь {user.username} прошёл проверку manager/admin',
-        user.username,
-        user.id,
-    )
-    return user
-
-
-async def get_user_by_name(name: str, db: AsyncSession) -> Optional[User]:
-    """Возвращает пользователя по email или телефону через CRUD."""
-    user = await user_crud.get_by_name(db, name)
-    username = user.username if user else settings.system_username
-    user_id = user.id if user else settings.default_user_id
-    log_event(
-        'info',
-        f'Поиск пользователя по имени: {name}',
-        username,
-        user_id,
-    )
     return user

@@ -8,13 +8,11 @@ from src.constants import SLOT_DESCRIPTION_MAX_LENGTH
 from src.models.base import BaseModel
 
 
-class Slots(BaseModel):
+class Slot(BaseModel):
     """Интервал бронирования в рамках конкретного кафе."""
 
-    __tablename__ = 'slots'
-
     cafe_id: Mapped[int] = mapped_column(
-        ForeignKey('cafes.id', ondelete='CASCADE'),
+        ForeignKey('cafe.id', ondelete='CASCADE'),
         index=True,
         nullable=False,
     )
@@ -22,10 +20,10 @@ class Slots(BaseModel):
     end_time: Mapped[time] = mapped_column(nullable=False)
     description: Mapped[Optional[str]] = mapped_column(
         String(SLOT_DESCRIPTION_MAX_LENGTH),
-        default=None,
+        nullable=True,
     )
 
-    cafe = relationship('Cafes', back_populates='slots')
+    cafe = relationship('Cafe', back_populates='slots')
 
     __table_args__ = (
         UniqueConstraint(

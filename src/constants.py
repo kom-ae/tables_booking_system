@@ -9,51 +9,51 @@ JWT_LIFETIME_SECONDS = 1600
 # Минимальный интервал обновления last_used
 MIN_UPDATE_INTERVAL_SECONDS = 60
 
-
-# -------------------
-# User model constraints
-# -------------------
-USERNAME_MAX_LENGTH = 255
-EMAIL_MAX_LENGTH = 255
-PASSWORD_MAX_LENGTH = 128
-PHONE_MAX_LENGTH = 20
-TG_ID_MAX_LENGTH = 50
-ROLE_MAX_LENGTH = 50
-
 # -------------------
 # Логирование Settings
 # -------------------
-MAX_BYTES_TEMP_LOGER = 1000000
+MAX_BYTES_TEMP_LOGER = 1_000_000
 BACKUP_COUNT_TEMP_LOGER = 3
+LOG_FILE_APP_LOGGER = 'app.log'
 LOG_FILE_TEMP_LOGER = 'app_temp.log'
+DEFAULT_USER_ID = 0
+SYSTEM_USERNAME = 'SYSTEM'
 
 # -------------------
 # Пользователи
 # -------------------
-# Минимальная длина пароля
-MIN_LENGTH_PASSWORD = 8
-
-# Минимальная длина username
-MIN_LENGTH_USERNAME = 1
-
-# Максимальная длина username
-MAX_LENGTH_USERNAME = 40
+USERNAME_MAX_LENGTH = 50
+USERNAME_MIN_LENGTH = 3
+EMAIL_MIN_LENGTH = 5
+EMAIL_MAX_LENGTH = 255
+PASSWORD_MAX_LENGTH = 128
+PHONE_MAX_LENGTH = 15
+TG_ID_MIN_LENGTH = 5
+TG_ID_MAX_LENGTH = 15
+ROLE_MAX_LENGTH = 10
 
 # Регулярка для проверки международного формата телефона
-PHONE_REGEX = re.compile(
-    r'^(\+[1-9]\d{0,2})\d{6,15}$',  # +код страны, затем 6-15 цифр
-)
+PHONE_REGEX = re.compile(r'^\+7\d{10}$')  # +7XXXXXXXXXX
 
 # Регулярка для проверки пароля
 PASSWORD_REGEX = re.compile(
-    r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$',
-    # Минимум: 1 заглавная, 1 строчная, 1 цифра, 1 спецсимвол, длина ≥8
+    r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$',
 )
+
+# Регулярка для проверки имени
+USERNAME_REGEX = re.compile(r'^[a-zA-Z0-9_]+$')
+
+# Регулярка для проверки email
+EMAIL_REGEX = re.compile(r'^[\w.%+-]+@[\w.-]+\.[A-Za-z]{2,}$')
+
+# Регулярка длоя проверки tg_id
+TG_ID_REGEX = re.compile(r'^\d{5,15}$')
+
 
 # -------------------
 # Кафе / Бизнес
 # -------------------
-# Максимальная и минимальная длинна телефона
+# Максимальная и минимальная длина телефона
 MAX_TEL = 15
 MIN_TEL = 5
 
@@ -61,7 +61,7 @@ MIN_TEL = 5
 MAX_NAME_CAFE = 256
 MIN_NAME_CAFE = 5
 
-# Максимальная и минимальная длинна адреса кафе
+# Максимальная и минимальная длина адреса кафе
 MAX_ADDRESS = 256
 MIN_ADDRESS = 5
 
@@ -87,9 +87,8 @@ TAGS_METADATA = [
         'name': 'Временные слоты',
         'description': 'Управление временными слотами',
     },
-    # Допишите свои если здесь их нет
+    # Допишите свои, если здесь их нет
 ]
-
 
 # -------------------
 # Блюда

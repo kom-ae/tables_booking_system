@@ -5,11 +5,11 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.base import CRUDBase
-from src.models import Cafes, User
+from src.models import Cafe, User
 from src.schemas.cafes import CafeCreate, CafeUpdate
 
 
-class CRUDCafe(CRUDBase[Cafes, CafeCreate, CafeUpdate]):
+class CRUDCafe(CRUDBase[Cafe, CafeCreate, CafeUpdate]):
     """CRUD для кафе."""
 
     async def create_cafe(
@@ -17,16 +17,18 @@ class CRUDCafe(CRUDBase[Cafes, CafeCreate, CafeUpdate]):
         obj_in: CafeCreate,
         session: AsyncSession,
         user: Optional[User] = None,
-    ) -> Cafes:
+    ) -> Cafe:
         """Создание кафе."""
         in_managers = obj_in.model_dump(include='managers').get('managers')
         obj_in_data = obj_in.model_dump(exclude='managers')
 
-        db_obj_managers = (await session.scalars(
-            select(User).where(User.id.in_(in_managers)),
-        )).all()
+        db_obj_managers = (
+            await session.scalars(
+                select(User).where(User.id.in_(in_managers)),
+            )
+        ).all()
 
-        db_obj = Cafes(**obj_in_data)
+        db_obj = Cafe(**obj_in_data)
         db_obj.managers = db_obj_managers
         session.add(db_obj)
         await session.commit()
@@ -34,11 +36,11 @@ class CRUDCafe(CRUDBase[Cafes, CafeCreate, CafeUpdate]):
         return db_obj
 
     async def update(
-            self,
-            db_obj: Cafes,
-            obj_in: CafeUpdate,
-            session: AsyncSession,
-    ) -> Cafes:
+        self,
+        db_obj: Cafe,
+        obj_in: CafeUpdate,
+        session: AsyncSession,
+    ) -> Cafe:
         """Обновление кафе."""
         obj_data = jsonable_encoder(db_obj, exclude={'managers'})
         update_data = obj_in.model_dump(exclude_unset=True, exclude='managers')
@@ -48,9 +50,11 @@ class CRUDCafe(CRUDBase[Cafes, CafeCreate, CafeUpdate]):
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
 
-        db_obj_managers = (await session.scalars(
-            select(User).where(User.id.in_(in_managers)),
-        )).all()
+        db_obj_managers = (
+            await session.scalars(
+                select(User).where(User.id.in_(in_managers)),
+            )
+        ).all()
 
         db_obj.managers = db_obj_managers
 
@@ -60,15 +64,19 @@ class CRUDCafe(CRUDBase[Cafes, CafeCreate, CafeUpdate]):
         return db_obj
 
     async def get_by_name_address(
-            self,
-            name: str,
-            address: str,
-            session: AsyncSession,
-    ) -> Optional[Cafes]:
+        self,
+        name: str,
+        address: str,
+        session: AsyncSession,
+    ) -> Optional[Cafe]:
         """Поиск кафе по имени и адресу."""
-        return (await session.scalars(select(Cafes).where(
-                and_(
-                    Cafes.name == name,
-                    Cafes.address == address,
-                )))
-                ).first()
+        return (
+            await session.scalars(
+                select(Cafe).where(
+                    and_(
+                        Cafe.name == name,
+                        Cafe.address == address,
+                    ),
+                ),
+            )
+        ).first()

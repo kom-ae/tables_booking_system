@@ -3,8 +3,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.schemas.base import BaseSchema
 
-class DishBase(BaseModel):
+
+class DishBase(BaseSchema):
     """Базовая схема для блюд."""
 
     cafe_id: int = Field(..., description='Кафе')

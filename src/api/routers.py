@@ -14,17 +14,20 @@ main_router.include_router(
     prefix='/users',
     tags=['Пользователи'],
 )
+
 main_router.include_router(
     auth_router,
     prefix='/auth',
     tags=['Аутентификация'],
 )
+
 main_router.include_router(
     cafes_router,
     prefix='/cafes',
     tags=['Кафе'],
 )
+
 main_router.include_router(
     slots_router,
-    tags=["Слоты"],
+    tags=['Слоты'],
 )

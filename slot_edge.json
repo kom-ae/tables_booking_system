@@ -1,0 +1,7 @@
+{
+  "cafe_id": 1,
+  "start_time": "10:00",
+  "end_time": "11:00",
+  "description": "Касание",
+  "is_active": true
+}

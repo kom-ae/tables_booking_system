@@ -8,6 +8,10 @@ login_responses = {
         'description': 'Неверный логин или пароль',
         'model': Error,
     },
+    status.HTTP_400_BAD_REQUEST: {
+        'description': 'Неверный формат запроса',
+        'model': Error,
+    },
 }
 
 logout_responses = {
