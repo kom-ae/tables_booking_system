@@ -20,6 +20,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
             🔔 Новое обновление в репозитории:
+            - Тип события: ${{ github.event_name }}
             - Бранч: ${{ github.ref_name }}
             - Коммит: ${{ github.sha }}
             - Автор: ${{ github.actor }}
