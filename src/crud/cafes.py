@@ -12,7 +12,7 @@ from src.schemas.cafes import CafeCreate, CafeUpdate
 class CRUDCafe(CRUDBase[Cafe, CafeCreate, CafeUpdate]):
     """CRUD для кафе."""
 
-    async def create_cafe(
+    async def _create_impl(
         self,
         obj_in: CafeCreate,
         session: AsyncSession,
@@ -31,17 +31,18 @@ class CRUDCafe(CRUDBase[Cafe, CafeCreate, CafeUpdate]):
         db_obj = Cafe(**obj_in_data)
         db_obj.managers = db_obj_managers
         session.add(db_obj)
-        await session.commit()
+        await self._commit(session, user)
         await session.refresh(db_obj)
         return db_obj
 
-    async def update(
+    async def _update_impl(
         self,
         db_obj: Cafe,
         obj_in: CafeUpdate,
         session: AsyncSession,
+        user: Optional[User] = None,
     ) -> Cafe:
-        """Обновление кафе."""
+        """Внутренняя реализация обновления кафе."""
         obj_data = jsonable_encoder(db_obj, exclude={'managers'})
         update_data = obj_in.model_dump(exclude_unset=True, exclude='managers')
         in_managers = obj_in.model_dump(include='managers').get('managers')
@@ -59,7 +60,7 @@ class CRUDCafe(CRUDBase[Cafe, CafeCreate, CafeUpdate]):
         db_obj.managers = db_obj_managers
 
         session.add(db_obj)
-        await session.commit()
+        await self._commit(session, user)
         await session.refresh(db_obj)
         return db_obj
 

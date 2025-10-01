@@ -1,12 +1,11 @@
 from typing import Optional
 
-from fastapi import HTTPException, status
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.crud.base import CRUDBase
-from src.models import Action, Cafe, User
+from src.models import Action, User
 from src.schemas.action import ActionCreate, ActionDB, ActionUpdate
 
 
@@ -14,17 +13,18 @@ class ActionsCRUD(CRUDBase):
     """CRUD-логика для Акций."""
 
     async def get_all_actions(
-            self,
-            session: AsyncSession,
-            current_user: User,
-            cafe_id: Optional[int] = None,
-            show_all: bool | None = None,
+        self,
+        session: AsyncSession,
+        current_user: User,
+        cafe_id: Optional[int] = None,
+        show_all: bool | None = None,
     ) -> list[Action]:
         """Получает все акции."""
         query = select(Action)
 
-        is_admin_is_manager = (current_user.is_admin() or
-                               current_user.is_manager())
+        is_admin_is_manager = (
+            current_user.is_admin() or current_user.is_manager()
+        )
 
         if cafe_id is not None:
             query = query.where(Action.cafe_id == cafe_id)
@@ -36,22 +36,25 @@ class ActionsCRUD(CRUDBase):
         return response.scalars().all()
 
     async def get_action(
-            self,
-            session: AsyncSession,
-            action_id: int,
-            current_user: User,
+        self,
+        session: AsyncSession,
+        action_id: int,
+        current_user: User,
     ) -> Optional[Action]:
         """Возвращает акция по его ID."""
         db_obj = select(Action)
 
-        is_admin_is_manager = (current_user.is_admin() or
-                               current_user.is_manager())
+        is_admin_is_manager = (
+            current_user.is_admin() or current_user.is_manager()
+        )
 
         if not is_admin_is_manager:
-            db_obj = db_obj.where(and_(
-                Action.id == action_id,
-                Action.is_active,
-            ))
+            db_obj = db_obj.where(
+                and_(
+                    Action.id == action_id,
+                    Action.is_active,
+                ),
+            )
         else:
             db_obj = db_obj.where(
                 Action.id == action_id,
@@ -68,24 +71,7 @@ class ActionsCRUD(CRUDBase):
     ) -> ActionDB:
         """Создает акцию."""
         obj_in_data = obj_in.model_dump()
-
         cafe_id = obj_in.cafe
-
-        if cafe_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail='Нет такого кафе',
-            )
-        cafe = await session.execute(
-            select(Cafe).where(Cafe.id == cafe_id),
-        )
-        cafe = cafe.scalar_one_or_none()
-
-        if cafe is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f'Кафе с ID {cafe_id} не найдено.',
-            )
 
         if user_id is not None:
             obj_in_data['user_id'] = user_id
@@ -112,27 +98,16 @@ class ActionsCRUD(CRUDBase):
         return ActionDB.model_validate(db_obj_fully_loaded)
 
     async def update_action(
-            self,
-            db_obj: Action,
-            obj_in: ActionUpdate,
-            session: AsyncSession,
+        self,
+        db_obj: Action,
+        obj_in: ActionUpdate,
+        session: AsyncSession,
     ) -> ActionDB:
         """Обновляет акцию."""
         update_data = obj_in.model_dump(exclude_unset=True)
 
         if 'cafe' in update_data:
             cafe_id = update_data['cafe']
-
-            if cafe_id is not None:
-                cafe_exist = await session.execute(
-                    select(Cafe).where(Cafe.id == cafe_id),
-                )
-                cafe = cafe_exist.scalar_one_or_none()
-                if cafe is None:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f'Кафе с ID {cafe_id} не найдено.',
-                    )
 
             del update_data['cafe']
             update_data['cafe_id'] = cafe_id

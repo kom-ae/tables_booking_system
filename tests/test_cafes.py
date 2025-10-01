@@ -16,10 +16,10 @@ from starlette import status
 from src.models.cafe import Cafe
 from src.models.user import User
 from tests.conftest import (
-    INVALID_DATA,
     assert_error_response,
     assert_success_response,
     get_auth_headers,
+    INVALID_DATA,
 )
 
 
@@ -106,7 +106,7 @@ class TestCafesList:
         """Тест получения кафе с параметром show_all=false."""
         # Деактивируем кафе
         await session_fixture.execute(
-            text('UPDATE cafe SET is_active = false WHERE id = :cafe_id'),
+            text('UPDATE cafe SET is_active = true WHERE id = :cafe_id'),
             {'cafe_id': test_cafe.id},
         )
         await session_fixture.commit()

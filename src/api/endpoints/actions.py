@@ -10,7 +10,7 @@ from src.api.responses.actions import (
     action_update_responses,
     actions_list_responses,
 )
-from src.api.validators import check_action_exist
+from src.api.validators import cafe_existence, check_action_exist
 from src.core.db import get_async_session
 from src.core.dependencies import current_admin, current_manager, current_user
 from src.core.logger import log_endpoint, logger
@@ -74,8 +74,12 @@ async def create_action(
 ) -> ActionDB:
     """Создание акции."""
     logger.info(
-        f'{create_action.__doc__} Данные:', user=admin, info_dict=action,
+        f'{create_action.__doc__} Данные:',
+        user=admin,
+        info_dict=action,
     )
+
+    await cafe_existence(session, action.cafe)
 
     new_action = await actions_crud.create_action(
         obj_in=action,
@@ -104,7 +108,8 @@ async def get_action_by_id(
 ) -> ActionDB:
     """Получение акции по ID."""
     logger.info(
-        f'{get_action_by_id.__doc__} ID: {action_id}', user=current_user,
+        f'{get_action_by_id.__doc__} ID: {action_id}',
+        user=current_user,
     )
     action = await actions_crud.get_action(
         session,
@@ -139,6 +144,11 @@ async def update_action_by_id(
         user=admin,
         info_dict=update_data,
     )
+
+    new_cafe_id = update_data.cafe
+
+    if new_cafe_id is not None:
+        await cafe_existence(session, new_cafe_id)
 
     action = await check_action_exist(
         action_id=action_id,

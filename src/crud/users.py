@@ -113,6 +113,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             users = await self.get_multi_active(session)
 
         logger.info(
-            f'{CRUDUser.get_users.__doc__} show_all={show_all}', user=user,
+            f'{CRUDUser.get_users.__doc__} show_all={show_all}',
+            user=user,
         )
         return users
