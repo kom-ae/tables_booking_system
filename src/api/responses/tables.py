@@ -42,7 +42,7 @@ table_get_responses = {
 table_update_responses = {
     status.HTTP_200_OK: {
         'description': 'Стол успешно обновлён',
-        'model': TableDB
+        'model': TableDB,
     },
     status.HTTP_401_UNAUTHORIZED: TABLE_RESPONSES[
         status.HTTP_401_UNAUTHORIZED

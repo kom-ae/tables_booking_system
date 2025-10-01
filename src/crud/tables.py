@@ -32,8 +32,7 @@ class CRUDTable(CRUDBase[Table, TableCreate, TableUpdate]):
         result = await session.scalars(query)
         if table_id is not None:
             return result.first()
-        else:
-            return result.all()
+        return result.all()
 
     async def get_tables_by_cafe_id(
         self,

@@ -46,14 +46,14 @@ class Table(BaseModel):
     )
 
     def is_available(self) -> bool:
-        """Проверка доступности стола"""
+        """Проверка доступности стола."""
         return self.is_active
 
     def full_description(self) -> str:
-        """Формирование описания стола"""
+        """Формирование описания стола."""
         parts = [
             f'Стол №{self.id}',
             f'({self.seats_number} мест)',
-            self.description or 'Без описания'
+            self.description or 'Без описания',
         ]
         return ' - '.join(parts)
