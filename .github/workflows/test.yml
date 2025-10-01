@@ -19,22 +19,4 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r ./src/requirements.txt
       - name: run pytest
-        # env:
-        #   DB_ENGINE: sqlite
-        #   JWT_ALGORITHM: HS256
-        #   SECRET: test_secret
-        #   DB_HOST: localhost
-        #   DB_PORT: 5432
-        #   DB_NAME: test
-        #   DB_USER: test
-        #   DB_PASSWORD: test
-        run: |
-          export DB_ENGINE=sqlite
-          export JWT_ALGORITHM=HS256
-          export SECRET=test_secret
-          export DB_HOST=localhost
-          export DB_PORT=5432
-          export DB_NAME=test
-          export DB_USER=test
-          export DB_PASSWORD=test
-          python -m pytest tests/ -v -m "not skip" 
+        run: python -m pytest tests/ -v -m "not skip" 
