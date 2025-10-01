@@ -6,6 +6,23 @@ on:
       - feature/CI_CD_workflow
 
 jobs:
+# Сообщение о коммите в ветку
+  # send-telegram-message:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Send Telegram Message
+  #       uses: appleboy/telegram-action@master
+  #       with:
+  #         to: ${{ secrets.TELEGRAM_KOM_AE }}
+  #         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  #         message: |
+  #           🎉 Новый коммит в репозитории ${{ github.repository }}!
+  #           - Автор: ${{ github.actor }}
+  #           - Бранч: ${{ github.ref_name }}
+  #           - Сообщение: ${{ github.event.head_commit.message }}
+  #           - Ссылка: ${{ github.server_url }}/${{ github.repository }}/commit/${{github.sha}}
+
+# Запуск тестов бэкэнда
   backend_tests:
     runs-on: ubuntu-latest
     steps: 
@@ -20,3 +37,5 @@ jobs:
           pip install -r ./src/requirements.txt
       - name: run pytest
         run: python -m pytest tests/ -v -m "not skip" 
+
+
