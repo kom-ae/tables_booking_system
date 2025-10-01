@@ -2,11 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, List, Optional, Union
 
-<<<<<<< HEAD
 from fastapi import Depends, HTTPException, Path, status
-=======
-from fastapi import HTTPException, status
->>>>>>> a588c3ee0b4da4e5914a8e1de405f8547ae95680
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +11,6 @@ from src.constants import ID_MIN
 from src.core.db import get_async_session
 from src.core.logger import logger
 from src.crud.action import actions_crud
-<<<<<<< HEAD
 from src.core.dependencies import (
     current_user,
     current_manager,
@@ -31,11 +26,6 @@ from src.exceptions.db import (
     DBException,
 )
 from src.models import Cafe, Slot, User, Action
-=======
-from src.crud.factory import get_cafe_crud
-from src.exceptions.db import DBException, DBIntegrityException
-from src.models import Action, Cafe, User
->>>>>>> a588c3ee0b4da4e5914a8e1de405f8547ae95680
 from src.schemas.cafes import CafeCreate, CafeDB
 
 cafe_crud = get_cafe_crud()
@@ -161,7 +151,6 @@ async def cafe_existence(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f'Кафе с ID {cafe_id} не найдено.',
         )
-<<<<<<< HEAD
 
 current_user_dep = Depends(current_user)
 current_manager_dep = Depends(current_manager)
@@ -197,5 +186,3 @@ async def visible_slot_for_user(
     if not bool(slot.is_active):
         raise SlotNotFoundException()
     return slot
-=======
->>>>>>> a588c3ee0b4da4e5914a8e1de405f8547ae95680

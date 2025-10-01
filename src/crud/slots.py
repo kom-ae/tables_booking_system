@@ -3,7 +3,8 @@ from __future__ import annotations
 from datetime import time
 from typing import Any, Optional
 
-from sqlalchemy import select, update as sa_update
+from sqlalchemy import select
+from sqlalchemy import update as sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.base import CRUDBase
@@ -42,7 +43,7 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
             self,
             session: AsyncSession,
             *,
-            cafe_id: int
+            cafe_id: int,
     ) -> list[Slot]:
         return await self.list(session, cafe_id=cafe_id, only_active=False)
 
@@ -50,7 +51,7 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
             self,
             session: AsyncSession,
             *,
-            cafe_id: int
+            cafe_id: int,
     ) -> list[Slot]:
         return await self.list(session, cafe_id=cafe_id, only_active=True)
 
@@ -129,7 +130,7 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
         """Мягко помечает слот как неактивный (soft delete)."""
         await session.execute(
             sa_update(Slot).where(
-                Slot.id == db_obj.id
+                Slot.id == db_obj.id,
             ).values(is_active=False),
         )
         await session.commit()

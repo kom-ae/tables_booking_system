@@ -10,6 +10,7 @@ from src.constants import ID_MIN, SLOT_DESCRIPTION_MAX_LENGTH
 
 class SlotBase(BaseModel):
     """Базовая схема слота."""
+
     model_config = ConfigDict(extra='forbid')
 
     cafe_id: int = Field(..., ge=ID_MIN)
@@ -34,6 +35,7 @@ class SlotCreate(SlotBase):
 
 class SlotUpdate(BaseModel):
     """Частичное обновление слота."""
+
     model_config = ConfigDict(extra='forbid')
 
     cafe_id: Optional[int] = Field(None, ge=ID_MIN)
@@ -55,6 +57,7 @@ class SlotUpdate(BaseModel):
 
 class SlotDB(BaseModel):
     """Слот из БД."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -69,6 +72,7 @@ class SlotDB(BaseModel):
 
 class SlotShortDB(BaseModel):
     """Короткая версия слота."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
