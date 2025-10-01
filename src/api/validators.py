@@ -17,10 +17,7 @@ from src.core.dependencies import (
 from src.core.logger import logger
 from src.crud.action import actions_crud
 from src.crud.factory import get_cafe_crud, get_slot_crud
-from src.exceptions.db import (
-    DBIntegrityException,
-    DBException,
-)
+from src.exceptions.db import DBException, DBIntegrityException
 from src.exceptions.slots import (
     CafeOrSlotNotFoundException,
     SlotNotFoundException,
