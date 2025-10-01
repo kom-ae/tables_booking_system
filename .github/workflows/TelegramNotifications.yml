@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - main
-	    - develop
-	    - feature/CI_CD_workflow
+      - develop
+      - feature/CI_CD_workflow
   pull_request:
     types: [opened, closed]
 
@@ -20,7 +20,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
             🔔 Новое обновление в репозитории:
-			      - Бранч: ${{ github.ref_name }}
+            - Бранч: ${{ github.ref_name }}
             - Коммит: ${{ github.sha }}
             - Автор: ${{ github.actor }}
             - Сообщение: ${{ github.event.head_commit.message }}
