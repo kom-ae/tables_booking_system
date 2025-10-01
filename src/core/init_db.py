@@ -23,8 +23,8 @@ async def init_db_and_superuser() -> None:
             logger.info(f'{init_db_and_superuser.__doc__}')
     except Exception as error:
         logger.warning(
-            f'{init_db_and_superuser.__doc__} '
-            f'Таблицы уже существуют: {error}')
+            f'{init_db_and_superuser.__doc__} Таблицы уже существуют: {error}',
+        )
         return
 
     try:

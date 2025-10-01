@@ -23,33 +23,36 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
             raise SlotNotFoundException()
         return slot
 
-    async def list_all(
+    async def list(
         self,
         session: AsyncSession,
         *,
-        cafe_id: Optional[int] = None,
+        cafe_id: int,
+        only_active: bool,
     ) -> list[Slot]:
-        """Возвращает все слоты (опционально отфильтрованные по cafe_id)."""
-        stmt = select(Slot)
-        if cafe_id is not None:
-            stmt = stmt.where(Slot.cafe_id == cafe_id)
-        stmt = stmt.order_by(Slot.cafe_id, Slot.start_time)
+        """Список слотов по кафе с опциональной фильтрацией активности."""
+        stmt = select(Slot).where(Slot.cafe_id == cafe_id)
+        if only_active:
+            stmt = stmt.where(Slot.is_active.is_(True))
+        stmt = stmt.order_by(Slot.cafe_id.asc(), Slot.start_time.asc())
         res = await session.execute(stmt)
         return list(res.scalars().all())
 
-    async def list_active(
-        self,
-        session: AsyncSession,
-        *,
-        cafe_id: Optional[int] = None,
+    async def list_all(
+            self,
+            session: AsyncSession,
+            *,
+            cafe_id: int
     ) -> list[Slot]:
-        """Возвращает активные слоты, опционально по cafe_id."""
-        stmt = select(Slot).where(Slot.is_active.is_(True))
-        if cafe_id is not None:
-            stmt = stmt.where(Slot.cafe_id == cafe_id)
-        stmt = stmt.order_by(Slot.cafe_id, Slot.start_time)
-        res = await session.execute(stmt)
-        return list(res.scalars().all())
+        return await self.list(session, cafe_id=cafe_id, only_active=False)
+
+    async def list_active(
+            self,
+            session: AsyncSession,
+            *,
+            cafe_id: int
+    ) -> list[Slot]:
+        return await self.list(session, cafe_id=cafe_id, only_active=True)
 
     async def _check_overlap(
         self,
@@ -85,7 +88,7 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
         if obj_in.start_time >= obj_in.end_time:
             raise SlotOverlapException()
 
-        if getattr(obj_in, 'is_active', True):
+        if getattr(obj_in, "is_active", True):
             await self._check_overlap(
                 session,
                 cafe_id=obj_in.cafe_id,
@@ -104,10 +107,10 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
         """Обновляет существующий слот."""
         data = obj_in.model_dump(exclude_unset=True)
 
-        new_start = data.get('start_time', db_obj.start_time)
-        new_end = data.get('end_time', db_obj.end_time)
-        new_cafe_id = data.get('cafe_id', db_obj.cafe_id)
-        will_be_active = bool(data.get('is_active', db_obj.is_active))
+        new_start = data.get("start_time", db_obj.start_time)
+        new_end = data.get("end_time", db_obj.end_time)
+        new_cafe_id = data.get("cafe_id", db_obj.cafe_id)
+        will_be_active = bool(data.get("is_active", db_obj.is_active))
 
         if new_start >= new_end:
             raise SlotOverlapException()
@@ -125,8 +128,8 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
     async def delete_soft(self, db_obj: Slot, session: AsyncSession) -> None:
         """Мягко помечает слот как неактивный (soft delete)."""
         await session.execute(
-            sa_update(Slot)
-            .where(Slot.id == db_obj.id)
-            .values(is_active=False),
+            sa_update(Slot).where(
+                Slot.id == db_obj.id
+            ).values(is_active=False),
         )
         await session.commit()

@@ -176,6 +176,7 @@ test
 
 # База данных
 fastapi.db
+/infra/pgdata/
 
 # Black
 pyproject.toml
@@ -184,3 +185,4 @@ pyproject.toml
 app.log
 src.log
 app_temp.log
+logs

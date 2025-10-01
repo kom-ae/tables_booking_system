@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from src.api.endpoints import (
+    actions_router,
     auth_router,
     cafes_router,
     slots_router,
@@ -29,5 +30,12 @@ main_router.include_router(
 
 main_router.include_router(
     slots_router,
+    prefix='/cafe/{cafe_id}/time_slots',
     tags=['Слоты'],
+)
+
+main_router.include_router(
+    actions_router,
+    prefix='/actions',
+    tags=['Акции'],
 )
