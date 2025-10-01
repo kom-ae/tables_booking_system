@@ -9,23 +9,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.api.responses.cafes import cafe_check_duplicate_responses
 from src.constants import ID_MIN
 from src.core.db import get_async_session
-from src.core.logger import logger
-from src.crud.action import actions_crud
 from src.core.dependencies import (
-    current_user,
     current_manager,
+    current_user,
     get_current_user_or_none,
 )
+from src.core.logger import logger
+from src.crud.action import actions_crud
 from src.crud.factory import get_cafe_crud, get_slot_crud
-from src.exceptions.slots import (
-    CafeOrSlotNotFoundException,
-    SlotNotFoundException,
-)
 from src.exceptions.db import (
     DBIntegrityException,
     DBException,
 )
-from src.models import Cafe, Slot, User, Action
+from src.exceptions.slots import (
+    CafeOrSlotNotFoundException,
+    SlotNotFoundException,
+)
+from src.models import Action, Cafe, Slot, User
 from src.schemas.cafes import CafeCreate, CafeDB
 
 cafe_crud = get_cafe_crud()
@@ -152,6 +152,7 @@ async def cafe_existence(
             detail=f'Кафе с ID {cafe_id} не найдено.',
         )
 
+
 current_user_dep = Depends(current_user)
 current_manager_dep = Depends(current_manager)
 current_user_or_none_dep = Depends(get_current_user_or_none)
@@ -175,8 +176,9 @@ async def visible_slot_for_user(
     session: AsyncSession = Depends(get_async_session),
     user: Optional[User] = current_user_or_none_dep,
 ) -> Slot:
-    """
-    Правила видимости слота:
+    """Определить видимость слота для запрашивающего пользователя.
+
+    Правила:
     - superuser/admin/manager видят любой слот;
     - остальные — только активный (иначе 404).
     """

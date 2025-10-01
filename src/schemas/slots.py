@@ -24,6 +24,7 @@ class SlotBase(BaseModel):
 
     @model_validator(mode='after')
     def check_times(self) -> SlotBase:
+        """Проверяет, что end_time позже start_time."""
         if self.end_time <= self.start_time:
             raise ValueError('end_time должен быть позже start_time')
         return self
@@ -49,6 +50,7 @@ class SlotUpdate(BaseModel):
 
     @model_validator(mode='after')
     def check_times(self) -> Self:
+        """Если заданы оба времени, end_time должен быть позже start_time."""
         if self.start_time is not None and self.end_time is not None:
             if self.end_time <= self.start_time:
                 raise ValueError('end_time должен быть позже start_time')

@@ -45,6 +45,7 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
             *,
             cafe_id: int,
     ) -> list[Slot]:
+        """Вернуть все слоты кафе (без фильтрации по активности)."""
         return await self.list(session, cafe_id=cafe_id, only_active=False)
 
     async def list_active(
@@ -53,6 +54,7 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
             *,
             cafe_id: int,
     ) -> list[Slot]:
+        """Вернуть только активные слоты кафе."""
         return await self.list(session, cafe_id=cafe_id, only_active=True)
 
     async def _check_overlap(
