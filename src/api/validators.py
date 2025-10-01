@@ -8,6 +8,7 @@ from src.api.responses.cafes import cafe_check_duplicate_responses
 from src.core.logger import logger
 from src.crud.action import actions_crud
 from src.crud.factory import get_cafe_crud
+from src.exceptions.db import DBException, DBIntegrityException
 from src.models import Action, Cafe, User
 from src.schemas.cafes import CafeCreate, CafeDB
 
