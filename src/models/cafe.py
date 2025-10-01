@@ -10,7 +10,7 @@ from src.models.base import BaseModel
 if TYPE_CHECKING:
     from src.models.action import Action
     from src.models.dish import Dishe
-    from src.models.table import Tables
+    from src.models.table import Table
     from src.models.user import User
 
 
@@ -48,8 +48,8 @@ class Cafe(BaseModel):
         lazy='selectin',
         cascade='all, delete-orphan',
     )
-    tables: Mapped[list['Tables']] = relationship(
-        'Tables',
+    tables: Mapped[list['Table']] = relationship(
+        'Table',
         back_populates='cafe',
         lazy='selectin',
         cascade='all, delete-orphan',

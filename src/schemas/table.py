@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.constants import (
     MAX_DESCRIPTION,
@@ -26,16 +26,13 @@ class TableBase(BaseModel):
         title='Описание столика',
     )
 
-    class Config:
-        """Конфиг класса."""
-
-        extra = 'forbid'
+    model_config = ConfigDict(extra='forbid')
 
 
 class TableCreate(TableBase):
     """Схема для создания стола."""
 
-    pass
+    is_active: bool = Field(True, title='Стол активен?')
 
 
 class TableUpdate(BaseModel):
@@ -52,15 +49,9 @@ class TableUpdate(BaseModel):
         max_length=MAX_DESCRIPTION,
         title='Описание столика',
     )
-    is_active: Optional[bool] = Field(
-        None,
-        title='Стол активен?',
-    )
+    is_active: Optional[bool] = Field(None, title='Стол активен?')
 
-    class Config:
-        """Конфиг класса."""
-
-        extra = 'forbid'
+    model_config = ConfigDict(extra='forbid')
 
 
 class TableDB(TableBase):
@@ -72,7 +63,15 @@ class TableDB(TableBase):
     created_at: datetime = Field(..., title='Дата создания')
     updated_at: datetime = Field(..., title='Дата обновления')
 
-    class Config(TableBase.Config):
-        """Конфиг класса."""
+    model_config = ConfigDict(from_attributes=True)
 
-        from_attributes = True
+
+class TableShort(BaseModel):
+    """Краткая схема стола."""
+
+    id: int = Field(..., title='ID стола')
+    seats_number: int = Field(..., title='Количество мест')
+    is_active: bool = Field(..., title='Активен?')
+    description: Optional[str] = Field(None, title='Описание')
+
+    model_config = ConfigDict(from_attributes=True)
