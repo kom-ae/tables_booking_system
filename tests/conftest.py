@@ -197,11 +197,11 @@ async def cleanup_db(
     tables_to_clean = [
         'cafe_manager',  # Ассоциативная таблица
         'booking',  # Когда будет реализовано
-        'dishes',  # Когда будет реализовано
-        'tables',  # Когда будет реализовано
-        'time_slots',  # Когда будет реализовано
-        'actions',  # Когда будет реализовано
-        'cafes',
+        'dishe',  # Когда будет реализовано
+        'table',  # Когда будет реализовано
+        'time_slot',  # Когда будет реализовано
+        'action',  # Когда будет реализовано
+        'cafe',
         'user',
     ]
 
@@ -357,7 +357,7 @@ async def test_cafe(session_fixture: AsyncSession) -> Cafe:
         photo='',
         managers=[],
     )
-    cafe_db = await get_cafe_crud().create_cafe(cafe_in, session_fixture)
+    cafe_db = await get_cafe_crud().create(cafe_in, session_fixture)
     # Возвращаем объект модели из БД
     cafe = await session_fixture.get(Cafe, cafe_db.id)
     assert cafe is not None
@@ -376,7 +376,7 @@ async def test_cafe2(session_fixture: AsyncSession) -> Cafe:
         photo='',
         managers=[],
     )
-    cafe_db = await get_cafe_crud().create_cafe(cafe_in, session_fixture)
+    cafe_db = await get_cafe_crud().create(cafe_in, session_fixture)
     # Возвращаем объект модели из БД
     cafe = await session_fixture.get(Cafe, cafe_db.id)
     assert cafe is not None

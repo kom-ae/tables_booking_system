@@ -7,7 +7,7 @@ from src.schemas.cafes import CafeShortDB
 
 
 class ActionCreate(BaseModel):
-    """Сехма для создания акций."""
+    """Схема для создания акций."""
 
     cafe: int = Field(..., description='ID Кафе')
     description: str = Field(..., description='Описание акции', min_length=1)
