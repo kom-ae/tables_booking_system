@@ -4,6 +4,7 @@ from src.api.endpoints import (
     actions_router,
     auth_router,
     cafes_router,
+    tables_router,
     users_router,
 )
 
@@ -31,4 +32,10 @@ main_router.include_router(
     actions_router,
     prefix='/actions',
     tags=['Акции'],
+)
+
+main_router.include_router(
+    tables_router,
+    prefix='/cafe/{cafe_id}/tables',
+    tags=['Столы'],
 )
