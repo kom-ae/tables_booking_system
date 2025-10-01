@@ -23,6 +23,7 @@ from tests.conftest import (
     get_auth_headers,
 )
 
+
 # Эти тесты будут работать когда будут реализованы:
 # 1. Модель Action в src/models/action.py
 # 2. Эндпоинты в src/api/endpoints/actions.py

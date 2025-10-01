@@ -74,11 +74,11 @@ async def create_cafe(
     user: User = Depends(current_admin),
 ) -> CafeDB:
     """Создание кафе."""
-    await check_duplicate_cafe(cafe=cafe, session=session)
+    await check_duplicate_cafe(cafe=cafe, session=session, user=user)
 
     return await handler_run_crud_cafe(
-        cafe_crud.create_cafe,
-        crud_args={'obj_in': cafe, 'session': session},
+        cafe_crud.create,
+        crud_args={'obj_in': cafe, 'user': user, 'session': session},
         msg_log=f'{create_cafe.__doc__} Данные {cafe.model_dump()}.',
         user=user,
     )
@@ -149,8 +149,13 @@ async def update_cafe(
 
     return await handler_run_crud_cafe(
         cafe_crud.update,
-        crud_args={'db_obj': cafe, 'obj_in': obj_in, 'session': session},
+        crud_args={
+            'db_obj': cafe,
+            'obj_in': obj_in,
+            'user': user,
+            'session': session,
+        },
         msg_log=f'{update_cafe.__doc__} Данными: '
-                f'{obj_in.model_dump(exclude_unset=True)}.',
+        f'{obj_in.model_dump(exclude_unset=True)}.',
         user=user,
     )

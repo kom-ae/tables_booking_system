@@ -7,10 +7,11 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     String,
-    func,
     text,
 )
-from sqlalchemy import Enum as EnumSQL
+from sqlalchemy import (
+    Enum as EnumSQL,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.constants import (
@@ -64,15 +65,17 @@ class User(BaseModel):
         unique=True,
     )
     role: Mapped[UserRole] = mapped_column(
-        EnumSQL(UserRole, name='user_role_enum',
-                values_callable=lambda x: [member.value for member in x]),
+        EnumSQL(
+            UserRole,
+            name='user_role_enum',
+            values_callable=lambda x: [member.value for member in x],
+        ),
         default=UserRole.USER,
         nullable=False,
     )
     last_used: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text('CURRENT_TIMESTAMP'),
-        onupdate=func.now(),
         nullable=False,
     )
     managed_cafes: Mapped[list['Cafe']] = relationship(

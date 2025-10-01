@@ -13,10 +13,10 @@ from starlette import status
 
 from src.schemas.auth import Auth
 from tests.conftest import (
-    VALID_PASSWORD,
     assert_error_response,
     assert_success_response,
     get_auth_headers,
+    VALID_PASSWORD,
 )
 
 

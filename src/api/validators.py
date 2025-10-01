@@ -17,9 +17,10 @@ cafe_crud = get_cafe_crud()
 async def check_duplicate_cafe(
     cafe: CafeCreate,
     session: AsyncSession,
+    user: Optional[User] = None,
 ) -> None:
     """Проверить на существование дубликата кафе."""
-    db_obj = await handler_run_crud_cafe(
+    db_obj: Cafe = await handler_run_crud_cafe(
         cafe_crud.get_by_name_address,
         crud_args={
             'name': cafe.name,
@@ -27,15 +28,16 @@ async def check_duplicate_cafe(
             'session': session,
         },
         msg_log='Поиск дубликата кафе.',
-    )
-    db_obj = await cafe_crud.get_by_name_address(
-        name=cafe.name,
-        address=cafe.address,
-        session=session,
+        user=user,
     )
     if db_obj:
-        logger.error('Попытка создать дубликат кафе', info_dict=db_obj)
+        logger.error(
+            'Попытка создать дубликат кафе',
+            user,
+            info_dict=cafe.model_dump(),
+        )
         raise HTTPException(**cafe_check_duplicate_responses)
+    logger.info('Дубликат кафе не найден.', user)
 
 
 async def check_action_exist(
@@ -68,6 +70,7 @@ async def handler_run_crud_cafe(
         user: пользователь, инициирующий операцию
     """
     crud_args: dict = kwargs.get('crud_args', {})
+    session: AsyncSession = crud_args.get('session')
     msg_log: str = kwargs.get('msg_log', '')
     user: Optional[User] = kwargs.get('user', None)
 
@@ -83,8 +86,20 @@ async def handler_run_crud_cafe(
             logger.info(msg_log_full, user=user)
 
         return obj
-
+    except (DBIntegrityException, DBException) as err:
+        await session.rollback()
+        logger.error(
+            f'Операция "{msg_log}": '
+            f'Ошибка выполнения функции {func.__name__} '
+            f'в модуле {func.__module__}: {str(err)}',
+            user=user,
+        )
+        raise HTTPException(
+            status_code=err.status_code,
+            detail='Внутренняя ошибка сервера.',
+        )
     except Exception as err:
+        await session.rollback()
         logger.error(
             f'Операция "{msg_log}": '
             f'Ошибка выполнения функции {func.__name__} '

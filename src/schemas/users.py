@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from src.schemas.validators import (
     email_validator,
@@ -37,7 +37,6 @@ class UserCreate(UserBase):
     _validate_email = field_validator('email', mode='before')(
         email_validator,
     )
-
     _validate_tg_id = field_validator('tg_id', mode='before')(
         telegram_id_validator,
     )
@@ -73,7 +72,6 @@ class UserUpdate(UserBase):
     _validate_email = field_validator('email', mode='before')(
         email_validator,
     )
-
     _validate_tg_id = field_validator('tg_id', mode='before')(
         telegram_id_validator,
     )
@@ -91,4 +89,4 @@ class UserShort(BaseModel):
     class Config:
         """Конфиг класса."""
 
-        from_attributes = True
+        model_config = ConfigDict(from_attributes=True)
