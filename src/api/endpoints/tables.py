@@ -11,7 +11,7 @@ from src.api.responses.tables import (
 )
 from src.core.db import get_async_session
 from src.core.dependencies import current_manager, current_user
-from src.core.logger import log_endpoint
+from src.core.logger import log_endpoint, logger
 from src.crud.cafes import CRUDCafe
 from src.crud.factory import get_cafe_crud, get_table_crud
 from src.crud.tables import CRUDTable
@@ -24,7 +24,7 @@ router = APIRouter()
 @router.get(
     '',
     response_model=List[TableDB],
-    response_description='Список столов кафе',
+    response_description='Список столов',
     responses=tables_list_responses,
     summary='Получение списка столов в кафе '
     '(только для администратора и менеджера, пользователь - только активные)',
@@ -37,15 +37,15 @@ async def get_tables(
     tables_crud: CRUDTable = Depends(get_table_crud),
     cafe_crud: CRUDCafe = Depends(get_cafe_crud),
 ) -> List[TableDB]:
-    """Получить все столы кафе."""
+    """Получение списка столов в кафе."""
+    logger.info(get_tables.__doc__, user=user)
     cafe = await cafe_crud.get_active(cafe_id, session)
     if not cafe:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Кафе не найдено',
         )
-
-    only_active = not user.is_admin() and not user.is_manager()
+    only_active = True if user.is_manager() else False
     return await tables_crud.get_tables_by_cafe_id(
         cafe_id,
         session,
@@ -58,7 +58,7 @@ async def get_tables(
     response_model=TableDB,
     status_code=status.HTTP_201_CREATED,
     summary='Создание стола в кафе (только для администратора и менеджера)',
-    response_description='Стол успешно создан',
+    response_description='Данные созданного стола',
     responses=table_create_responses,
 )
 @log_endpoint
@@ -70,7 +70,8 @@ async def create_table(
     tables_crud: CRUDTable = Depends(get_table_crud),
     cafe_crud: CRUDCafe = Depends(get_cafe_crud),
 ) -> TableDB:
-    """Создать стол."""
+    """Создание стола в кафе."""
+    logger.info(create_table.__doc__, user=user, info_dict=table_in)
     cafe = await cafe_crud.get_active(cafe_id, session)
     if not cafe:
         raise HTTPException(
@@ -97,8 +98,12 @@ async def get_table(
     user: User = Depends(current_user),
     tables_crud: CRUDTable = Depends(get_table_crud),
 ) -> TableDB:
-    """Получить стол по ID."""
-    only_active = not user.is_admin() and not user.is_manager()
+    """Получает стол по ID."""
+    logger.info(
+        f'{get_table.__doc__} ID: {table_id}. Cafe ID: {cafe_id}',
+        user=user,
+    )
+    only_active = True if user.is_manager() else False
     table = await tables_crud.get_by_id_and_cafe(
         table_id, cafe_id, session, only_active=only_active,
     )
@@ -126,7 +131,12 @@ async def update_table(
     user: User = Depends(current_manager),
     tables_crud: CRUDTable = Depends(get_table_crud),
 ) -> TableDB:
-    """Обновить стол."""
+    """Обновляет стол по ID."""
+    logger.info(
+        f'{update_table.__doc__} ID: {table_id}. Cafe ID: {cafe_id}. Данные',
+        user=user,
+        info_dict=table_in,
+    )
     table = await tables_crud.get_by_id_and_cafe(
         table_id, cafe_id, session, only_active=False,
     )
