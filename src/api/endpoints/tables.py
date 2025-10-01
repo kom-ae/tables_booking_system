@@ -3,6 +3,12 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.api.responses.tables import (
+    table_create_responses,
+    table_get_responses,
+    table_update_responses,
+    tables_list_responses,
+)
 from src.core.db import get_async_session
 from src.core.dependencies import current_manager, current_user
 from src.core.logger import log_endpoint
@@ -11,12 +17,6 @@ from src.crud.factory import get_cafe_crud, get_table_crud
 from src.crud.tables import CRUDTable
 from src.models.user import User
 from src.schemas.table import TableCreate, TableDB, TableUpdate
-from src.api.responses.tables import (
-    tables_list_responses,
-    table_create_responses,
-    table_get_responses,
-    table_update_responses,
-)
 
 router = APIRouter()
 

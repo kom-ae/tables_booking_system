@@ -1,4 +1,5 @@
 from fastapi import status
+
 from src.schemas.table import TableDB
 
 TABLE_RESPONSES = {
