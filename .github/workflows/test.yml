@@ -20,5 +20,5 @@ jobs:
           pip install -r ./src/requirements.txt
       - name: run pytest
         env:
-          DB_ENGINE=sqlite
+          DB_ENGINE: sqlite
         run: python -m pytest tests/ -v -m "not skip" 
