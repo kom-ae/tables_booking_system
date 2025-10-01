@@ -58,7 +58,7 @@ class TableDB(TableBase):
     """Схема стола из БД."""
 
     id: int = Field(..., title='ID записи')
-    cafe: CafeShortDB = Field(..., title="Кафе")
+    cafe: CafeShortDB = Field(..., title='Кафе')
     is_active: bool = Field(..., title='Стол активен?')
     created_at: datetime = Field(..., title='Дата создания')
     updated_at: datetime = Field(..., title='Дата обновления')
