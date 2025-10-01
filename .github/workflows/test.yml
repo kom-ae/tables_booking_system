@@ -25,8 +25,8 @@ jobs:
         if: success() || failure()
         uses: appleboy/telegram-action@master
         with:
-          to: ${{ TELEGRAM_KOM_AE }}
-          token: ${{ TELEGRAM_BOT_TOKEN }}
+          to: ${{ secret.TELEGRAM_KOM_AE }}
+          token: ${{ secret.TELEGRAM_BOT_TOKEN }}
           message: |
             Статус выполнения задачи Action:
             - Репозиторий: ${{ github.repository }}
