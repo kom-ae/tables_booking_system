@@ -74,7 +74,9 @@ async def create_action(
 ) -> ActionDB:
     """Создание акции."""
     logger.info(
-        f'{create_action.__doc__} Данные:', user=admin, info_dict=action,
+        f'{create_action.__doc__} Данные:',
+        user=admin,
+        info_dict=action,
     )
 
     new_action = await actions_crud.create_action(
@@ -104,7 +106,8 @@ async def get_action_by_id(
 ) -> ActionDB:
     """Получение акции по ID."""
     logger.info(
-        f'{get_action_by_id.__doc__} ID: {action_id}', user=current_user,
+        f'{get_action_by_id.__doc__} ID: {action_id}',
+        user=current_user,
     )
     action = await actions_crud.get_action(
         session,

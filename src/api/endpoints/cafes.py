@@ -151,6 +151,6 @@ async def update_cafe(
         cafe_crud.update,
         crud_args={'db_obj': cafe, 'obj_in': obj_in, 'session': session},
         msg_log=f'{update_cafe.__doc__} Данными: '
-                f'{obj_in.model_dump(exclude_unset=True)}.',
+        f'{obj_in.model_dump(exclude_unset=True)}.',
         user=user,
     )

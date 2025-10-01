@@ -12,17 +12,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from src.core.db import engine, get_async_session
-from src.crud.factory import get_cafe_crud
 from src.crud.action import actions_crud
+from src.crud.factory import get_cafe_crud
 from src.main import app
+from src.models.action import Action
 from src.models.base import BaseModel
 from src.models.cafe import Cafe
 from src.models.user import User
-from src.models.action import Action
+from src.schemas.action import ActionCreate
 from src.schemas.auth import Auth
 from src.schemas.cafes import CafeCreate
-from src.schemas.action import ActionCreate
 from src.services.auth import PasswordService
+
 
 # -----------------------
 # Константы для эндпоинтов
