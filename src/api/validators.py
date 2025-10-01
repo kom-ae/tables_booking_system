@@ -1,13 +1,14 @@
 from typing import Any, Callable, List, Optional, Union
 
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.cafes import cafe_check_duplicate_responses
 from src.core.logger import logger
 from src.crud.action import actions_crud
 from src.crud.factory import get_cafe_crud
-from src.models import Action, User
+from src.models import Action, Cafe, User
 from src.schemas.cafes import CafeCreate, CafeDB
 
 cafe_crud = get_cafe_crud()
@@ -93,4 +94,27 @@ async def handler_run_crud_cafe(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail='Внутренняя ошибка сервера.',
+        )
+
+
+async def cafe_existence(
+        session: AsyncSession,
+        cafe_id: Optional[int],
+) -> None:
+    """Проверяет наличе кафе по его ID."""
+    if cafe_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Нет такого кафе',
+        )
+
+    cafe = await session.execute(
+        select(Cafe).where(Cafe.id == cafe_id),
+    )
+    cafe_obj = cafe.scalar_one_or_none()
+
+    if cafe_obj is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f'Кафе с ID {cafe_id} не найдено.',
         )
