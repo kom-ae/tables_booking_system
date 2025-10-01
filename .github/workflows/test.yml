@@ -21,4 +21,11 @@ jobs:
       - name: run pytest
         env:
           DB_ENGINE: sqlite
+          JWT_ALGORITHM: HS256
+          SECRET: test_secret
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: test
+          DB_USER: test
+          DB_PASSWORD: test
         run: python -m pytest tests/ -v -m "not skip" 
