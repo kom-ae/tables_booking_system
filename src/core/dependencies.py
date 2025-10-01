@@ -35,7 +35,7 @@ async def current_user(
     3. Обновление времени последней активности (last_used)
     4. Добавление пользователя в request.state для логов
 
-    Args:dee
+    Args:
         request: FastAPI request объект
         token: Bearer токен из заголовка Authorization
         db: Асинхронная сессия БД
