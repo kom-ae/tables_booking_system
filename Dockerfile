@@ -14,6 +14,7 @@ RUN apk del .build-deps
 COPY src/ ./src/
 COPY alembic/ ./alembic/
 COPY alembic.ini .
+COPY entrypoint.sh .
 
 ENV PYTHONUNBUFFERED=1
 
