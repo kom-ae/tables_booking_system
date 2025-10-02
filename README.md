@@ -74,7 +74,7 @@ cp env.local .env
 DB_ENGINE=sqlite
 DATABASE_URL=sqlite+aiosqlite:///./booking.db
 ```
-- ***Вариант B: PostgreSQL (продакшен-готовый)***
+- ***Вариант B: PostgreSQL (продакшен-готовый)***<br>
 В файле .env установите:
 ```
 DB_ENGINE=postgresql
@@ -87,7 +87,7 @@ DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/booking
 SECRET_KEY=your_secret_key_here
 ```
 ### Запуск приложения
-**С Docker (рекомендуется)**
+**С Docker (рекомендуется)**<br>
 Копируем .env в директорию infra
 ```bash
 cp .env infra/.env
@@ -97,7 +97,7 @@ cp .env infra/.env
 cd src/infra
 docker-compose -f docker-compose.local.yml up --build
 ```
-**Без Docker**
+**Без Docker**<br>
 Создание виртуального окружения
 ```
 python -m venv venv
@@ -112,40 +112,31 @@ pip install -r requirements.txt
 alembic upgrade head
 ```
 ### Запуск сервера
+```bash
 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-Проверка работоспособности
+```
+Проверка работоспособности<br>
 После запуска приложение будет доступно:
 - API: http://localhost:8000
 - Документация: http://localhost:8000/docs
-- Альтернативная документация: http://localhost:8000/redoc
--Переменные окружения (.env)
- Обязательные:
- .env
- ```bash
- SECRET_KEY=your_secret_key_here                    # Секретный ключ для JWT
- DB_ENGINE=sqlite|postgresql                        # Тип базы данных
-```
+- Альтернативная документация: http://localhost:8000/redoc<br>
+Переменные окружения (.env)<br>
  Для PostgreSQL:
-
- .env
  ```bash
  POSTGRES_USER=postgres
  POSTGRES_PASSWORD=postgres
  POSTGRES_DB=booking
  DB_HOST=localhost
  DB_PORT=5432
- DATABASE_URL=postgresql+asyncpg://user:pass@host:port/db
  ```
  Для SQLite:
-
- .env
  ```bash
  DATABASE_URL=sqlite+aiosqlite:///./booking.db
  ```
-**Приложение будет доступно по адресу:**
+**Приложение будет доступно по адресу:**<br>
 👉 http://localhost/api/v1
 
-Документация API:
+**Документация API:**<br>
 👉 http://localhost/docs
 
 ### 🔄 CI/CD
@@ -167,7 +158,7 @@ python -m pytest
 - деплой на сервер
 
 ### 🧹 Стилизация и проверка кода
-Для обеспечения единого стиля кода используются пакеты Ruff и Pre-commit.
+Для обеспечения единого стиля кода используются пакеты Ruff и Pre-commit.<br>
 Проверка стиля
 ```sh
 ruff check
