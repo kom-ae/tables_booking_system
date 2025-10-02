@@ -104,9 +104,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "./infra/docker-compose.production.yml"
-        target: "/opt/bron-2/"
-        recursive: false
-        options: --strip-components=1
+        target: "/opt/bron-2/."
 
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
