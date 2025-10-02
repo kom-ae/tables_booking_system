@@ -62,7 +62,7 @@ git clone https://github.com/Studio-Yandex-Practicum/tables_booking_system_team2
 cd tables_booking_system_team2
 ```
 ### Настройка окружения
-Копируем файл окружения
+***Копируем файл окружения***
 ```bash
 cd src
 cp env.local .env
@@ -75,7 +75,7 @@ DB_ENGINE=sqlite
 DATABASE_URL=sqlite+aiosqlite:///./booking.db
 ```
 - ***Вариант B: PostgreSQL (продакшен-готовый)***<br>
-В файле .env установите:
+***В файле .env установите:***
 ```
 DB_ENGINE=postgresql
 POSTGRES_USER=postgres
@@ -88,7 +88,7 @@ SECRET_KEY=your_secret_key_here
 ```
 ### Запуск приложения
 **С Docker (рекомендуется)**<br>
-Копируем .env в директорию infra
+***Копируем .env в директорию infra***
 ```bash
 cp .env infra/.env
 ```
@@ -98,7 +98,7 @@ cd src/infra
 docker-compose -f docker-compose.local.yml up --build
 ```
 **Без Docker**<br>
-Создание виртуального окружения
+***Создание виртуального окружения***
 ```
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
@@ -115,13 +115,14 @@ alembic upgrade head
 ```bash
 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
-Проверка работоспособности<br>
-После запуска приложение будет доступно:
+### Проверка работоспособности
+***После запуска приложение будет доступно:***
 - API: http://localhost:8000
 - Документация: http://localhost:8000/docs
 - Альтернативная документация: http://localhost:8000/redoc<br>
-Переменные окружения (.env)<br>
- Для PostgreSQL:
+
+### Переменные окружения (.env)
+ ***Для PostgreSQL:***
  ```bash
  POSTGRES_USER=postgres
  POSTGRES_PASSWORD=postgres
@@ -129,7 +130,7 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
  DB_HOST=localhost
  DB_PORT=5432
  ```
- Для SQLite:
+ ***Для SQLite:***
  ```bash
  DATABASE_URL=sqlite+aiosqlite:///./booking.db
  ```
