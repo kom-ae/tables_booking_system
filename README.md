@@ -54,27 +54,27 @@ tables_booking_system_team2/
 ```
 ### ⚙️ Установка и запуск
 
-#### Для локальной разработки
+### Для локальной разработки
 
-**Клонирование репозитория**
+***Клонирование репозитория***
 ```bash
 git clone https://github.com/Studio-Yandex-Practicum/tables_booking_system_team2.git
 cd tables_booking_system_team2
 ```
-**Настройка окружения**
+### Настройка окружения
 Копируем файл окружения
 ```bash
 cd src
 cp env.local .env
 ```
-**Настройка базы данных**
-**Вариант A: SQLite (быстрый старт)**
+### Настройка базы данных
+ - ***Вариант A: SQLite (быстрый старт)***
 ```bash
 # В файле .env установите:
 DB_ENGINE=sqlite
 DATABASE_URL=sqlite+aiosqlite:///./booking.db
 ```
-**Вариант B: PostgreSQL (продакшен-готовый)**
+- ***Вариант B: PostgreSQL (продакшен-готовый)***
 В файле .env установите:
 ```
 DB_ENGINE=postgresql
@@ -98,7 +98,7 @@ cd src/infra
 docker-compose -f docker-compose.local.yml up --build
 ```
 **Без Docker**
-***Создание виртуального окружения***
+Создание виртуального окружения
 ```
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
