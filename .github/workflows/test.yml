@@ -104,7 +104,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "./infra/docker-compose.production.yml"
-        target: "/opt/bron-2/."
+        target: "/opt/bron-2/"
 
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
@@ -116,10 +116,10 @@ jobs:
         script: |
           cd /opt/bron-2/
           # Выполняет pull образов с Docker Hub
-          sudo docker compose -f docker-compose.production.yml pull
+          sudo docker compose -f infra/docker-compose.production.yml pull
           # Перезапускает все контейнеры в Docker Compose
-          sudo docker compose -f docker-compose.production.yml down
-          sudo docker compose -f docker-compose.production.yml up -d
+          sudo docker compose -f infra/docker-compose.production.yml down
+          sudo docker compose -f infra/docker-compose.production.yml up -d
 
 # Отправить сообщение
     - name: Send message
