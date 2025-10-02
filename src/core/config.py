@@ -40,7 +40,14 @@ try:
         db_name: str = Field(..., env='DB_NAME')
         db_user: str = Field(..., env='DB_USER')
         db_password: str = Field(..., env='DB_PASSWORD')
-
+        # -------------------
+        # Настройки Celery
+        # -------------------
+        celery_broker_url: str = Field(..., env='CELERY_BROKER_URL')
+        celery_backend_url: str = Field(..., env='CELERY_BACKEND_URL')
+        email_ssl: str = Field(..., env='EMAIL_SSL')
+        email_login: str = Field(..., env='EMAIL_LOGIN')
+        email_password: str = Field(..., env='EMAIL_PASSWORD')
         # -------------------
         # Настройки повторных попыток БД
         # -------------------
