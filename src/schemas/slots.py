@@ -5,7 +5,8 @@ from typing import Optional, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from src.constants import ID_MIN, SLOT_DESCRIPTION_MAX_LENGTH
+from src.constants import SLOT_DESCRIPTION_MAX_LENGTH
+from src.schemas.cafes import CafeShortDB
 
 
 class SlotBase(BaseModel):
@@ -13,7 +14,6 @@ class SlotBase(BaseModel):
 
     model_config = ConfigDict(extra='forbid')
 
-    cafe_id: int = Field(..., ge=ID_MIN)
     start_time: time
     end_time: time
     description: Optional[str] = Field(
@@ -33,13 +33,14 @@ class SlotBase(BaseModel):
 class SlotCreate(SlotBase):
     """Создание слота."""
 
+    model_config = ConfigDict(extra='ignore')
+
 
 class SlotUpdate(BaseModel):
     """Частичное обновление слота."""
 
     model_config = ConfigDict(extra='forbid')
 
-    cafe_id: Optional[int] = Field(None, ge=ID_MIN)
     start_time: Optional[time] = None
     end_time: Optional[time] = None
     description: Optional[str] = Field(
@@ -63,7 +64,7 @@ class SlotDB(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    cafe_id: int
+    cafe: CafeShortDB
     start_time: time
     end_time: time
     description: Optional[str] = None
@@ -78,7 +79,7 @@ class SlotShortDB(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    cafe_id: int
+    cafe: CafeShortDB
     start_time: time
     end_time: time
     is_active: bool

@@ -1,5 +1,5 @@
 from datetime import time
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import CheckConstraint, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -7,9 +7,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.constants import SLOT_DESCRIPTION_MAX_LENGTH
 from src.models.base import BaseModel
 
+if TYPE_CHECKING:
+    from src.models.cafe import Cafe
+
 
 class Slot(BaseModel):
     """Интервал бронирования в рамках конкретного кафе."""
+
+    __tablename__ = 'time_slot'
 
     cafe_id: Mapped[int] = mapped_column(
         ForeignKey('cafe.id', ondelete='CASCADE'),
@@ -23,7 +28,12 @@ class Slot(BaseModel):
         nullable=True,
     )
 
-    cafe = relationship('Cafe', back_populates='slots')
+    cafe: Mapped['Cafe'] = relationship(
+        'Cafe',
+        back_populates='slots',
+        lazy='selectin',
+        passive_deletes=True,
+    )
 
     __table_args__ = (
         UniqueConstraint(

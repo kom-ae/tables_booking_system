@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import List, Optional
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Body, Depends, Path, Query, Response, status
+from fastapi import APIRouter, Body, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.slots import (
@@ -14,17 +14,14 @@ from src.api.responses.slots import (
     slots_list_responses,
 )
 from src.api.validators import (
-    cafe_existence,
+    cafe_exists_404_for_slots,
     slot_in_cafe_exists,
     visible_slot_for_user,
 )
 from src.core.db import get_async_session
 from src.core.dependencies import current_manager, current_user
 from src.crud.factory import get_slot_crud
-from src.exceptions.slots import (
-    CafeIdChangeForbiddenException,
-    CafeIdMismatchException,
-)
+from src.models.cafe import Cafe
 from src.models.slot import Slot
 from src.models.user import User
 from src.schemas.slots import SlotCreate, SlotDB, SlotShortDB, SlotUpdate
@@ -44,17 +41,15 @@ slot_crud = get_slot_crud()
     ),
 )
 async def list_time_slots(
-    cafe_id: int = Path(..., description='ID кафе'),
+    cafe: Cafe = Depends(cafe_exists_404_for_slots),
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_user),
 ) -> List[SlotShortDB]:
     """Список слотов кафе."""
-    await cafe_existence(session, cafe_id)
-
-    show_all = user.is_manager()
+    show_all = user.is_manager() or user.is_admin()
     slots = await slot_crud.list(
         session,
-        cafe_id=cafe_id,
+        cafe_id=cafe.id,
         only_active=not show_all,
     )
     return [SlotShortDB.model_validate(s) for s in slots]
@@ -88,16 +83,13 @@ async def get_time_slot(
     response_description='Созданный слот.',
 )
 async def create_time_slot(
-    cafe_id: int = Path(..., description='ID кафе'),
+    cafe: Any = Depends(cafe_exists_404_for_slots),
     payload: SlotCreate = Body(...),
     session: AsyncSession = Depends(get_async_session),
-    user: User = Depends(current_manager),
+    _manager: User = Depends(current_manager),
 ) -> SlotDB:
     """Создать новый слот для кафе."""
-    await cafe_existence(session, cafe_id)
-    if payload.cafe_id != cafe_id:
-        raise CafeIdMismatchException()
-    obj = await slot_crud.create(payload, session, user=user)
+    obj = await slot_crud.create(payload, session, cafe_id=cafe.id)
     return SlotDB.model_validate(obj)
 
 
@@ -112,12 +104,10 @@ async def update_time_slot(
     slot: Slot = Depends(slot_in_cafe_exists),
     payload: SlotUpdate = Body(...),
     session: AsyncSession = Depends(get_async_session),
-    user: User = Depends(current_manager),
+    _manager: User = Depends(current_manager),
 ) -> SlotDB:
-    """Частично обновить слот (смена cafe_id запрещена)."""
-    if payload.cafe_id is not None and payload.cafe_id != slot.cafe_id:
-        raise CafeIdChangeForbiddenException()
-    obj = await slot_crud.update(slot, payload, session, user=user)
+    """Частично обновить слот (смена кафе не поддерживается)."""
+    obj = await slot_crud.update(slot, payload, session)
     return SlotDB.model_validate(obj)
 
 
@@ -131,7 +121,7 @@ async def update_time_slot(
 async def delete_time_slot(
     slot: Slot = Depends(slot_in_cafe_exists),
     session: AsyncSession = Depends(get_async_session),
-    user: User = Depends(current_manager),
+    _manager: User = Depends(current_manager),
 ) -> Response:
     """Мягкое удаление слота: пометить как неактивный."""
     await slot_crud.delete_soft(slot, session)

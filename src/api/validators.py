@@ -131,7 +131,7 @@ async def cafe_existence(
         session: AsyncSession,
         cafe_id: Optional[int],
 ) -> None:
-    """Проверяет наличе кафе по его ID."""
+    """Проверяет наличие кафе по его ID."""
     if cafe_id is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -185,3 +185,18 @@ async def visible_slot_for_user(
     if not bool(slot.is_active):
         raise SlotNotFoundException()
     return slot
+
+
+async def cafe_exists_404_for_slots(
+    cafe_id: int = Path(..., ge=ID_MIN, description='ID кафе'),
+    session: AsyncSession = Depends(get_async_session),
+) -> Cafe:
+    """Вернуть кафе или 404 (специально для эндпоинтов слотов)."""
+    res = await session.execute(select(Cafe).where(Cafe.id == cafe_id))
+    cafe = res.scalar_one_or_none()
+    if cafe is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f'Кафе с ID {cafe_id} не найдено.',
+        )
+    return cafe

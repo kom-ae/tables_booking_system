@@ -32,7 +32,7 @@ from tests.conftest import (
 # 4. Схемы TableCreate, TableUpdate, Table
 
 # Пропускаем все тесты до реализации эндпоинтов
-pytestmark = pytest.mark.skip(reason='Tables эндпоинты не реализованы')
+# pytestmark = pytest.mark.skip(reason='Tables эндпоинты не реализованы')
 
 
 class TestTablesList:

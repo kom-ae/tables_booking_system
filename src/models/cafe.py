@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from src.models.action import Action
     from src.models.dish import Dishe
     from src.models.slot import Slot
+    from src.models.table import Table
     from src.models.user import User
 
 
@@ -54,4 +55,10 @@ class Cafe(BaseModel):
         lazy='selectin',
         cascade='all, delete-orphan',
         passive_deletes=True,
+    )
+    tables: Mapped[list['Table']] = relationship(
+        'Table',
+        back_populates='cafe',
+        lazy='selectin',
+        cascade='all, delete-orphan',
     )
