@@ -96,10 +96,9 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v5
-    - name : Change directory
+    - name: Copy docker-compose.production.yml via ssh
       run: |
         cd infra
-    - name: Copy docker-compose.production.yml via ssh
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ vars.HOST }}
