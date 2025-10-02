@@ -64,6 +64,7 @@ cd tables_booking_system_team2
 **Настройка окружения**
 Копируем файл окружения
 ```bash
+cd src
 cp env.local .env
 ```
 **Настройка базы данных**
@@ -93,7 +94,7 @@ cp .env infra/.env
 ```
 ### Запускаем контейнеры
 ```bash
-cd infra
+cd src/infra
 docker-compose -f docker-compose.local.yml up --build
 ```
 **Без Docker**
@@ -147,9 +148,13 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 Документация API:
 👉 http://localhost/docs
 
+### 🔄 CI/CD
+(Дополнить)
+
 ### 🧪 Тестирование
 Запуск тестов локально с использованием базы данных SQLite
 ```sh
+cd src
 python -m pytest
 ```
 
