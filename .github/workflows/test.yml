@@ -103,8 +103,8 @@ jobs:
         username: ${{ vars.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: infra/docker-compose.prod.yml
-        target: "/opt/bron-2/"
+        source: infra/docker-compose.production.yml
+        target: /opt/bron-2/docker-compose.production.yml
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
       with:
@@ -119,3 +119,15 @@ jobs:
           # Перезапускает все контейнеры в Docker Compose
           sudo docker compose -f docker-compose.production.yml down
           sudo docker compose -f docker-compose.production.yml up -d
+
+# Отправить сообщение
+    - name: Send message
+      if: success() || failure()
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_KOM_AE }}
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        message: |
+          Статус выполнения задачи Action:
+          - Задача: ${{ github.job }}
+          - status: ${{ job.status }}
