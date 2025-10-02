@@ -1,12 +1,11 @@
 from datetime import date
 from typing import List, Optional
 
-from fastapi import APIRouter, Body, Depends, Query, Response, status
+from fastapi import APIRouter, Body, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.slots import (
     slot_create_responses,
-    slot_delete_responses,
     slot_get_responses,
     slot_update_responses,
     slots_list_responses,
@@ -34,8 +33,9 @@ slot_crud = get_slot_crud()
     response_model=List[SlotShortDB],
     responses=slots_list_responses,
     summary=(
-        'Список слотов. Менеджер/админ видят все; '
-        'пользователь — только активные.'
+        'Получение списка временных слотов в кафе '
+        '(только для администратора и менеджера, '
+        'пользователь — только активные)'
     ),
     response_description='Список временных слотов',
 )
@@ -44,7 +44,7 @@ async def list_time_slots(
     cafe: Cafe = Depends(cafe_exists_404_for_slots),
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_user),
-) -> List[SlotShortDB]:
+) -> List[Slot]:
     """Список слотов кафе."""
     show_all = user.is_manager() or user.is_admin()
     slots = await slot_crud.list(
@@ -52,15 +52,19 @@ async def list_time_slots(
         cafe_id=cafe.id,
         only_active=not show_all,
     )
-    return [SlotShortDB.model_validate(s) for s in slots]
+    return slots
 
 
 @router.get(
     '/{time_slot_id}',
     response_model=SlotDB,
     responses=slot_get_responses,
-    summary='Полная информация о слоте.',
-    response_description='Получить временной слот по ID',
+    summary=(
+        'Получение временного слота по ID '
+        '(только для администратора и менеджера, '
+        'пользователь — только активные)'
+    ),
+    response_description='Полная информация о временном слоте',
 )
 @log_endpoint
 async def get_time_slot(
@@ -72,7 +76,7 @@ async def get_time_slot(
     ),
 ) -> SlotDB:
     """Получить слот по id (учитывая права и активность)."""
-    return SlotDB.model_validate(slot)
+    return slot
 
 
 @router.post(
@@ -80,8 +84,11 @@ async def get_time_slot(
     response_model=SlotDB,
     status_code=status.HTTP_201_CREATED,
     responses=slot_create_responses,
-    summary='Созданный слот.',
-    response_description='Создать новый временной слот',
+    summary=(
+        'Создание временного слота в кафе '
+        '(только для администратора и менеджера)'
+    ),
+    response_description='Данные созданного временного слота',
 )
 @log_endpoint
 async def create_time_slot(
@@ -92,15 +99,18 @@ async def create_time_slot(
 ) -> SlotDB:
     """Создать новый слот для кафе."""
     obj = await slot_crud.create(payload, session, cafe_id=cafe.id)
-    return SlotDB.model_validate(obj)
+    return obj
 
 
 @router.patch(
     '/{time_slot_id}',
     response_model=SlotDB,
     responses=slot_update_responses,
-    summary='Обновлённый слот.',
-    response_description='Частично обновить слот',
+    summary=(
+        'Обновление временного слота по ID '
+        '(только для администратора и менеджера)'
+    ),
+    response_description='Обновлённый временный слот',
 )
 @log_endpoint
 async def update_time_slot(
@@ -111,22 +121,4 @@ async def update_time_slot(
 ) -> SlotDB:
     """Частично обновить слот (смена кафе не поддерживается)."""
     obj = await slot_crud.update(slot, payload, session)
-    return SlotDB.model_validate(obj)
-
-
-@router.delete(
-    '/{time_slot_id}',
-    status_code=status.HTTP_204_NO_CONTENT,
-    responses=slot_delete_responses,
-    summary='Слот деактивирован, тело ответа отсутствует.',
-    response_description='Удалить (деактивировать) слот',
-)
-@log_endpoint
-async def delete_time_slot(
-    slot: Slot = Depends(slot_in_cafe_exists),
-    session: AsyncSession = Depends(get_async_session),
-    _manager: User = Depends(current_manager),
-) -> Response:
-    """Мягкое удаление слота: пометить как неактивный."""
-    await slot_crud.delete_soft(slot, session)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return obj

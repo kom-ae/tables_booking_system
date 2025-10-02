@@ -10,7 +10,7 @@ Responses = Dict[HTTPCode, Dict[str, Any]]
 
 slots_list_responses: Responses = {
     status.HTTP_200_OK: {
-        'description': 'Список слотов',
+        'description': 'Список временных слотов',
         'model': list[SlotShortDB],
     },
     status.HTTP_401_UNAUTHORIZED: {
@@ -21,7 +21,7 @@ slots_list_responses: Responses = {
 
 slot_get_responses: Responses = {
     status.HTTP_200_OK: {
-        'description': 'Данные слота',
+        'description': 'Полная информация о временном слоте',
         'model': SlotDB,
     },
     status.HTTP_401_UNAUTHORIZED: {
@@ -36,7 +36,7 @@ slot_get_responses: Responses = {
 
 slot_create_responses: Responses = {
     status.HTTP_201_CREATED: {
-        'description': 'Созданный слот',
+        'description': 'Данные созданного временного слота',
         'model': SlotDB,
     },
     status.HTTP_400_BAD_REQUEST: {
@@ -45,13 +45,17 @@ slot_create_responses: Responses = {
     },
     status.HTTP_401_UNAUTHORIZED: {
         'description': 'Необходима авторизация',
+        'model': Error,
+    },
+    status.HTTP_403_FORBIDDEN: {
+        'description': 'Недостаточно прав',
         'model': Error,
     },
 }
 
 slot_update_responses: Responses = {
     status.HTTP_200_OK: {
-        'description': 'Обновлённый слот',
+        'description': 'Обновлённый временный слот',
         'model': SlotDB,
     },
     status.HTTP_400_BAD_REQUEST: {
@@ -62,18 +66,8 @@ slot_update_responses: Responses = {
         'description': 'Необходима авторизация',
         'model': Error,
     },
-    status.HTTP_404_NOT_FOUND: {
-        'description': 'Слот не найден',
-        'model': Error,
-    },
-}
-
-slot_delete_responses: Responses = {
-    status.HTTP_204_NO_CONTENT: {
-        'description': 'Удалено (soft delete)',
-    },
-    status.HTTP_401_UNAUTHORIZED: {
-        'description': 'Необходима авторизация',
+    status.HTTP_403_FORBIDDEN: {
+        'description': 'Недостаточно прав',
         'model': Error,
     },
     status.HTTP_404_NOT_FOUND: {

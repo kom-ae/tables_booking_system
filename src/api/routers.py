@@ -32,7 +32,7 @@ main_router.include_router(
 main_router.include_router(
     slots_router,
     prefix='/cafe/{cafe_id}/time_slots',
-    tags=['Слоты'],
+    tags=['Временные слоты'],
 )
 
 main_router.include_router(
