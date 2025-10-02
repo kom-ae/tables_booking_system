@@ -107,7 +107,7 @@ jobs:
         target: "/opt/bron-2/"
         recursive: false
         options: --strip-components=1
-        # strip-components: true
+
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
       with:
