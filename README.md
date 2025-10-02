@@ -33,6 +33,7 @@ Email/Telegram-уведомления о создании и изменении 
 - Инфраструктура: Nginx, Gunicorn/Uvicorn
 
 ### 📂 Структура проекта
+```bash
 tables_booking_system_team2/
 │── src/                  # Основной код приложения
 │   ├── api/              # Роутеры FastAPI
@@ -50,12 +51,12 @@ tables_booking_system_team2/
 │── requirements.txt      # Зависимости
 │── docker-compose.yml    # Docker Compose
 │── README.md             # Документация
-
+```
 ### ⚙️ Установка и запуск
 
 #### Для локальной разработки
 
-1. **Клонирование репозитория**
+**Клонирование репозитория**
 ```bash
 git clone https://github.com/Studio-Yandex-Practicum/tables_booking_system_team2.git
 cd tables_booking_system_team2
@@ -66,13 +67,13 @@ cd tables_booking_system_team2
 cp env.local .env
 ```
 **Настройка базы данных**
-Вариант A: SQLite (быстрый старт)
+**Вариант A: SQLite (быстрый старт)**
 ```bash
 # В файле .env установите:
 DB_ENGINE=sqlite
 DATABASE_URL=sqlite+aiosqlite:///./booking.db
 ```
-Вариант B: PostgreSQL (продакшен-готовый)
+**Вариант B: PostgreSQL (продакшен-готовый)**
 В файле .env установите:
 ```
 DB_ENGINE=postgresql
@@ -119,22 +120,27 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 -Переменные окружения (.env)
  Обязательные:
  .env
+ ```bash
  SECRET_KEY=your_secret_key_here                    # Секретный ключ для JWT
  DB_ENGINE=sqlite|postgresql                        # Тип базы данных
-
+```
  Для PostgreSQL:
 
  .env
+ ```bash
  POSTGRES_USER=postgres
  POSTGRES_PASSWORD=postgres
  POSTGRES_DB=booking
  DB_HOST=localhost
  DB_PORT=5432
  DATABASE_URL=postgresql+asyncpg://user:pass@host:port/db
+ ```
  Для SQLite:
 
  .env
+ ```bash
  DATABASE_URL=sqlite+aiosqlite:///./booking.db
+ ```
 **Приложение будет доступно по адресу:**
 👉 http://localhost/api/v1
 
