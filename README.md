@@ -21,10 +21,8 @@ Tables Booking System — это веб-приложение для онлайн
 Email/Telegram-уведомления о создании и изменении брони (Поправить тимлиду)
 
 ### 🛠️ Технологии
-**Язык**: Python 3.11
-**Backend**: FastAPI
-**База данных**: PostgreSQL + SQLAlchemy + Alembic
-
+- Язык: Python 3.11
+- Backend: FastAPI
 - База данных: PostgreSQL + SQLAlchemy + Alembic
 - Аутентификация: JWT
 - Контейнеризация: Docker, Docker Compose
