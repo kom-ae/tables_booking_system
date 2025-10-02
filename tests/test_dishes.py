@@ -24,15 +24,6 @@ from tests.conftest import (
 )
 
 
-# Эти тесты будут работать когда будут реализованы:
-# 1. Эндпоинты в src/api/endpoints/dishes.py
-# 2. CRUD операции для блюд
-# 3. Исправление модели Dish (добавление поля is_active)
-
-# Пропускаем все тесты до реализации эндпоинтов
-pytestmark = pytest.mark.skip(reason='Dishes эндпоинты не реализованы')
-
-
 class TestDishesList:
     """Тесты эндпоинта GET /dishes."""
 
@@ -45,7 +36,7 @@ class TestDishesList:
     ) -> None:
         """Тест получения списка блюд администратором."""
         headers = get_auth_headers(admin_token)
-        response = await client_fixture.get('/dishes', headers=headers)
+        response = await client_fixture.get('/dishes/', headers=headers)
 
         assert_success_response(response)
         data = response.json()
@@ -60,7 +51,7 @@ class TestDishesList:
     ) -> None:
         """Тест получения списка блюд менеджером."""
         headers = get_auth_headers(manager_token)
-        response = await client_fixture.get('/dishes', headers=headers)
+        response = await client_fixture.get('/dishes/', headers=headers)
 
         assert_success_response(response)
         data = response.json()
@@ -75,7 +66,7 @@ class TestDishesList:
     ) -> None:
         """Тест получения списка блюд обычным пользователем (активные)."""
         headers = get_auth_headers(user_token)
-        response = await client_fixture.get('/dishes', headers=headers)
+        response = await client_fixture.get('/dishes/', headers=headers)
 
         assert_success_response(response)
         data = response.json()
@@ -93,7 +84,7 @@ class TestDishesList:
         """Тест получения блюд с фильтром по кафе."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            f'/dishes?cafe_id={test_cafe.id}',
+            f'/dishes/?cafe_id={test_cafe.id}',
             headers=headers,
         )
 
@@ -112,7 +103,7 @@ class TestDishesList:
         """Тест получения всех блюд включая неактивные."""
         headers = get_auth_headers(admin_token)
         response = await client_fixture.get(
-            '/dishes?show_all=true',
+            '/dishes/?show_all=true',
             headers=headers,
         )
 
@@ -128,7 +119,7 @@ class TestDishesList:
     ) -> None:
         """Тест получения только активных блюд."""
         headers = get_auth_headers(admin_token)
-        url = '/dishes?show_all=false'
+        url = '/dishes/?show_all=false'
         response = await client_fixture.get(url, headers=headers)
 
         assert_success_response(response)
@@ -143,7 +134,7 @@ class TestDishesList:
         client_fixture: AsyncClient,
     ) -> None:
         """Тест получения списка блюд без авторизации."""
-        response = await client_fixture.get('/dishes')
+        response = await client_fixture.get('/dishes/')
 
         assert_error_response(response, status.HTTP_401_UNAUTHORIZED)
 
@@ -161,7 +152,7 @@ class TestDishCreate:
         """Тест создания блюда администратором."""
         headers = get_auth_headers(admin_token)
         payload = {
-            'cafe': test_cafe.id,
+            'cafe_id': test_cafe.id,
             'name': 'Delicious Pasta',
             'description': 'Italian pasta with tomato sauce',
             'price': 299.99,
@@ -169,7 +160,7 @@ class TestDishCreate:
         }
 
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -195,14 +186,14 @@ class TestDishCreate:
         """Тест создания блюда менеджером."""
         headers = get_auth_headers(manager_token)
         payload = {
-            'cafe': test_cafe.id,
+            'cafe_id': test_cafe.id,
             'name': 'Manager Special',
             'description': 'Special dish by manager',
             'price': 199.99,
         }
 
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -226,7 +217,7 @@ class TestDishCreate:
         }
 
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -249,7 +240,7 @@ class TestDishCreate:
             'price': 100.00,
         }
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -262,7 +253,7 @@ class TestDishCreate:
             'price': 100.00,
         }
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -275,7 +266,7 @@ class TestDishCreate:
             'price': 100.00,
         }
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -288,7 +279,7 @@ class TestDishCreate:
             'description': 'Description',
         }
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -312,7 +303,7 @@ class TestDishCreate:
             'price': -10.00,
         }
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -326,7 +317,7 @@ class TestDishCreate:
             'price': 0.00,
         }
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -352,7 +343,7 @@ class TestDishCreate:
         }
 
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -425,7 +416,7 @@ class TestDishById:
         """Тест обновления блюда по ID администратором."""
         headers = get_auth_headers(admin_token)
         payload = {
-            'cafe': test_cafe2.id,
+            'cafe_id': test_cafe2.id,
             'name': 'Updated Dish Name',
             'description': 'Updated description',
             'price': 399.99,
@@ -513,7 +504,7 @@ class TestDishValidation:
             'price': 100.00,
         }
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -537,7 +528,7 @@ class TestDishValidation:
             'price': 100.00,
         }
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -565,7 +556,7 @@ class TestDishValidation:
             'price': 123.456789,  # Много знаков после запятой
         }
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -587,14 +578,14 @@ class TestDishValidation:
         """Тест создания блюда с специальными символами."""
         headers = get_auth_headers(admin_token)
         payload = {
-            'cafe': test_cafe.id,
+            'cafe_id': test_cafe.id,
             'name': 'Café Latté ☕',
             'description': 'Delicious coffee with émojis 🌟 & chars áéíóú',
             'price': 45.50,
         }
 
         response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=payload,
             headers=headers,
         )
@@ -621,14 +612,14 @@ class TestDishIntegration:
 
         # Создаем блюдо
         create_payload = {
-            'cafe': test_cafe.id,
+            'cafe_id': test_cafe.id,
             'name': 'Integration Test Dish',
             'description': 'Dish for integration testing',
             'price': 250.00,
         }
 
         create_response = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=create_payload,
             headers=headers,
         )
@@ -638,7 +629,7 @@ class TestDishIntegration:
         dish_id = created_dish['id']
 
         # Получаем список блюд
-        list_response = await client_fixture.get('/dishes', headers=headers)
+        list_response = await client_fixture.get('/dishes/', headers=headers)
         assert_success_response(list_response)
 
         dishes = list_response.json()
@@ -670,26 +661,26 @@ class TestDishIntegration:
 
         # Создаем блюда для разных кафе
         dish1_payload = {
-            'cafe': test_cafe.id,
+            'cafe_id': test_cafe.id,
             'name': 'Dish for Cafe 1',
             'description': 'First cafe dish',
             'price': 100.00,
         }
 
         dish2_payload = {
-            'cafe': test_cafe2.id,
+            'cafe_id': test_cafe2.id,
             'name': 'Dish for Cafe 2',
             'description': 'Second cafe dish',
             'price': 150.00,
         }
 
         response1 = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=dish1_payload,
             headers=headers,
         )
         response2 = await client_fixture.post(
-            '/dishes',
+            '/dishes/',
             json=dish2_payload,
             headers=headers,
         )
@@ -699,11 +690,11 @@ class TestDishIntegration:
 
         # Проверяем фильтрацию по кафе
         cafe1_dishes_response = await client_fixture.get(
-            f'/dishes?cafe_id={test_cafe.id}',
+            f'/dishes/?cafe_id={test_cafe.id}',
             headers=headers,
         )
         cafe2_dishes_response = await client_fixture.get(
-            f'/dishes?cafe_id={test_cafe2.id}',
+            f'/dishes/?cafe_id={test_cafe2.id}',
             headers=headers,
         )
 

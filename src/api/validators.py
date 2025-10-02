@@ -5,14 +5,17 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.cafes import cafe_check_duplicate_responses
+from src.api.responses.dishes import dish_check_duplicate_responses
 from src.core.logger import logger
 from src.crud.action import actions_crud
-from src.crud.factory import get_cafe_crud
+from src.crud.factory import get_cafe_crud, get_dish_crud
 from src.exceptions.db import DBException, DBIntegrityException
-from src.models import Action, Cafe, User
+from src.models import Action, Cafe, Dishe, User
 from src.schemas.cafes import CafeCreate, CafeDB
+from src.schemas.dish import Dish, DishCreate
 
 cafe_crud = get_cafe_crud()
+dish_crud = get_dish_crud()
 
 
 async def check_duplicate_cafe(
@@ -41,6 +44,32 @@ async def check_duplicate_cafe(
     logger.info('Дубликат кафе не найден.', user)
 
 
+async def check_duplicate_dish(
+    dish: DishCreate,
+    session: AsyncSession,
+    user: Optional[User] = None,
+) -> None:
+    """Проверить на существование дубликата блюда."""
+    db_obj: Dishe = await handler_run_crud_dish(
+        dish_crud.get_dish_by_name_and_cafe,
+        crud_args={
+            'name': dish.name,
+            'cafe_id': dish.cafe_id,
+            'session': session,
+        },
+        msg_log='Поиск дубликата блюда.',
+        user=user,
+    )
+    if db_obj:
+        logger.error(
+            'Попытка создать дубликат блюда',
+            user,
+            info_dict=dish.model_dump(),
+        )
+        raise HTTPException(**dish_check_duplicate_responses)
+    logger.info('Дубликат блюда не найден.', user)
+
+
 async def check_action_exist(
     action_id: int,
     session: AsyncSession,
@@ -63,6 +92,61 @@ async def handler_run_crud_cafe(
     **kwargs: Any,
 ) -> Union[CafeDB, List[CafeDB]]:
     """Запуск корутины CRUD и логирование результата через logger.
+
+    Аргументы:
+        func: функция CRUD
+        crud_args: словарь аргументов для функции
+        msg_log: сообщение для логирования
+        user: пользователь, инициирующий операцию
+    """
+    crud_args: dict = kwargs.get('crud_args', {})
+    session: AsyncSession = crud_args.get('session')
+    msg_log: str = kwargs.get('msg_log', '')
+    user: Optional[User] = kwargs.get('user', None)
+
+    logger.info(msg=f'Попытка: "{msg_log}"', user=user)
+
+    try:
+        if obj := await func(**crud_args):
+            msg_log_full = msg_log
+            if not isinstance(obj, list):
+                msg_log_full += f' ID={str(obj.id)}.'
+            msg_log_full += ' Успешно.'
+
+            logger.info(msg_log_full, user=user)
+
+        return obj
+    except (DBIntegrityException, DBException) as err:
+        await session.rollback()
+        logger.error(
+            f'Операция "{msg_log}": '
+            f'Ошибка выполнения функции {func.__name__} '
+            f'в модуле {func.__module__}: {str(err)}',
+            user=user,
+        )
+        raise HTTPException(
+            status_code=err.status_code,
+            detail='Внутренняя ошибка сервера.',
+        )
+    except Exception as err:
+        await session.rollback()
+        logger.error(
+            f'Операция "{msg_log}": '
+            f'Ошибка выполнения функции {func.__name__} '
+            f'в модуле {func.__module__}: {str(err)}',
+            user=user,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='Внутренняя ошибка сервера.',
+        )
+
+
+async def handler_run_crud_dish(
+    func: Callable[..., Any],
+    **kwargs: Any,
+) -> Union[Dish, List[Dish]]:
+    """Запуск корутины CRUD для блюд и логирование результата через logger.
 
     Аргументы:
         func: функция CRUD
