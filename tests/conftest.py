@@ -14,6 +14,7 @@ from starlette import status
 from src.core.db import engine, get_async_session
 from src.crud.action import actions_crud
 from src.crud.factory import get_cafe_crud
+from src.crud.factory import get_table_crud
 from src.main import app
 from src.models.action import Action
 from src.models.base import BaseModel
@@ -22,6 +23,7 @@ from src.models.user import User
 from src.schemas.action import ActionCreate
 from src.schemas.auth import Auth
 from src.schemas.cafes import CafeCreate
+from src.schemas.table import TableCreate
 from src.services.auth import PasswordService
 
 
@@ -492,8 +494,17 @@ def get_user_endpoint_url(action: str, user_id: int, **kwargs) -> str:
 @pytest_asyncio.fixture
 async def test_table(session_fixture: AsyncSession, test_cafe: Cafe) -> None:
     """Фикстура для тестового стола (когда будет реализовано)."""
-    # TODO: Реализовать когда модель Table будет готова
-    pass
+    table_in = TableCreate(
+        seats_number=1,
+        description='string',
+    )
+    table_crud = get_table_crud()
+    table = await table_crud.create_table(
+        cafe_id=test_cafe.id,
+        obj_in=table_in,
+        session=session_fixture,
+    )
+    return table
 
 
 @pytest_asyncio.fixture
@@ -507,7 +518,10 @@ async def test_time_slot(
 
 
 @pytest_asyncio.fixture
-async def test_action(session_fixture: AsyncSession, test_cafe: Cafe) -> Action:
+async def test_action(
+    session_fixture: AsyncSession,
+    test_cafe: Cafe
+) -> Action:
     """Фикстура для тестовой акции (когда будет реализовано)."""
     action_data = dict(TEST_ACTIONS['action1'])
 

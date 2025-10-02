@@ -99,3 +99,18 @@ MAX_DISH_LENGTH_NAME = 200
 MAX_DISH_LENGTH_DESC = 600
 # Значение Numeric для цены блюда
 DISH_PRICE_PRECISION = (10, 2)
+
+# -------------------
+# Столы
+# -------------------
+# Максимальная длина description для модели Tables
+MAX_DESCRIPTION = 256
+
+# Минимальное количество мест стола
+MIN_SEATS_NUMBER = 1
+
+# Максимальное количество мест стола
+MAX_SEATS_NUMBER = 12
+
+# Минимальное знаение id кафе
+MIN_ID_CAFE = 1
