@@ -1,11 +1,11 @@
-name: Test Workflow
+# name: Test Workflow
 
-on:
-  push:
-    branches:
-      - feature/CI_CD_workflow
+# on:
+#   push:
+#     branches:
+#       - feature/CI_CD_workflow
 
-jobs:
+# jobs:
 # Сообщение о коммите в ветку
   # send-telegram-message:
   #   runs-on: ubuntu-latest
@@ -50,37 +50,72 @@ jobs:
   #           - Задача: ${{ github.job }}
   #           - status: ${{ job.status }}
 
-# Собрать образ бэкэнда и залить на DockerHub
-  build_backend_and_push_to_docker_hub:
-    name: Push Docker image to DockerHub
-    runs-on: ubuntu-latest
-    # needs: 
-    #   - backend_tests
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v5
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Docker 
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DOCKER_USERNAME }} 
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Push to DockerHub
-        uses: docker/build-push-action@v6
-        with:
-          # context: .
-          push: true
-          tags: ${{ vars.DOCKER_USERNAME }}/tables_booking_system:latest
-# Отправить сообщение
-      - name: Send message
-        if: success() || failure()
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_KOM_AE }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message: |
-            Статус выполнения задачи Action:
-            - Репозиторий: ${{ github.repository }}
-            - Задача: ${{ github.job }}
-            - status: ${{ job.status }}
+# # Собрать образ бэкэнда и залить на DockerHub
+#   build_backend_and_push_to_docker_hub:
+#     name: Push Docker image to DockerHub
+#     runs-on: ubuntu-latest
+#     # needs: 
+#     #   - backend_tests
+#     steps:
+#       - name: Check out the repo
+#         uses: actions/checkout@v5
+#       - name: Set up Docker Buildx
+#         uses: docker/setup-buildx-action@v3
+#       - name: Login to Docker 
+#         uses: docker/login-action@v3
+#         with:
+#           username: ${{ vars.DOCKER_USERNAME }} 
+#           password: ${{ secrets.DOCKER_PASSWORD }}
+#       - name: Push to DockerHub
+#         uses: docker/build-push-action@v6
+#         with:
+#           # context: .
+#           push: true
+#           tags: ${{ vars.DOCKER_USERNAME }}/tables_booking_system:latest
+# # Отправить сообщение
+#       - name: Send message
+#         if: success() || failure()
+#         uses: appleboy/telegram-action@master
+#         with:
+#           to: ${{ secrets.TELEGRAM_KOM_AE }}
+#           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+#           message: |
+#             Статус выполнения задачи Action:
+#             - Репозиторий: ${{ github.repository }}
+#             - Задача: ${{ github.job }}
+#             - status: ${{ job.status }}
+  
+# # Деплой на сервер
+#   deploy:
+#     runs-on: ubuntu-latest
+#     # needs: 
+#     #   - build_backend_and_push_to_docker_hub
+#       # - build_frontend_and_push_to_docker_hub
+#       # - build_gateway_and_push_to_docker_hub
+#     # environment: production
+#     steps:
+#     - name: Checkout repo
+#       uses: actions/checkout@v5
+#     - name: Copy docker-compose.production.yml via ssh
+#       uses: appleboy/scp-action@master
+#       with:
+#         host: ${{ vars.HOST }}
+#         username: ${{ vars.USER }}
+#         key: ${{ secrets.SSH_KEY }}
+#         passphrase: ${{ secrets.SSH_PASSPHRASE }}
+#         source: "/infra/docker-compose.production.yml"
+#         target: "/opt/bron-2/"
+#     - name: Executing remote ssh commands to deploy
+#       uses: appleboy/ssh-action@master
+#       with:
+#         host: ${{ vars.HOST }}
+#         username: ${{ vars.USER }}
+#         key: ${{ secrets.SSH_KEY }}
+#         passphrase: ${{ secrets.SSH_PASSPHRASE }}
+#         script: |
+#           cd /opt/bron-2/
+#           # Выполняет pull образов с Docker Hub
+#           sudo docker compose -f docker-compose.production.yml pull
+#           # Перезапускает все контейнеры в Docker Compose
+#           sudo docker compose -f docker-compose.production.yml down
+#           sudo docker compose -f docker-compose.production.yml up -d
