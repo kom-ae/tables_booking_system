@@ -97,15 +97,15 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v5
     - name: Copy docker-compose.production.yml via ssh
-      uses: appleboy/scp-action@master
+      uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ vars.HOST }}
         username: ${{ vars.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "./infra/docker-compose.production.yml"
-        target: "/opt/bron-2"
-        options: --strip-components=1
+        source: "infra/docker-compose.production.yml"
+        target: "/opt/bron-2/"
+        # strip-components: true
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
       with:
