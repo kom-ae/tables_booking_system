@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from datetime import date
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +18,7 @@ from src.api.validators import (
 )
 from src.core.db import get_async_session
 from src.core.dependencies import current_manager, current_user
+from src.core.logger import log_endpoint
 from src.crud.factory import get_slot_crud
 from src.models.cafe import Cafe
 from src.models.slot import Slot
@@ -34,12 +33,13 @@ slot_crud = get_slot_crud()
     '',
     response_model=List[SlotShortDB],
     responses=slots_list_responses,
-    summary='Список временных слотов кафе',
-    response_description=(
+    summary=(
         'Список слотов. Менеджер/админ видят все; '
         'пользователь — только активные.'
     ),
+    response_description='Список временных слотов',
 )
+@log_endpoint
 async def list_time_slots(
     cafe: Cafe = Depends(cafe_exists_404_for_slots),
     session: AsyncSession = Depends(get_async_session),
@@ -59,9 +59,10 @@ async def list_time_slots(
     '/{time_slot_id}',
     response_model=SlotDB,
     responses=slot_get_responses,
-    summary='Получить временной слот по ID',
-    response_description='Полная информация о слоте.',
+    summary='Полная информация о слоте.',
+    response_description='Получить временной слот по ID',
 )
+@log_endpoint
 async def get_time_slot(
     slot: Slot = Depends(visible_slot_for_user),
     _date: Optional[date] = Query(
@@ -79,11 +80,12 @@ async def get_time_slot(
     response_model=SlotDB,
     status_code=status.HTTP_201_CREATED,
     responses=slot_create_responses,
-    summary='Создать новый временной слот',
-    response_description='Созданный слот.',
+    summary='Созданный слот.',
+    response_description='Создать новый временной слот',
 )
+@log_endpoint
 async def create_time_slot(
-    cafe: Any = Depends(cafe_exists_404_for_slots),
+    cafe: Cafe = Depends(cafe_exists_404_for_slots),
     payload: SlotCreate = Body(...),
     session: AsyncSession = Depends(get_async_session),
     _manager: User = Depends(current_manager),
@@ -97,9 +99,10 @@ async def create_time_slot(
     '/{time_slot_id}',
     response_model=SlotDB,
     responses=slot_update_responses,
-    summary='Частично обновить слот',
-    response_description='Обновлённый слот.',
+    summary='Обновлённый слот.',
+    response_description='Частично обновить слот',
 )
+@log_endpoint
 async def update_time_slot(
     slot: Slot = Depends(slot_in_cafe_exists),
     payload: SlotUpdate = Body(...),
@@ -115,9 +118,10 @@ async def update_time_slot(
     '/{time_slot_id}',
     status_code=status.HTTP_204_NO_CONTENT,
     responses=slot_delete_responses,
-    summary='Удалить (деактивировать) слот',
-    response_description='Слот деактивирован, тело ответа отсутствует.',
+    summary='Слот деактивирован, тело ответа отсутствует.',
+    response_description='Удалить (деактивировать) слот',
 )
+@log_endpoint
 async def delete_time_slot(
     slot: Slot = Depends(slot_in_cafe_exists),
     session: AsyncSession = Depends(get_async_session),
