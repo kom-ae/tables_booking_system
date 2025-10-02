@@ -98,7 +98,8 @@ jobs:
       uses: actions/checkout@v5
     - name: Copy docker-compose.production.yml via ssh
       uses: appleboy/scp-action@v0.1.7
-      run: cd infra
+      run: |
+        cd infra
       with:
         host: ${{ vars.HOST }}
         username: ${{ vars.USER }}
