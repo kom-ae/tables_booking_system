@@ -7,13 +7,8 @@ from src.api import main_router
 from src.constants import TAGS_METADATA
 from src.core.config import settings
 from src.core.init_db import init_db_and_superuser
-from src.core.logger import FastAPILogger, temp_logger
+from src.core.logger import logger
 from src.exceptions.handlers import register_exception_handlers
-
-temp_logger()
-
-
-logger = FastAPILogger(__name__)
 
 
 @asynccontextmanager

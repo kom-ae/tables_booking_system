@@ -1,12 +1,7 @@
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import (
-    CheckConstraint,
-    ForeignKey,
-    Numeric,
-    String,
-)
+from sqlalchemy import CheckConstraint, ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.constants import (

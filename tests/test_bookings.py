@@ -19,12 +19,8 @@ from starlette import status
 
 from src.models.cafe import Cafe
 from src.models.user import User
-from tests.conftest import (
-    assert_error_response,
-    assert_success_response,
-    get_auth_headers,
-)
-
+from tests.conftest import (assert_error_response, assert_success_response,
+                            get_auth_headers)
 
 # Эти тесты будут работать когда будут реализованы:
 # 1. Модель Booking в src/models/booking.py

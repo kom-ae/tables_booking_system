@@ -3,11 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.constants import (
-    MAX_DESCRIPTION,
-    MAX_SEATS_NUMBER,
-    MIN_SEATS_NUMBER,
-)
+from src.constants import MAX_DESCRIPTION, MAX_SEATS_NUMBER, MIN_SEATS_NUMBER
 from src.schemas.cafes import CafeShortDB
 
 

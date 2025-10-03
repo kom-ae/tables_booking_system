@@ -31,13 +31,3 @@ class InvalidCredentialsException(AppException):
     def __init__(self, message: str = 'Неверный логин или пароль') -> None:
         """Исключение."""
         super().__init__(message, status.HTTP_401_UNAUTHORIZED)
-
-
-class PermissionDeniedException(AppException):
-    """Нет доступа."""
-
-    error_code: str = 'PermissionDenied'
-
-    def __init__(self, message: str = 'Недостаточно прав') -> None:
-        """Исключение."""
-        super().__init__(message, status.HTTP_403_FORBIDDEN)
