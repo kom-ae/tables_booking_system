@@ -35,14 +35,14 @@ class Settings(BaseSettings):
     # -------------------
     # Настройки повторных попыток БД
     # -------------------
-    db_retry_max_attempts: int = Field(3, env='DB_RETRY_MAX_ATTEMPTS')
-    db_retry_delay_seconds: float = Field(0.1, env='DB_RETRY_DELAY_SECONDS')
+    db_retry_max_attempts: int = Field(..., env='DB_RETRY_MAX_ATTEMPTS')
+    db_retry_delay_seconds: float = Field(..., env='DB_RETRY_DELAY_SECONDS')
 
     # -------------------
     # JWT / безопасность
     # -------------------
     secret: str = Field(..., env='SECRET')
-    jwt_algorithm: str = Field('HS256', env='JWT_ALGORITHM')
+    jwt_algorithm: str = Field(..., env='JWT_ALGORITHM')
     access_token_expire_minutes: int = Field(
         1,
         env='ACCESS_TOKEN_EXPIRE_MINUTES',

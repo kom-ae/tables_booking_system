@@ -15,12 +15,8 @@ from starlette import status
 
 from src.models.cafe import Cafe
 from src.models.user import User
-from tests.conftest import (
-    assert_error_response,
-    assert_success_response,
-    get_auth_headers,
-    INVALID_DATA,
-)
+from tests.conftest import (INVALID_DATA, assert_error_response,
+                            assert_success_response, get_auth_headers)
 
 
 class TestCafesList:

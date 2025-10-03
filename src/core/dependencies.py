@@ -10,10 +10,7 @@ from src.core.db import get_async_session
 from src.core.logger import logger
 from src.core.user import get_current_user_logic
 from src.crud.factory import CRUDUser, get_user_crud
-from src.exceptions.auth import (
-    ExpiredTokenException,
-    InvalidTokenException,
-)
+from src.exceptions.auth import ExpiredTokenException, InvalidTokenException
 from src.exceptions.user import (
     PermissionDeniedException,
     UserNotFoundException,

@@ -16,11 +16,8 @@ from httpx import AsyncClient
 from starlette import status
 
 from src.models.cafe import Cafe
-from tests.conftest import (
-    assert_error_response,
-    assert_success_response,
-    get_auth_headers,
-)
+from tests.conftest import (assert_error_response, assert_success_response,
+                            get_auth_headers)
 
 
 class TestTimeSlotsList:
