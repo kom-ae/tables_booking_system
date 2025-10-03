@@ -24,7 +24,7 @@ jobs:
       - name: Send Telegram Message to Group
         uses: appleboy/telegram-action@master
         with:
-          to: ${{ secrets.TELEGRAM_KOM_AE }}
+          to: ${{ secrets.TELEGRAM_KOM_AE }}, ${{ secrets.TELEGRAM_GROUP_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
             🔔 Новое обновление в репозитории:
