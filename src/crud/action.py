@@ -94,8 +94,7 @@ class ActionsCRUD(CRUDBase):
             )
             .where(self.model.id == db_obj.id),
         )
-        db_obj_fully_loaded = result.scalar_one()
-        return ActionDB.model_validate(db_obj_fully_loaded)
+        return result.scalar_one()
 
     async def update_action(
         self,
@@ -125,8 +124,7 @@ class ActionsCRUD(CRUDBase):
             )
             .where(self.model.id == db_obj.id),
         )
-        db_obj_fully_loaded = result.scalar_one()
-        return ActionDB.model_validate(db_obj_fully_loaded)
+        return result.scalar_one()
 
 
 actions_crud = ActionsCRUD(Action)

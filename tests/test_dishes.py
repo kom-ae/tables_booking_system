@@ -30,7 +30,7 @@ from tests.conftest import (
 # 3. Исправление модели Dish (добавление поля is_active)
 
 # Пропускаем все тесты до реализации эндпоинтов
-pytestmark = pytest.mark.skip(reason='Dishes эндпоинты не реализованы')
+# pytestmark = pytest.mark.skip(reason='Dishes эндпоинты не реализованы')
 
 
 class TestDishesList:
