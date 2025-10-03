@@ -99,6 +99,7 @@ MAX_DISH_LENGTH_NAME = 200
 MAX_DISH_LENGTH_DESC = 600
 # Значение Numeric для цены блюда
 DISH_PRICE_PRECISION = (10, 2)
+MIN_PRICE_DISH = 0
 
 # -------------------
 # Столы
