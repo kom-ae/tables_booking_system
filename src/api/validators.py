@@ -202,7 +202,7 @@ async def visible_slot_for_user(
     - остальные — только активный (иначе 404).
     """
     slot = await slot_in_cafe_exists(cafe_id, time_slot_id, session)
-    if user and (user.is_superuser or user.is_admin() or user.is_manager()):
+    if user and user.is_manager():
         return slot
     if not bool(slot.is_active):
         raise SlotNotFoundException()

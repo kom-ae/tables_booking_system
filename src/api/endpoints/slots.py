@@ -17,7 +17,7 @@ from src.api.validators import (
 )
 from src.core.db import get_async_session
 from src.core.dependencies import current_manager, current_user
-from src.core.logger import log_endpoint
+from src.core.logger import log_endpoint, logger
 from src.crud.factory import get_slot_crud
 from src.models.cafe import Cafe
 from src.models.slot import Slot
@@ -50,15 +50,18 @@ async def list_time_slots(
         description='Фильтрация по дате (YYYY-MM-DD).',
     ),
 ) -> List[Slot]:
-    """Список слотов кафе."""
-    show_all = user.is_manager() or user.is_admin()
-    slots = await slot_crud.list(
+    """Получает список временных слотов в кафе."""
+    show_all = True if user.is_manager() else False
+    logger.info(
+        f'{list_time_slots.__doc__} Cafe ID: {cafe.id}',
+        user=user,
+    )
+    return await slot_crud.list(
         session,
         cafe_id=cafe.id,
-        only_active=not show_all,
+        show_all=show_all,
         on_date=q_date,
     )
-    return slots
 
 
 @router.get(
@@ -81,7 +84,8 @@ async def get_time_slot(
         description='Дата для контекстной проверки видимости слота.',
     ),
 ) -> SlotDB:
-    """Получить слот по id (учитывая права и активность)."""
+    """Получает временной слот в кафе по ID. (учитывая права и активность)."""
+    logger.info(f'{get_time_slot.__doc__} ID: {slot.id}')
     return slot
 
 
@@ -103,9 +107,13 @@ async def create_time_slot(
     session: AsyncSession = Depends(get_async_session),
     _manager: User = Depends(current_manager),
 ) -> SlotDB:
-    """Создать новый слот для кафе."""
-    obj = await slot_crud.create(payload, session, cafe_id=cafe.id)
-    return obj
+    """Создаёт новый временной слот для кафе."""
+    logger.info(
+        f'{create_time_slot.__doc__} Данные',
+        user=_manager,
+        info_dict=payload,
+    )
+    return await slot_crud.create(payload, session, cafe_id=cafe.id)
 
 
 @router.patch(
@@ -125,6 +133,10 @@ async def update_time_slot(
     session: AsyncSession = Depends(get_async_session),
     _manager: User = Depends(current_manager),
 ) -> SlotDB:
-    """Частично обновить слот (смена кафе не поддерживается)."""
-    obj = await slot_crud.update(slot, payload, session)
-    return obj
+    """Частично обновляет слот."""
+    logger.info(
+        f'{update_time_slot.__doc__} Данные',
+        user=_manager,
+        info_dict=payload,
+    )
+    return await slot_crud.update(slot, payload, session)

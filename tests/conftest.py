@@ -3,7 +3,7 @@
 Этот модуль содержит общие фикстуры, константы и утилиты для всех тестов.
 """
 
-from datetime import time
+
 from types import SimpleNamespace
 from typing import Any, AsyncGenerator, Dict
 
@@ -518,8 +518,9 @@ async def test_time_slot(
     """Создаём тестовый временной слот (для тестов by-id/patch)."""
     slot_crud = get_slot_crud()
     payload = SlotCreate(
-        start_time=time(10, 0, 0),
-        end_time=time(12, 0, 0),
+        date='2025-03-10',
+        start_time='12:00:00',
+        end_time='14:00:00',
         description='Fixture slot',
         is_active=True,
     )

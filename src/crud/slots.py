@@ -4,7 +4,6 @@ from datetime import date, time
 from typing import Any, Optional
 
 from sqlalchemy import select
-from sqlalchemy import update as sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.base import CRUDBase
@@ -29,12 +28,12 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
         session: AsyncSession,
         *,
         cafe_id: int,
-        only_active: bool,
+        show_all: bool,
         on_date: Optional[date] = None,
     ) -> list[Slot]:
         """Список слотов по кафе с опциональной фильтрацией активности."""
         stmt = select(Slot).where(Slot.cafe_id == cafe_id)
-        if only_active:
+        if show_all:
             stmt = stmt.where(Slot.is_active.is_(True))
         if on_date:
             stmt = stmt.where(Slot.date == on_date)

@@ -1,10 +1,8 @@
 """Тесты временных слотов для API системы бронирования столов.
 
-ВНИМАНИЕ: Эти тесты написаны на основе API спецификации,
-но пока не могут быть выполнены, так как соответствующие
-эндпоинты не реализованы в проекте.
+ВНИМАНИЕ: Эти тесты написаны на основе API спецификации.
 
-Тестирует эндпоинты (когда будут реализованы):
+Тестирует эндпоинты:
 - GET /cafe/{cafe_id}/time_slots
 - POST /cafe/{cafe_id}/time_slots
 - GET /cafe/{cafe_id}/time_slots/{time_slot_id}
@@ -23,16 +21,6 @@ from tests.conftest import (
     assert_success_response,
     get_auth_headers,
 )
-
-
-# Эти тесты будут работать когда будут реализованы:
-# 1. Модель TimeSlot в src/models/slot.py
-# 2. Эндпоинты в src/api/endpoints/slots.py
-# 3. CRUD операции для временных слотов
-# 4. Схемы TimeSlotCreate, TimeSlotUpdate, TimeSlot
-
-# Пропускаем все тесты до реализации эндпоинтов
-pytestmark = pytest.mark.skip(reason='Time slots эндпоинты не реализованы')
 
 
 class TestTimeSlotsList:
@@ -135,6 +123,7 @@ class TestTimeSlotCreate:
         headers = get_auth_headers(admin_token)
         payload = {
             'cafe_id': test_cafe.id,
+            'date': '2025-10-05',
             'start_time': '10:00:00',
             'end_time': '12:00:00',
             'description': 'Morning slot',
@@ -166,6 +155,7 @@ class TestTimeSlotCreate:
         headers = get_auth_headers(manager_token)
         payload = {
             'cafe_id': test_cafe.id,
+            'date': '2025-10-04',
             'start_time': '14:00:00',
             'end_time': '16:00:00',
             'description': 'Afternoon slot',
@@ -341,6 +331,7 @@ class TestTimeSlotById:
         """Тест обновления временного слота по ID администратором."""
         headers = get_auth_headers(admin_token)
         payload = {
+            'date': '2025-04-10',
             'start_time': '11:00:00',
             'end_time': '13:00:00',
             'description': 'Updated morning slot',
@@ -370,6 +361,7 @@ class TestTimeSlotById:
         """Тест обновления временного слота пользователем (запрещено)."""
         headers = get_auth_headers(user_token)
         payload = {
+            'date': '2025-03-10',
             'start_time': '20:00:00',
             'end_time': '22:00:00',
             'description': 'Unauthorized update',
@@ -400,6 +392,7 @@ class TestTimeSlotValidation:
         # Создаем первый слот
         payload1 = {
             'cafe_id': test_cafe.id,
+            'date': '2025-10-04',
             'start_time': '10:00:00',
             'end_time': '12:00:00',
             'is_active': True,
@@ -414,6 +407,7 @@ class TestTimeSlotValidation:
         # Пытаемся создать пересекающийся слот
         payload2 = {
             'cafe_id': test_cafe.id,
+            'date': '2025-10-04',
             'start_time': '11:00:00',  # Пересекается с первым слотом
             'end_time': '13:00:00',
             'is_active': True,
@@ -441,6 +435,7 @@ class TestTimeSlotValidation:
         headers = get_auth_headers(admin_token)
         payload = {
             'cafe_id': test_cafe.id,
+            'date': '2025-10-04',
             'start_time': '12:00:00',
             'end_time': '12:00:00',  # Одинаковое время
             'is_active': True,

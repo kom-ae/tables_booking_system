@@ -1,8 +1,12 @@
-from datetime import date, time
-from typing import Optional, TYPE_CHECKING
+import datetime
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import (
-    CheckConstraint, ForeignKey, String, UniqueConstraint, Index
+    CheckConstraint,
+    ForeignKey,
+    Index,
+    String,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -15,6 +19,7 @@ if TYPE_CHECKING:
 
 class Slot(BaseModel):
     """Интервал бронирования в рамках конкретного кафе."""
+
     __tablename__ = 'time_slot'
 
     cafe_id: Mapped[int] = mapped_column(
@@ -22,9 +27,9 @@ class Slot(BaseModel):
         index=True,
         nullable=False,
     )
-    date: Mapped[date] = mapped_column(index=True, nullable=False)
-    start_time: Mapped[time] = mapped_column(nullable=False)
-    end_time: Mapped[time] = mapped_column(nullable=False)
+    date: Mapped[datetime.date] = mapped_column(index=True, nullable=False)
+    start_time: Mapped[datetime.time] = mapped_column(nullable=False)
+    end_time: Mapped[datetime.time] = mapped_column(nullable=False)
     description: Mapped[Optional[str]] = mapped_column(
         String(SLOT_DESCRIPTION_MAX_LENGTH),
         nullable=True,
