@@ -217,8 +217,8 @@ pre-commit install
 Проект выполнен в рамках обучения в Яндекс Практикуме.
 > 🚧 Секция в разработке (будет дополнена)
 
-### 📌 Примеры API-запросов
-### 👤 Регистрация пользователя
+### 🧩 Примеры API-запросов
+***👤 Регистрация пользователя***
 ```bash
 POST /api/v1/auth/register
 Content-Type: application/json
@@ -240,7 +240,7 @@ Content-Type: application/json
   "is_active": true
 }
 ```
-### 🔑 Авторизация (получение JWT)
+***🔑 Авторизация (получение JWT)***
 ```bash
 POST /api/v1/auth/login
 Content-Type: application/json
@@ -256,9 +256,3 @@ Content-Type: application/json
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI...",
 }
 ```
-
-
-### 📌 Roadmap
- - Подключить Telegram-бота для уведомлений
- - Добавить интеграцию с оплатой
- - Реализовать модуль рекомендации столиков
