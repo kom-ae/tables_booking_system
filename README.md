@@ -64,7 +64,9 @@ Email/Telegram-уведомления о создании и изменении 
 │   ├── main.py               # Точка входа FastAPI
 │   ├── Dockerfile.local      # Dockerfile для локалки
 │   ├── Dockerfile.prod       # Dockerfile для продакшена
-│   └── requirements.txt      # Зависимости для src
+│   ├── create_superuser_cli.py  # Скрипт создания суперюзера на проде
+│   └── AuthJWT.md        # Документация по Auth/JWT
+└── requirements.txt      # Зависимости для src
 │
 ├── tests/                    # Тесты (pytest)
 │   ├── test_actions.py
