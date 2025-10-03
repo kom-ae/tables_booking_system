@@ -32,7 +32,7 @@ try:
         # Настройки БД
         # -------------------
         db_engine: str = Field(
-            default=DBEngine.POSTGRES.value,
+            default=DBEngine.SQLITE.value,
             env='DB_ENGINE',
         )
         db_host: str = Field(..., env='DB_HOST')
@@ -63,10 +63,10 @@ try:
         # -------------------
         # JWT / безопасность
         # -------------------
-        secret: str = Field(..., env='SECRET')
-        jwt_algorithm: str = Field(..., env='JWT_ALGORITHM')
+        secret: str = Field('SECRET', env='SECRET')
+        jwt_algorithm: str = Field('HS256', env='JWT_ALGORITHM')
         access_token_expire_minutes: int = Field(
-            ...,
+            1,
             env='ACCESS_TOKEN_EXPIRE_MINUTES',
         )
 
