@@ -54,7 +54,7 @@ async def check_duplicate_dish(
         dish_crud.get_dish_by_name_and_cafe,
         crud_args={
             'name': dish.name,
-            'cafe_id': dish.cafe_id,
+            'cafe_id': dish.cafe,
             'session': session,
         },
         msg_log='Поиск дубликата блюда.',

@@ -68,6 +68,7 @@ class CRUDDish(CRUDBase[Dishe, DishCreate, DishUpdate]):
     ) -> Dishe:
         """Создать блюдо в кафе."""
         obj_data = obj_in.model_dump()
+        obj_data["cafe_id"] = obj_data.pop("cafe")
         db_obj = Dishe(**obj_data)
         session.add(db_obj)
         await session.commit()
@@ -82,6 +83,7 @@ class CRUDDish(CRUDBase[Dishe, DishCreate, DishUpdate]):
     ) -> Dishe:
         """Обновить блюдо."""
         obj_data = obj_in.model_dump(exclude_unset=True)
+        obj_data["cafe_id"] = obj_data.pop("cafe")
         for field, value in obj_data.items():
             setattr(dish_obj, field, value)
         session.add(dish_obj)

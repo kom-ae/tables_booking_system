@@ -10,8 +10,8 @@ from src.schemas.cafes import CafeShortDB
 class DishBase(BaseSchema):
     """Базовая схема для блюд."""
 
-    cafe_id: int = Field(..., description='Кафе')
-    name: str = Field(..., description='Название блюда')
+    cafe: int = Field(..., description='ID Кафе')
+    name: str = Field(..., max_length=100, description='Название блюда')
     description: str = Field(..., description='Описание блюда')
     price: Decimal | None = Field(None, description='Цена')
     photo: str | None = Field(
@@ -20,20 +20,27 @@ class DishBase(BaseSchema):
     )
 
 
-class DishCreate(DishBase):
+class DishCreate(BaseModel):
     """Схема для создания блюд."""
 
+    cafe: int = Field(..., description='ID Кафе')
+    name: str = Field(..., max_length=100, description='Название блюда')
+    description: str = Field(..., description='Описание блюда')
     price: Decimal = Field(
         ...,
         ge=Decimal('0'),
         description='Цена',
+    )
+    photo: str | None = Field(
+        None,
+        description='Фото блюда в формате base64',
     )
 
 
 class DishUpdate(BaseModel):
     """Схема для обновления блюд."""
 
-    cafe_id: int | None = Field(None, description='Кафе')
+    cafe: int | None = Field(None, description='Кафе')
     name: str | None = Field(None, description='Название блюда')
     description: str | None = Field(None, description='Описание акции')
     price: Decimal | None = Field(None, ge=0, description='Цена')

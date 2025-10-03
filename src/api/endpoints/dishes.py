@@ -10,7 +10,11 @@ from src.api.responses.dishes import (
     dish_update_responses,
     dishes_list_responses,
 )
-from src.api.validators import check_duplicate_dish, handler_run_crud_dish
+from src.api.validators import (
+    cafe_existence,
+    check_duplicate_dish,
+    handler_run_crud_dish,
+)
 from src.core.db import get_async_session
 from src.core.dependencies import current_manager, current_user
 from src.core.logger import log_endpoint, logger
@@ -23,7 +27,7 @@ dish_crud = get_dish_crud()
 
 
 @router.get(
-    '/',
+    '',
     response_model=List[Dish],
     response_model_exclude_none=True,
     response_description='Список блюд',
@@ -82,7 +86,7 @@ async def get_dishes(
 
 
 @router.post(
-    '/',
+    '',
     response_model=Dish,
     response_model_exclude_none=True,
     response_description='Данные созданного блюда',
@@ -98,7 +102,7 @@ async def create_dish(
 ) -> Dish:
     """Создание блюда."""
     await check_duplicate_dish(dish=dish, session=session, user=user)
-
+    await cafe_existence(cafe_id=dish.cafe, session=session)
     return await handler_run_crud_dish(
         dish_crud.create_dish,
         crud_args={
