@@ -13,9 +13,11 @@ from src.crud.factory import CRUDUser, get_user_crud
 from src.exceptions.auth import (
     ExpiredTokenException,
     InvalidTokenException,
-    PermissionDeniedException,
 )
-from src.exceptions.user import UserNotFoundException
+from src.exceptions.user import (
+    PermissionDeniedException,
+    UserNotFoundException,
+)
 from src.models.user import User
 
 bearer_scheme: HTTPBearer = HTTPBearer(auto_error=False)
