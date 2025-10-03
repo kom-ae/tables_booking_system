@@ -46,9 +46,8 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
             Статус выполнения задачи Action:
-            - Репозиторий: ${{ github.repository }}
             - Задача: ${{ github.job }}
-            - status: ${{ job.status }}
+            - Статус: ${{ job.status }}
 
 # Собрать образ бэкэнда и залить на DockerHub
   build_backend_and_push_to_docker_hub:
@@ -80,9 +79,8 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
             Статус выполнения задачи Action:
-            - Репозиторий: ${{ github.repository }}
             - Задача: ${{ github.job }}
-            - status: ${{ job.status }}
+            - Статус: ${{ job.status }}
   
 # Деплой на сервер
   deploy:
@@ -130,4 +128,4 @@ jobs:
         message: |
           Статус выполнения задачи Action:
           - Задача: ${{ github.job }}
-          - status: ${{ job.status }}
+          - Статус: ${{ job.status }}
