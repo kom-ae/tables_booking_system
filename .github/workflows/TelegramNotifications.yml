@@ -4,10 +4,10 @@ on:
   push:
     branches:
       # - main
-      # - develop
-      - feature/CI_CD_workflow
+      - develop
+      # - feature/CI_CD_workflow
   pull_request:
-    types: [opened, closed]
+    types: [opened,]
 
 jobs:
   send-notification:
@@ -17,18 +17,14 @@ jobs:
         if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
         run: |
             echo "TG_MESSAGE=‼️--Нужно ревью--‼️" >> $GITHUB_ENV
-      - name: Задать текст сообщения если закрыли пул реквест
-        if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
-        run: |
-            echo "TG_MESSAGE=‼️--Запульте ветку develop--‼️" >> $GITHUB_ENV
       - name: Задать текст сообщения если push
         if: ${{ github.event_name == 'push'}}
         run: |
-            echo "TG_MESSAGE=‼️--Запушил--‼️" >> $GITHUB_ENV
+            echo "TG_MESSAGE=‼️--Подтяните к себе ветку develop--‼️" >> $GITHUB_ENV
       - name: Send Telegram Message to Group
         uses: appleboy/telegram-action@master
         with:
-          to: ${{ secrets.TELEGRAM_KOM_AE }}
+          to: ${{ secrets.TELEGRAM_KOM_AE }}, ${{ secrets.TELEGRAM_GROUP_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
             🔔 Новое обновление в репозитории:
