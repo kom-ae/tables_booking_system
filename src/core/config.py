@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 
-from pydantic import ConfigDict, EmailStr, Field, field_validator
+from pydantic import ConfigDict, EmailStr, Field
 from pydantic_settings import BaseSettings
 
 
@@ -10,7 +10,6 @@ class DBEngine(str, Enum):
 
     SQLITE = 'sqlite'
     POSTGRES = 'postgres'
-    POSTGRESQL = 'postgresql'
 
 
 class Settings(BaseSettings):
@@ -26,10 +25,7 @@ class Settings(BaseSettings):
     # -------------------
     # Настройки БД
     # -------------------
-    db_engine: str = Field(
-        default=DBEngine.POSTGRES.value,
-        env='DB_ENGINE',
-    )
+    db_engine: DBEngine = Field(default=DBEngine.POSTGRES, env='DB_ENGINE')
     db_host: str = Field(..., env='DB_HOST')
     db_port: int = Field(..., env='DB_PORT')
     db_name: str = Field(..., env='DB_NAME')
@@ -39,22 +35,16 @@ class Settings(BaseSettings):
     # -------------------
     # Настройки повторных попыток БД
     # -------------------
-    db_retry_max_attempts: int = Field(
-        default=3,
-        env='DB_RETRY_MAX_ATTEMPTS',
-    )
-    db_retry_delay_seconds: float = Field(
-        default=0.1,
-        env='DB_RETRY_DELAY_SECONDS',
-    )
+    db_retry_max_attempts: int = Field(3, env='DB_RETRY_MAX_ATTEMPTS')
+    db_retry_delay_seconds: float = Field(0.1, env='DB_RETRY_DELAY_SECONDS')
 
     # -------------------
     # JWT / безопасность
     # -------------------
     secret: str = Field(..., env='SECRET')
-    jwt_algorithm: str = Field(..., env='JWT_ALGORITHM')
+    jwt_algorithm: str = Field('HS256', env='JWT_ALGORITHM')
     access_token_expire_minutes: int = Field(
-        ...,
+        1,
         env='ACCESS_TOKEN_EXPIRE_MINUTES',
     )
 
@@ -72,50 +62,12 @@ class Settings(BaseSettings):
     # -------------------
     def get_database_uri(self) -> str:
         """Возвращает URI для подключения к базе данных."""
-        if hasattr(self, 'database_uri') and getattr(
-            self,
-            'database_uri',
-            None,
-        ):
-            return self.database_uri
-
-        if self.db_engine in (
-            DBEngine.POSTGRES.value,
-            DBEngine.POSTGRESQL.value,
-        ):
-            return self._get_postgresql_uri()
-        return self._get_sqlite_uri()
-
-    def _get_sqlite_uri(self) -> str:
-        """Возвращает URI для SQLite."""
+        if self.db_engine == DBEngine.POSTGRES:
+            return (
+                f'postgresql+asyncpg://{self.db_user}:{self.db_password}'
+                f'@{self.db_host}:{self.db_port}/{self.db_name}'
+            )
         return f'sqlite+aiosqlite:///./{self.db_name}'
-
-    def _get_postgresql_uri(self) -> str:
-        """Возвращает URI для PostgreSQL."""
-        if not all(
-            [self.db_host, self.db_name, self.db_user, self.db_password],
-        ):
-            raise ValueError(
-                'Для PostgreSQL необходимо указать host, name, user, password',
-            )
-
-        port = f':{self.db_port}' if self.db_port else ''
-        return (
-            f'postgresql+asyncpg://{self.db_user}:'
-            f'{self.db_password}@{self.db_host}{port}/{self.db_name}'
-        )
-
-    @field_validator('db_engine')
-    @classmethod
-    def validate_db_engine(cls, value: str) -> str:
-        """Проверяет допустимый тип базы данных."""
-        value_clean = value.strip().lower()
-        if value_clean not in [enum.value for enum in DBEngine]:
-            raise ValueError(
-                'DB engine должен быть одним из: '
-                f'{", ".join(enum.value for enum in DBEngine)}',
-            )
-        return value_clean
 
     model_config = ConfigDict(
         env_file='.env',

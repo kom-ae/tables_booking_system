@@ -1,4 +1,4 @@
-## 🍽 Tables Booking System
+# 🍽 Tables Booking System
 Tables Booking System — это веб-приложение для онлайн-бронирования столиков в ресторанах.
 Система позволяет пользователям искать свободные столики, бронировать их на удобное время, а администраторам — управлять заведением и бронированиями.
 
@@ -32,23 +32,63 @@ Email/Telegram-уведомления о создании и изменении 
 
 ### 📂 Структура проекта
 ```bash
-tables_booking_system_team2/
-│── src/                  # Основной код приложения
-│   ├── api/              # Роутеры FastAPI
-│   ├── core/             # Настройки и конфигурации
-│   ├── crud/             # Логика работы с БД
-│   ├── models/           # SQLAlchemy-модели
-│   ├── schemas/          # Pydantic-схемы
-│   ├── services/         # Бизнес-логика
-│   └── main.py           # Точка входа
+.
+├── alembic/                  # Миграции базы данных
+│   ├── env.py
+│   ├── README
+│   ├── script.py.mako
+│   └── versions/
 │
-│── tests/                # Тесты
-│── infra/                # Docker и деплой
-│── alembic/              # Миграции БД
-│── nginx/                # Конфигурация nginx
-│── requirements.txt      # Зависимости
-│── docker-compose.yml    # Docker Compose
-│── README.md             # Документация
+├── infra/                    # Инфраструктура и докер
+│   ├── docker-compose.local.yml
+│   ├── docker-compose.production.yml
+│   ├── docker-compose.prod.yml.bac
+│   └── requirements.txt
+│
+├── logs/                     # Логи приложения
+│   └── app.log
+│
+├── nginx/                    # Конфигурация Nginx
+│   ├── local.conf
+│   └── prod.conf
+│
+├── src/                      # Исходный код приложения
+│   ├── api/                  # Роуты (FastAPI endpoints)
+│   ├── constants.py
+│   ├── core/                 # Настройки, логгер, зависимости
+│   ├── crud/                 # CRUD-операции
+│   ├── exceptions/           # Кастомные исключения
+│   ├── models/               # SQLAlchemy модели
+│   ├── schemas/              # Pydantic-схемы
+│   ├── services/             # Бизнес-логика
+│   ├── main.py               # Точка входа FastAPI
+│   ├── Dockerfile.local      # Dockerfile для локалки
+│   ├── Dockerfile.prod       # Dockerfile для продакшена
+│   └── requirements.txt      # Зависимости для src
+│
+├── tests/                    # Тесты (pytest)
+│   ├── test_actions.py
+│   ├── test_auth.py
+│   ├── test_bookings.py
+│   ├── test_cafes.py
+│   ├── test_dishes.py
+│   ├── test_integration.py
+│   ├── test_tables.py
+│   ├── test_time_slots.py
+│   └── test_users.py
+│
+├── alembic.ini               # Конфиг Alembic
+├── Dockerfile                # Dockerfile для корневого уровня
+├── entrypoint.sh             # Скрипт запуска
+├── env.local                 # Переменные окружения (локально)
+├── env.prod                  # Переменные окружения (продакшн)
+├── fastapi.db                # SQLite база (для отладки)
+├── pytest.ini                # Конфиг Pytest
+├── requirements.txt          # Общие зависимости
+├── requirements_style.txt    # Зависимости для линтеров/стиля
+├── ruff.toml                 # Конфиг линтера Ruff
+├── README.md                 # Документация
+└── venv/
 ```
 ### ⚙️ Установка и запуск
 
@@ -70,19 +110,17 @@ cp env.local .env
 ```bash
 # В файле .env установите:
 DB_ENGINE=sqlite
-DATABASE_URL=sqlite+aiosqlite:///./booking.db
 ```
 - ***Вариант B: PostgreSQL (продакшен-готовый)***<br>
 ***В файле .env установите:***
 ```
 DB_ENGINE=postgresql
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=booking
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=booking
 DB_HOST=localhost
 DB_PORT=5432
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/booking
-SECRET_KEY=your_secret_key_here
+SECRET=your_secret_key_here
 ```
 ### Запуск приложения
 **С Docker (рекомендуется)**<br>
@@ -136,10 +174,12 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 👉 http://localhost/api/v1
 
 **Документация API:**<br>
-👉 http://localhost/docs
+👉 Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+👉 ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
 
 ### 🔄 CI/CD
-(Дополнить)
+> ⚙️ Развертывание автоматизировано через GitHub Actions (добавить описание)
 
 ### 🧪 Тестирование
 ***Запуск тестов локально с использованием базы данных SQLite***
@@ -175,8 +215,48 @@ pre-commit install
 
 ### 👥 Команда разработки
 Проект выполнен в рамках обучения в Яндекс Практикуме.
-(ДОПОЛНИТЬ)
-.....
+> 🚧 Секция в разработке (будет дополнена)
+
+### 📌 Примеры API-запросов
+### 👤 Регистрация пользователя
+```bash
+POST /api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "string123",
+  "phone": "+79991234567",
+  "username": "John Doe"
+}
+```
+**✅ Ответ:**
+```bash
+{
+  "id": 1,
+  "email": "user@example.com",
+  "username": "John Doe",
+  "phone": "+79991234567",
+  "is_active": true
+}
+```
+### 🔑 Авторизация (получение JWT)
+```bash
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "string123"
+}
+```
+**✅ Ответ:**
+```bash
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI...",
+}
+```
+
 
 ### 📌 Roadmap
  - Подключить Telegram-бота для уведомлений

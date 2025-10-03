@@ -10,7 +10,8 @@ from src.models.base import BaseModel
 if TYPE_CHECKING:
     from src.models.action import Action
     from src.models.dish import Dishe
-    from src.models.table import Table
+    from src.models.slot import Slot
+    from src.models.table import Table as Table_model
     from src.models.user import User
 
 
@@ -48,7 +49,14 @@ class Cafe(BaseModel):
         lazy='selectin',
         cascade='all, delete-orphan',
     )
-    tables: Mapped[list['Table']] = relationship(
+    slots: Mapped[list['Slot']] = relationship(
+        'Slot',
+        back_populates='cafe',
+        lazy='selectin',
+        cascade='all, delete-orphan',
+        passive_deletes=True,
+    )
+    tables: Mapped[list['Table_model']] = relationship(
         'Table',
         back_populates='cafe',
         lazy='selectin',
