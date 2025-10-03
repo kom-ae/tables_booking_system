@@ -1,20 +1,34 @@
+from __future__ import annotations
+
 from typing import Any, Callable, List, Optional, Union
 
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, Path, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.cafes import cafe_check_duplicate_responses
 from src.api.responses.dishes import dish_check_duplicate_responses
+from src.constants import ID_MIN
+from src.core.db import get_async_session
+from src.core.dependencies import (
+    current_manager,
+    current_user,
+    get_current_user_or_none,
+)
 from src.core.logger import logger
 from src.crud.action import actions_crud
-from src.crud.factory import get_cafe_crud, get_dish_crud
+from src.crud.factory import get_cafe_crud, get_dish_crud, get_slot_crud
 from src.exceptions.db import DBException, DBIntegrityException
-from src.models import Action, Cafe, Dishe, User
+from src.exceptions.slots import (
+    CafeOrSlotNotFoundException,
+    SlotNotFoundException,
+)
+from src.models import Action, Cafe, Dishe, Slot, User
 from src.schemas.cafes import CafeCreate, CafeDB
 from src.schemas.dish import Dish, DishCreate
 
 cafe_crud = get_cafe_crud()
+slot_crud = get_slot_crud()
 dish_crud = get_dish_crud()
 
 
@@ -142,6 +156,31 @@ async def handler_run_crud_cafe(
         )
 
 
+async def _get_cafe_or_none(
+    session: AsyncSession,
+    cafe_id: int,
+) -> Optional[Cafe]:
+    """Вернуть объект Cafe или None (без исключений)."""
+    res = await session.execute(select(Cafe).where(Cafe.id == cafe_id))
+    return res.scalar_one_or_none()
+
+
+async def _ensure_cafe_exists(
+    session: AsyncSession,
+    cafe_id: int,
+    *,
+    not_found_status: int,
+) -> Cafe:
+    """Вернуть Cafe или кинуть HTTPException с нужным статусом."""
+    cafe = await _get_cafe_or_none(session, cafe_id)
+    if cafe is None:
+        raise HTTPException(
+            status_code=not_found_status,
+            detail=f'Кафе с ID {cafe_id} не найдено.',
+        )
+    return cafe
+
+
 async def handler_run_crud_dish(
     func: Callable[..., Any],
     **kwargs: Any,
@@ -198,23 +237,69 @@ async def handler_run_crud_dish(
 
 
 async def cafe_existence(
-        session: AsyncSession,
-        cafe_id: Optional[int],
+    session: AsyncSession,
+    cafe_id: Optional[int],
 ) -> None:
-    """Проверяет наличе кафе по его ID."""
+    """Проверяет наличие кафе по его ID (контракт для actions: 400)."""
     if cafe_id is None:
+        # Этот кейс обычно не встречается для path-параметров,
+        # оставим как было.
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Нет такого кафе',
         )
-
-    cafe = await session.execute(
-        select(Cafe).where(Cafe.id == cafe_id),
+    # Для actions тесты ожидают 400 при отсутствии кафе.
+    await _ensure_cafe_exists(
+        session=session,
+        cafe_id=cafe_id,
+        not_found_status=status.HTTP_400_BAD_REQUEST,
     )
-    cafe_obj = cafe.scalar_one_or_none()
 
-    if cafe_obj is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f'Кафе с ID {cafe_id} не найдено.',
-        )
+
+current_user_dep = Depends(current_user)
+current_manager_dep = Depends(current_manager)
+current_user_or_none_dep = Depends(get_current_user_or_none)
+
+
+async def slot_in_cafe_exists(
+    cafe_id: int = Path(..., ge=ID_MIN, description='ID кафе'),
+    time_slot_id: int = Path(..., ge=ID_MIN, description='ID слота'),
+    session: AsyncSession = Depends(get_async_session),
+) -> Slot:
+    """Слот существует и относится к указанному кафе, иначе 404."""
+    slot = await slot_crud.get(obj_id=time_slot_id, session=session)
+    if not slot or slot.cafe_id != cafe_id:
+        raise CafeOrSlotNotFoundException()
+    return slot
+
+
+async def visible_slot_for_user(
+    cafe_id: int = Path(..., ge=ID_MIN, description='ID кафе'),
+    time_slot_id: int = Path(..., ge=ID_MIN, description='ID слота'),
+    session: AsyncSession = Depends(get_async_session),
+    user: Optional[User] = current_user_or_none_dep,
+) -> Slot:
+    """Определить видимость слота для запрашивающего пользователя.
+
+    Правила:
+    - superuser/admin/manager видят любой слот;
+    - остальные — только активный (иначе 404).
+    """
+    slot = await slot_in_cafe_exists(cafe_id, time_slot_id, session)
+    if user and user.is_manager():
+        return slot
+    if not bool(slot.is_active):
+        raise SlotNotFoundException()
+    return slot
+
+
+async def cafe_exists_404_for_slots(
+    cafe_id: int = Path(..., ge=ID_MIN, description='ID кафе'),
+    session: AsyncSession = Depends(get_async_session),
+) -> Cafe:
+    """Вернуть кафе или 404 (контракт для эндпоинтов слотов)."""
+    return await _ensure_cafe_exists(
+        session=session,
+        cafe_id=cafe_id,
+        not_found_status=status.HTTP_404_NOT_FOUND,
+    )

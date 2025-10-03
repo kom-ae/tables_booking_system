@@ -5,6 +5,7 @@ from src.api.endpoints import (
     auth_router,
     cafes_router,
     dishes_router,
+    slots_router,
     tables_router,
     users_router,
 )
@@ -27,6 +28,12 @@ main_router.include_router(
     cafes_router,
     prefix='/cafes',
     tags=['Кафе'],
+)
+
+main_router.include_router(
+    slots_router,
+    prefix='/cafe/{cafe_id}/time_slots',
+    tags=['Временные слоты'],
 )
 
 main_router.include_router(

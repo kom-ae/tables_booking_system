@@ -3,6 +3,8 @@
 Этот модуль содержит общие фикстуры, константы и утилиты для всех тестов.
 """
 
+
+from types import SimpleNamespace
 from typing import Any, AsyncGenerator, Dict
 
 import pytest_asyncio
@@ -13,7 +15,7 @@ from starlette import status
 
 from src.core.db import engine, get_async_session
 from src.crud.action import actions_crud
-from src.crud.factory import get_cafe_crud
+from src.crud.factory import get_cafe_crud, get_slot_crud
 from src.crud.factory import get_table_crud
 from src.main import app
 from src.models.action import Action
@@ -24,6 +26,7 @@ from src.models.user import User
 from src.schemas.action import ActionCreate
 from src.schemas.auth import Auth
 from src.schemas.cafes import CafeCreate
+from src.schemas.slots import SlotCreate
 from src.schemas.table import TableCreate
 from src.services.auth import PasswordService
 
@@ -512,10 +515,26 @@ async def test_table(session_fixture: AsyncSession, test_cafe: Cafe) -> None:
 async def test_time_slot(
     session_fixture: AsyncSession,
     test_cafe: Cafe,
-) -> None:
-    """Фикстура для тестового временного слота (когда будет реализовано)."""
-    # TODO: Реализовать когда модель TimeSlot будет готова
-    pass
+):
+    """Создаём тестовый временной слот (для тестов by-id/patch)."""
+    slot_crud = get_slot_crud()
+    payload = SlotCreate(
+        date='2025-03-10',
+        start_time='12:00:00',
+        end_time='14:00:00',
+        description='Fixture slot',
+        is_active=True,
+    )
+    slot_obj = await slot_crud.create(
+        payload,
+        session_fixture,
+        cafe_id=test_cafe.id,
+    )
+    return SimpleNamespace(
+        id=slot_obj.id,
+        start_time=slot_obj.start_time.strftime('%H:%M:%S'),
+        end_time=slot_obj.end_time.strftime('%H:%M:%S'),
+    )
 
 
 @pytest_asyncio.fixture
