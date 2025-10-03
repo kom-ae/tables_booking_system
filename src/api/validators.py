@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.responses.cafes import cafe_check_duplicate_responses
+from src.api.responses.dishes import dish_check_duplicate_responses
 from src.constants import ID_MIN
 from src.core.db import get_async_session
 from src.core.dependencies import (
@@ -16,14 +17,13 @@ from src.core.dependencies import (
 )
 from src.core.logger import logger
 from src.crud.action import actions_crud
-from src.crud.factory import get_cafe_crud, get_slot_crud, get_dish_crud
+from src.crud.factory import get_cafe_crud, get_dish_crud, get_slot_crud
 from src.exceptions.db import DBException, DBIntegrityException
 from src.exceptions.slots import (
     CafeOrSlotNotFoundException,
     SlotNotFoundException,
 )
-from src.models import Action, Cafe, Slot, User, Dishe
-from src.api.responses.dishes import dish_check_duplicate_responses
+from src.models import Action, Cafe, Dishe, Slot, User
 from src.schemas.cafes import CafeCreate, CafeDB
 from src.schemas.dish import Dish, DishCreate
 

@@ -1,9 +1,9 @@
 from src.crud.cafes import CRUDCafe
-from src.crud.slots import CRUDSlot
 from src.crud.dishes import CRUDDish
+from src.crud.slots import CRUDSlot
 from src.crud.tables import CRUDTable
 from src.crud.users import CRUDUser
-from src.models import Cafe, Slot, Dishe, Table, User  # noqa
+from src.models import Cafe, Dishe, Slot, Table, User  # noqa
 
 
 def get_user_crud() -> CRUDUser:

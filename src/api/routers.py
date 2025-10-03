@@ -4,8 +4,8 @@ from src.api.endpoints import (
     actions_router,
     auth_router,
     cafes_router,
-    slots_router,
     dishes_router,
+    slots_router,
     tables_router,
     users_router,
 )
