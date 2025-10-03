@@ -94,24 +94,24 @@ Email/Telegram-уведомления о создании и изменении 
 
 ### Для локальной разработки
 
-***Клонирование репозитория***
+**Клонирование репозитория**
 ```bash
 git clone https://github.com/Studio-Yandex-Practicum/tables_booking_system_team2.git
 cd tables_booking_system_team2
 ```
 ### Настройка окружения
-***Копируем файл окружения***
+**Копируем файл окружения**
 ```bash
 cd src
 cp env.local .env
 ```
 ### Настройка базы данных
- - ***Вариант A: SQLite (быстрый старт)***
+ - **Вариант A: SQLite (быстрый старт)**
 ```bash
 # В файле .env установите:
 DB_ENGINE=sqlite
 ```
-- ***Вариант B: PostgreSQL (продакшен-готовый)***<br>
+- **Вариант B: PostgreSQL (продакшен-готовый)**<br>
 ***В файле .env установите:***
 ```
 DB_ENGINE=postgresql
@@ -124,7 +124,7 @@ SECRET=your_secret_key_here
 ```
 ### Запуск приложения
 **С Docker (рекомендуется)**<br>
-***Копируем .env в директорию infra***
+**Копируем .env в директорию infra**
 ```bash
 cp .env infra/.env
 ```
@@ -134,7 +134,7 @@ cd src/infra
 docker-compose -f docker-compose.local.yml up --build
 ```
 **Без Docker**<br>
-***Создание виртуального окружения***
+**Создание виртуального окружения**
 ```
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
@@ -152,7 +152,7 @@ alembic upgrade head
 uvicorn src.main:app --reload
 ```
 ### Проверка работоспособности
-***После запуска приложение будет доступно:***
+**После запуска приложение будет доступно:**
 - API: http://localhost:8000
 - Документация: http://localhost:8000/docs
 - Альтернативная документация: http://localhost:8000/redoc<br>
@@ -193,7 +193,7 @@ uvicorn src.main:app --reload
 ```bash
 docker-compose -f docker-compose.production.yml up --build
 ```
-***Запустите команду для создания суперпользователя:***<br>
+**Запустите команду для создания суперпользователя:**<br>
 После того как контейнеры будут запущены, используйте
  команду create_superuser для создания суперпользователя:<br>
 ***Примечание:***<br>
@@ -216,7 +216,7 @@ docker-compose exec <имя контейнера backend> sh python /app/create_
    к административной панели вашего приложения.
 
 ### 🧪 Тестирование
-***Запуск тестов локально с использованием базы данных SQLite***
+**Запуск тестов локально с использованием базы данных SQLite**<br>
 Из корня проекта выполнить команду:
 ```sh
 python -m pytest
@@ -233,22 +233,22 @@ python -m pytest
 ### 🧹 Стилизация и проверка кода
 Для обеспечения единого стиля кода используются пакеты Ruff и Pre-commit.<br>
 
-***Проверка стиля***
+**Проверка стиля**
 ```sh
 ruff check
 ```
-***Проверка и автофикс***
+**Проверка и автофикс**
 ```sh
 ruff check --fix
 ```
-***Автоматическая проверка при коммитах***<br>
+**Автоматическая проверка при коммитах**<br>
 Чтобы при каждом коммите автоматически проверялась и исправлялась стилистика, нужно подключить pre-commit:
 ```sh
 pre-commit install
 ```
 
 ### 🧩 Примеры API-запросов
-***👤 Регистрация пользователя***
+**👤 Регистрация пользователя**
 ```bash
 POST /api/v1/auth/register
 Content-Type: application/json
@@ -276,7 +276,7 @@ Content-Type: application/json
   "updated_at": "2025-10-03T13:39:03.182Z"
 }
 ```
-***🔑 Авторизация (получение JWT)***
+**🔑 Авторизация (получение JWT)**
 ```bash
 POST /api/v1/auth/login
 Content-Type: application/json
