@@ -52,23 +52,23 @@ Email/Telegram-уведомления о создании и изменении 
 │   ├── local.conf
 │   └── prod.conf
 │
-├── src/                      # Исходный код приложения
-│   ├── api/                  # Роуты (FastAPI endpoints)
+├── src/                          # Исходный код приложения
+│   ├── api/                      # Роуты (FastAPI endpoints)
 │   ├── constants.py
-│   ├── core/                 # Настройки, логгер, зависимости
-│   ├── crud/                 # CRUD-операции
-│   ├── exceptions/           # Кастомные исключения
-│   ├── models/               # SQLAlchemy модели
-│   ├── schemas/              # Pydantic-схемы
-│   ├── services/             # Бизнес-логика
-│   ├── main.py               # Точка входа FastAPI
-│   ├── Dockerfile.local      # Dockerfile для локалки
-│   ├── Dockerfile.prod       # Dockerfile для продакшена
-│   ├── create_superuser_cli.py  # Скрипт создания суперюзера на проде
-│   └── AuthJWT.md        # Документация по Auth/JWT
-└── requirements.txt      # Зависимости для src
+│   ├── core/                     # Настройки, логгер, зависимости
+│   ├── crud/                     # CRUD-операции
+│   ├── exceptions/               # Кастомные исключения
+│   ├── models/                   # SQLAlchemy модели
+│   ├── schemas/                  # Pydantic-схемы
+│   ├── services/                 # Бизнес-логика
+│   ├── main.py                   # Точка входа FastAPI
+│   ├── Dockerfile.local          # Dockerfile для локалки
+│   ├── Dockerfile.prod           # Dockerfile для продакшена
+│   ├── create_superuser_cli.py   # Скрипт создания суперюзера на проде
+│   └── AuthJWT.md                # Документация по Auth/JWT
+└── requirements.txt              # Зависимости для src
 │
-├── tests/                    # Тесты (pytest)
+├── tests/                        # Тесты (pytest)
 │   ├── test_actions.py
 │   ├── test_auth.py
 │   ├── test_bookings.py
@@ -104,13 +104,12 @@ cd tables_booking_system_team2
 ### Настройка окружения
 **Копируем файл окружения**
 ```bash
-cd src
 cp env.local .env
 ```
 ### Настройка базы данных
- - **Вариант A: SQLite (быстрый старт)**
+- **Вариант A: SQLite (быстрый старт)**
+***В файле .env установите:***
 ```bash
-# В файле .env установите:
 DB_ENGINE=sqlite
 ```
 - **Вариант B: PostgreSQL (продакшен-готовый)**<br>
