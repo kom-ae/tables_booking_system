@@ -127,27 +127,49 @@ async def handler_run_crud_cafe(
         )
 
 
+async def _get_cafe_or_none(
+    session: AsyncSession,
+    cafe_id: int,
+) -> Optional[Cafe]:
+    """Вернуть объект Cafe или None (без исключений)."""
+    res = await session.execute(select(Cafe).where(Cafe.id == cafe_id))
+    return res.scalar_one_or_none()
+
+
+async def _ensure_cafe_exists(
+    session: AsyncSession,
+    cafe_id: int,
+    *,
+    not_found_status: int,
+) -> Cafe:
+    """Вернуть Cafe или кинуть HTTPException с нужным статусом."""
+    cafe = await _get_cafe_or_none(session, cafe_id)
+    if cafe is None:
+        raise HTTPException(
+            status_code=not_found_status,
+            detail=f'Кафе с ID {cafe_id} не найдено.',
+        )
+    return cafe
+
+
 async def cafe_existence(
-        session: AsyncSession,
-        cafe_id: Optional[int],
+    session: AsyncSession,
+    cafe_id: Optional[int],
 ) -> None:
-    """Проверяет наличие кафе по его ID."""
+    """Проверяет наличие кафе по его ID (контракт для actions: 400)."""
     if cafe_id is None:
+        # Этот кейс обычно не встречается для path-параметров,
+        # оставим как было.
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Нет такого кафе',
         )
-
-    cafe = await session.execute(
-        select(Cafe).where(Cafe.id == cafe_id),
+    # Для actions тесты ожидают 400 при отсутствии кафе.
+    await _ensure_cafe_exists(
+        session=session,
+        cafe_id=cafe_id,
+        not_found_status=status.HTTP_400_BAD_REQUEST,
     )
-    cafe_obj = cafe.scalar_one_or_none()
-
-    if cafe_obj is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f'Кафе с ID {cafe_id} не найдено.',
-        )
 
 
 current_user_dep = Depends(current_user)
@@ -191,12 +213,9 @@ async def cafe_exists_404_for_slots(
     cafe_id: int = Path(..., ge=ID_MIN, description='ID кафе'),
     session: AsyncSession = Depends(get_async_session),
 ) -> Cafe:
-    """Вернуть кафе или 404 (специально для эндпоинтов слотов)."""
-    res = await session.execute(select(Cafe).where(Cafe.id == cafe_id))
-    cafe = res.scalar_one_or_none()
-    if cafe is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'Кафе с ID {cafe_id} не найдено.',
-        )
-    return cafe
+    """Вернуть кафе или 404 (контракт для эндпоинтов слотов)."""
+    return await _ensure_cafe_exists(
+        session=session,
+        cafe_id=cafe_id,
+        not_found_status=status.HTTP_404_NOT_FOUND,
+    )

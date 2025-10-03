@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import time
+from datetime import date, time
 from typing import Any, Optional
 
 from sqlalchemy import select
@@ -30,12 +30,15 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
         *,
         cafe_id: int,
         only_active: bool,
+        on_date: Optional[date] = None,
     ) -> list[Slot]:
         """Список слотов по кафе с опциональной фильтрацией активности."""
         stmt = select(Slot).where(Slot.cafe_id == cafe_id)
         if only_active:
             stmt = stmt.where(Slot.is_active.is_(True))
-        stmt = stmt.order_by(Slot.start_time.asc())
+        if on_date:
+            stmt = stmt.where(Slot.date == on_date)
+        stmt = stmt.order_by(Slot.date.asc(), Slot.start_time.asc())
         res = await session.execute(stmt)
         return list(res.scalars().all())
 
@@ -44,6 +47,7 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
         session: AsyncSession,
         *,
         cafe_id: int,
+        date_: date,
         start_time: time,
         end_time: time,
         exclude_slot_id: Optional[int] = None,
@@ -56,6 +60,7 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
             await ensure_no_overlap(
                 session,
                 cafe_id=cafe_id,
+                date_=date_,
                 start_time=start_time,
                 end_time=end_time,
                 exclude_slot_id=exclude_slot_id,
@@ -82,25 +87,14 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
         if obj_in.start_time >= obj_in.end_time:
             raise SlotOverlapException()
 
-        existing = (
-            await session.execute(
-                select(Slot).where(
-                    Slot.cafe_id == cafe_id,
-                    Slot.start_time == obj_in.start_time,
-                    Slot.end_time == obj_in.end_time,
-                ),
+        if getattr(obj_in, 'is_active', True):
+            await self._check_overlap(
+                session,
+                cafe_id=cafe_id,
+                date_=obj_in.date,
+                start_time=obj_in.start_time,
+                end_time=obj_in.end_time,
             )
-        ).scalar_one_or_none()
-
-        if existing is not None:
-            data = obj_in.model_dump(exclude_unset=True)
-            if 'description' in data:
-                existing.description = data['description']
-            if 'is_active' in data:
-                existing.is_active = data['is_active']
-            await session.commit()
-            await session.refresh(existing)
-            return existing
 
         data = obj_in.model_dump()
         data['cafe_id'] = cafe_id
@@ -121,17 +115,19 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
         """Обновляет существующий слот (смена кафе не поддерживается)."""
         data = obj_in.model_dump(exclude_unset=True)
 
+        new_date = data.get('date', db_obj.date)
         new_start = data.get('start_time', db_obj.start_time)
         new_end = data.get('end_time', db_obj.end_time)
-        new_is_active = data.get('is_active', db_obj.is_active)
+        will_be_active = bool(data.get('is_active', db_obj.is_active))
 
         if new_start >= new_end:
             raise SlotOverlapException()
 
-        if new_is_active:
+        if will_be_active:
             await self._check_overlap(
                 session,
                 cafe_id=db_obj.cafe_id,
+                date_=new_date,
                 start_time=new_start,
                 end_time=new_end,
                 exclude_slot_id=db_obj.id,
@@ -139,11 +135,11 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
 
         return await super().update(db_obj, obj_in, session, user=user)
 
-    async def delete_soft(self, db_obj: Slot, session: AsyncSession) -> None:
-        """Мягко помечает слот как неактивный (soft delete)."""
-        await session.execute(
-            sa_update(Slot)
-            .where(Slot.id == db_obj.id)
-            .values(is_active=False),
-        )
-        await session.commit()
+    # async def delete_soft(self, db_obj: Slot, session: AsyncSession) -> None:
+    #   """Мягко помечает слот как неактивный (soft delete)."""
+    #   await session.execute(
+    #       sa_update(Slot)
+    #       .where(Slot.id == db_obj.id)
+    #       .values(is_active=False),
+    #   )
+    #   await session.commit()

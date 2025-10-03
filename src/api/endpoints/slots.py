@@ -44,6 +44,11 @@ async def list_time_slots(
     cafe: Cafe = Depends(cafe_exists_404_for_slots),
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_user),
+    q_date: Optional[date] = Query(
+        None,
+        alias='date',
+        description='Фильтрация по дате (YYYY-MM-DD).',
+    ),
 ) -> List[Slot]:
     """Список слотов кафе."""
     show_all = user.is_manager() or user.is_admin()
@@ -51,6 +56,7 @@ async def list_time_slots(
         session,
         cafe_id=cafe.id,
         only_active=not show_all,
+        on_date=q_date,
     )
     return slots
 

@@ -1,7 +1,9 @@
-from datetime import time
-from typing import TYPE_CHECKING, Optional
+from datetime import date, time
+from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, ForeignKey, String, UniqueConstraint
+from sqlalchemy import (
+    CheckConstraint, ForeignKey, String, UniqueConstraint, Index
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.constants import SLOT_DESCRIPTION_MAX_LENGTH
@@ -13,7 +15,6 @@ if TYPE_CHECKING:
 
 class Slot(BaseModel):
     """Интервал бронирования в рамках конкретного кафе."""
-
     __tablename__ = 'time_slot'
 
     cafe_id: Mapped[int] = mapped_column(
@@ -21,6 +22,7 @@ class Slot(BaseModel):
         index=True,
         nullable=False,
     )
+    date: Mapped[date] = mapped_column(index=True, nullable=False)
     start_time: Mapped[time] = mapped_column(nullable=False)
     end_time: Mapped[time] = mapped_column(nullable=False)
     description: Mapped[Optional[str]] = mapped_column(
@@ -32,18 +34,16 @@ class Slot(BaseModel):
         'Cafe',
         back_populates='slots',
         lazy='selectin',
-        passive_deletes=True,
     )
 
     __table_args__ = (
         UniqueConstraint(
-            'cafe_id',
-            'start_time',
-            'end_time',
-            name='uq_cafe_time_window',
+            'cafe_id', 'date', 'start_time', 'end_time',
+            name='uq_cafe_date_time_window',
         ),
         CheckConstraint(
             'start_time < end_time',
             name='ck_slot_start_before_end',
         ),
+        Index('ix_slot_cafe_date_start', 'cafe_id', 'date', 'start_time'),
     )
