@@ -21,6 +21,7 @@ from src.main import app
 from src.models.action import Action
 from src.models.base import BaseModel
 from src.models.cafe import Cafe
+from src.models.dish import Dishe
 from src.models.user import User
 from src.schemas.action import ActionCreate
 from src.schemas.auth import Auth
@@ -569,7 +570,21 @@ async def test_booking(
 
 
 @pytest_asyncio.fixture
-async def test_dish(session_fixture: AsyncSession, test_cafe: Cafe) -> None:
-    """Фикстура для тестового блюда (когда будет реализовано)."""
-    # TODO: Реализовать когда модель Dish будет готова
-    pass
+async def test_dish(
+    session_fixture: AsyncSession,
+    test_cafe: Cafe
+) -> Any:
+    """Фикстура для тестового блюда."""
+    dish_data = {
+        'cafe_id': test_cafe.id,
+        'name': 'Test Dish',
+        'description': 'Test dish description',
+        'price': 100.00,
+        'photo': 'test_photo.jpg',
+        'is_active': True
+    }
+    dish = Dishe(**dish_data)
+    session_fixture.add(dish)
+    await session_fixture.commit()
+    await session_fixture.refresh(dish)
+    return dish
