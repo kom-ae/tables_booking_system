@@ -174,7 +174,7 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 👉 http://localhost/api/v1
 
 **Документация API:**<br>
-👉 Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+👉 Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)<br>
 👉 ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
 
@@ -213,31 +213,33 @@ ruff check --fix
 pre-commit install
 ```
 
-### 👥 Команда разработки
-Проект выполнен в рамках обучения в Яндекс Практикуме.
-> 🚧 Секция в разработке (будет дополнена)
-
 ### 🧩 Примеры API-запросов
 ***👤 Регистрация пользователя***
 ```bash
 POST /api/v1/auth/register
 Content-Type: application/json
 
+
 {
+  "username": "IvanPetrov",
   "email": "user@example.com",
-  "password": "string123",
-  "phone": "+79991234567",
-  "username": "John Doe"
+  "phone": "+75555555555",
+  "tg_id": 123,
+  "password": "IvanPetrov@1"
 }
+
 ```
 **✅ Ответ:**
 ```bash
 {
-  "id": 1,
+  "username": "IvanPetrov",
   "email": "user@example.com",
-  "username": "John Doe",
-  "phone": "+79991234567",
-  "is_active": true
+  "phone": "+75555555555",
+  "tg_id": 123,
+  "id": 1,
+  "is_active": true,
+  "created_at": "2025-10-03T13:39:03.182Z",
+  "updated_at": "2025-10-03T13:39:03.182Z"
 }
 ```
 ***🔑 Авторизация (получение JWT)***
@@ -247,7 +249,7 @@ Content-Type: application/json
 
 {
   "email": "user@example.com",
-  "password": "string123"
+  "password": "sIvanPetrov@1"
 }
 ```
 **✅ Ответ:**
@@ -256,3 +258,7 @@ Content-Type: application/json
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI...",
 }
 ```
+
+### 👥 Команда разработки
+Проект выполнен в рамках обучения в Яндекс Практикуме.
+> 🚧 Секция в разработке (будет дополнена)
