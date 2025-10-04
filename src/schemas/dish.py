@@ -3,7 +3,11 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.constants import MAX_DISH_LENGTH_NAME, MIN_PRICE_DISH
+from src.constants import (
+    MAX_DISH_LENGTH_DESC,
+    MAX_DISH_LENGTH_NAME,
+    MIN_PRICE_DISH,
+)
 from src.schemas.base import BaseSchema
 from src.schemas.cafes import CafeShortDB
 
@@ -17,7 +21,11 @@ class DishBase(BaseSchema):
         max_length=MAX_DISH_LENGTH_NAME,
         description='Название блюда',
     )
-    description: str = Field(..., description='Описание блюда')
+    description: str = Field(
+        ...,
+        max_length=MAX_DISH_LENGTH_DESC,
+        description='Описание блюда',
+    )
     price: Decimal | None = Field(None, description='Цена')
     photo: str | None = Field(
         None,
@@ -34,10 +42,14 @@ class DishCreate(BaseModel):
         max_length=MAX_DISH_LENGTH_NAME,
         description='Название блюда',
     )
-    description: str = Field(..., description='Описание блюда')
+    description: str = Field(
+        ...,
+        max_length=MAX_DISH_LENGTH_DESC,
+        description='Описание блюда',
+    )
     price: Decimal = Field(
         ...,
-        ge=Decimal('MIN_PRICE_DISH'),
+        ge=Decimal(MIN_PRICE_DISH),
         description='Цена',
     )
     photo: str | None = Field(
@@ -51,7 +63,11 @@ class DishUpdate(BaseModel):
 
     cafe: int | None = Field(None, description='Кафе')
     name: str | None = Field(None, description='Название блюда')
-    description: str | None = Field(None, description='Описание акции')
+    description: str | None = Field(
+        None,
+        max_length=MAX_DISH_LENGTH_DESC,
+        description='Описание блюда',
+    )
     price: Decimal | None = Field(None, ge=MIN_PRICE_DISH, description='Цена')
     photo: str | None = Field(
         None,
