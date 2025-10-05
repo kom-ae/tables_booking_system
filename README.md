@@ -181,6 +181,8 @@ uvicorn src.main:app --reload --port 8000
 - Альтернативная документация: http://localhost:8000/redoc<br>
 
 ### Переменные окружения (.env)
+**Образцы переменных окружения лежат в корне проекта, в файлае env.example.**
+
  ***Для PostgreSQL:***
  ```bash
  DB_ENGINE=postgres
