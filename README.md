@@ -125,7 +125,8 @@ cd tables_booking_system_team2
 ### Настройка окружения
 **Копируем файл окружения**
 ```bash
-cp env.local .env
+cd tables_booking_system_team2
+cp env.example .env
 ```
 ### Настройка базы данных
 - **Вариант A: SQLite (быстрый старт)**<br>
@@ -133,7 +134,8 @@ cp env.local .env
 ```bash
 DB_ENGINE=sqlite
 ```
-- **Вариант B: PostgreSQL (продакшен-готовый)**<br>
+
+- **Вариант B: PostgreSQL**<br>
 ***В файле .env установите:***
 ```
 DB_ENGINE=postgresql
@@ -171,38 +173,21 @@ alembic upgrade head
 ```
 ### Запуск сервера
 ```bash
-uvicorn src.main:app --reload --port 8000
+uvicorn src.main:app --reload
 
 ```
 ### Проверка работоспособности
 **После запуска приложение будет доступно:**
-- API: http://localhost:8000
-- Документация: http://localhost:8000/docs
-- Альтернативная документация: http://localhost:8000/redoc<br>
+- API: http://localhost
+- Документация: http://localhost/docs
+- Альтернативная документация: http://localhost/redoc<br>
 
-### Переменные окружения (.env)
-**Образцы переменных окружения лежат в корне проекта, в файлае env.example.**
-
- ***Для PostgreSQL:***
- ```bash
- DB_ENGINE=postgres
- POSTGRES_USER=postgres
- POSTGRES_PASSWORD=postgres
- POSTGRES_DB=booking
- DB_HOST=localhost
- DB_PORT=5432
- ```
- ***Для SQLite:***
- ```bash
-DB_ENGINE=sqlite
- ```
 **Приложение будет доступно по адресу:**<br>
 👉 http://localhost/api/v1
 
 **Документация API:**<br>
-👉 Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)<br>
-👉 ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
-
+👉 Swagger UI: [http://localhost/docs](http://localhost/docs)<br>
+👉 ReDoc: [http://localhost/redoc](http://localhost/redoc)
 
 **🚀 Основные процессы CI/CD**<br>
 ### 🔄 CI/CD
@@ -353,12 +338,16 @@ Content-Type: application/json
 
 ### 👥 Команда разработки
 **Проект создан в рамках обучения в Яндекс Практикуме.**<br>
+
 **Наставник:**<br>
 🧭 Станислав Баринов<br>
+
 **Project Manager (PM):**<br>
 📋 Александр Аваков<br>
+
 **Тимлид:**<br>
 🧑‍💻 Вадим Каримов<br>
+
 **Разработчики:**<br>
 💡 Вадим Каримов<br>
 💡 Дмитрий Радюк<br>
