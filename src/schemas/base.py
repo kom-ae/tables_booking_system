@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from src.constants import (
     MAX_ADDRESS,
@@ -48,10 +48,7 @@ class CafeBase(BaseModel):
     photo: Optional[str] = Field(None, title='Фото кафе в формате base64')
     managers: Optional[list[UserShort]] = Field(None, title='ID менеджера')
 
-    class Config:
-        """Конфиг класса."""
-
-        extra = 'forbid'
+    model_config = ConfigDict(extra='forbid')
 
 
 class Error(BaseModel):

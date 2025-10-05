@@ -86,7 +86,4 @@ class UserShort(BaseModel):
     phone: str = Field(..., description='Телефон')
     is_active: bool = Field(..., description='Активен ли пользователь')
 
-    class Config:
-        """Конфиг класса."""
-
-        model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
