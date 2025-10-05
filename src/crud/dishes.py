@@ -83,7 +83,8 @@ class CRUDDish(CRUDBase[Dishe, DishCreate, DishUpdate]):
     ) -> Dishe:
         """Обновить блюдо."""
         obj_data = obj_in.model_dump(exclude_unset=True)
-        obj_data["cafe_id"] = obj_data.pop("cafe")
+        if "cafe" in obj_data.keys():
+            obj_data["cafe_id"] = obj_data.pop("cafe")
         for field, value in obj_data.items():
             setattr(dish_obj, field, value)
         session.add(dish_obj)
