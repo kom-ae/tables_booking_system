@@ -2,16 +2,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import (
-    BigInteger,
-    CheckConstraint,
-    DateTime,
-    String,
-    text,
-)
-from sqlalchemy import (
-    Enum as EnumSQL,
-)
+from sqlalchemy import BigInteger, CheckConstraint, DateTime, String, text
+from sqlalchemy import Enum as EnumSQL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.constants import (

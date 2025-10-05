@@ -18,12 +18,8 @@ from httpx import AsyncClient
 from starlette import status
 
 from src.models.cafe import Cafe
-from tests.conftest import (
-    assert_error_response,
-    assert_success_response,
-    get_auth_headers,
-)
-
+from tests.conftest import (assert_error_response, assert_success_response,
+                            get_auth_headers)
 
 # Эти тесты будут работать когда будут реализованы:
 # 1. Модель Table в src/models/table.py

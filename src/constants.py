@@ -15,7 +15,6 @@ MIN_UPDATE_INTERVAL_SECONDS = 60
 MAX_BYTES_TEMP_LOGER = 1_000_000
 BACKUP_COUNT_TEMP_LOGER = 3
 LOG_FILE_APP_LOGGER = 'app.log'
-LOG_FILE_TEMP_LOGER = 'app_temp.log'
 DEFAULT_USER_ID = 0
 SYSTEM_USERNAME = 'SYSTEM'
 
@@ -87,7 +86,18 @@ TAGS_METADATA = [
         'name': 'Временные слоты',
         'description': 'Управление временными слотами',
     },
-    # Допишите свои, если здесь их нет
+    {
+        'name': 'Бронирования',
+        'description': 'Управление бронированиями',
+    },
+    {
+        'name': 'Блюда',
+        'description': 'Управление блюдами',
+    },
+    {
+        'name': 'Акции',
+        'description': 'Управление акциями',
+    },
 ]
 
 # -------------------
@@ -99,6 +109,7 @@ MAX_DISH_LENGTH_NAME = 200
 MAX_DISH_LENGTH_DESC = 600
 # Значение Numeric для цены блюда
 DISH_PRICE_PRECISION = (10, 2)
+MIN_PRICE_DISH = 0
 
 # -------------------
 # Столы

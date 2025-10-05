@@ -17,12 +17,8 @@ import pytest
 from httpx import AsyncClient
 from starlette import status
 
-from tests.conftest import (
-    assert_error_response,
-    assert_success_response,
-    get_auth_headers,
-)
-
+from tests.conftest import (assert_error_response, assert_success_response,
+                            get_auth_headers)
 
 # Эти тесты будут работать когда будут реализованы:
 # 1. Модель Action в src/models/action.py

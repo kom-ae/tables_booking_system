@@ -15,8 +15,7 @@ from starlette import status
 
 from src.core.db import engine, get_async_session
 from src.crud.action import actions_crud
-from src.crud.factory import get_cafe_crud, get_slot_crud
-from src.crud.factory import get_table_crud
+from src.crud.factory import get_cafe_crud, get_slot_crud, get_table_crud
 from src.main import app
 from src.models.action import Action
 from src.models.base import BaseModel
@@ -29,7 +28,6 @@ from src.schemas.cafes import CafeCreate
 from src.schemas.slots import SlotCreate
 from src.schemas.table import TableCreate
 from src.services.auth import PasswordService
-
 
 # -----------------------
 # Константы для эндпоинтов

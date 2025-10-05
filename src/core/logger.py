@@ -9,7 +9,6 @@ from src.constants import (
     BACKUP_COUNT_TEMP_LOGER,
     DEFAULT_USER_ID,
     LOG_FILE_APP_LOGGER,
-    LOG_FILE_TEMP_LOGER,
     MAX_BYTES_TEMP_LOGER,
     SYSTEM_USERNAME,
 )
@@ -160,34 +159,3 @@ def log_endpoint(
             raise
 
     return wrapper
-
-
-def temp_logger(log_file: str = LOG_FILE_TEMP_LOGER) -> Logger:
-    """Создание временного логгера."""
-    logger_temp: Logger = logging.getLogger('temp_logger')
-    if logger_temp.handlers:
-        return logger_temp
-
-    logger_temp.setLevel(logging.DEBUG)
-    logger_temp.propagate = False
-
-    formatter = logging.Formatter(
-        '%(asctime)s | %(levelname)s | %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-    )
-
-    file_handler_temp = RotatingFileHandler(
-        log_file,
-        maxBytes=MAX_BYTES_TEMP_LOGER,
-        backupCount=BACKUP_COUNT_TEMP_LOGER,
-        encoding='utf-8',
-    )
-    file_handler_temp.setFormatter(formatter)
-
-    console_handler_temp = logging.StreamHandler()
-    console_handler_temp.setFormatter(formatter)
-
-    logger_temp.addHandler(file_handler_temp)
-    logger_temp.addHandler(console_handler_temp)
-
-    return logger_temp
