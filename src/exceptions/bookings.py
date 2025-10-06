@@ -54,6 +54,6 @@ class BookingResourceNotFoundException(AppException):
     error_code: str = 'BookingResourceNotFound'
 
     def __init__(
-            self, message: str = 'ННеверные идентификаторы ресурсов') -> None:
+            self, message: str = 'Неверные идентификаторы ресурсов') -> None:
         """Исключение 400: ресурсы не найдены."""
         super().__init__(message, status.HTTP_400_BAD_REQUEST)
