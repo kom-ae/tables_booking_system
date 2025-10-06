@@ -4,6 +4,7 @@
 """
 
 
+from datetime import date, timedelta
 from types import SimpleNamespace
 from typing import Any, AsyncGenerator, Dict
 
@@ -15,7 +16,11 @@ from starlette import status
 
 from src.core.db import engine, get_async_session
 from src.crud.action import actions_crud
-from src.crud.factory import get_cafe_crud, get_slot_crud, get_table_crud
+from src.crud.factory import (
+    get_booking_crud,
+    get_cafe_crud,
+    get_slot_crud,
+    get_table_crud)
 from src.main import app
 from src.models.action import Action
 from src.models.base import BaseModel
@@ -28,6 +33,7 @@ from src.schemas.cafes import CafeCreate
 from src.schemas.slots import SlotCreate
 from src.schemas.table import TableCreate
 from src.services.auth import PasswordService
+from src.schemas.bookings import BookingCreate
 
 # -----------------------
 # Константы для эндпоинтов
@@ -514,10 +520,10 @@ async def test_time_slot(
     session_fixture: AsyncSession,
     test_cafe: Cafe,
 ):
-    """Создаём тестовый временной слот (для тестов by-id/patch)."""
+    """Создаёт тестовый временной слот с актуальной датой."""
     slot_crud = get_slot_crud()
     payload = SlotCreate(
-        date='2025-03-10',
+        date=(date.today() + timedelta(days=3)).isoformat(),
         start_time='12:00:00',
         end_time='14:00:00',
         description='Fixture slot',
@@ -561,10 +567,27 @@ async def test_booking(
     session_fixture: AsyncSession,
     normal_user: User,
     test_cafe: Cafe,
-) -> None:
-    """Фикстура для тестового бронирования (когда будет реализовано)."""
-    # TODO: Реализовать когда модель Booking будет готова
-    pass
+    multiple_tables,
+    multiple_slots,
+) -> Any:
+    """Создаёт тестовое бронирование для проверки эндпоинтов /booking/{id}."""
+    booking_crud = get_booking_crud()
+    booking_in = BookingCreate(
+        user_id=normal_user.id,
+        cafe_id=test_cafe.id,
+        tables=[t.id for t in multiple_tables],
+        slots=[s.id for s in multiple_slots],
+        guests_number=4,
+        note='Test booking fixture',
+    )
+    booking = await booking_crud.create_booking(
+        obj_in=booking_in,
+        session=session_fixture,
+        user=normal_user,
+    )
+
+    assert booking.id is not None
+    return booking
 
 
 @pytest_asyncio.fixture
@@ -586,3 +609,57 @@ async def test_dish(
     await session_fixture.commit()
     await session_fixture.refresh(dish)
     return dish
+
+
+@pytest_asyncio.fixture
+async def multiple_tables(session_fixture: AsyncSession, test_cafe: Cafe):
+    """Создаёт два стола в кафе."""
+    table_crud = get_table_crud()
+    tables = []
+    for i in range(2):
+        table_in = TableCreate(seats_number=2 + i, description=f'Table {i}')
+        table = await table_crud.create_table(
+            cafe_id=test_cafe.id,
+            obj_in=table_in,
+            session=session_fixture,
+        )
+        tables.append(table)
+    return tables
+
+
+@pytest_asyncio.fixture
+async def multiple_slots(session_fixture: AsyncSession, test_cafe: Cafe):
+    """Создаёт два временных слота с разным временем."""
+    slot_crud = get_slot_crud()
+    base_date = date.today() + timedelta(days=3)
+    slots = []
+    times = [('12:00:00', '14:00:00'), ('15:00:00', '17:00:00')]
+
+    for i, (start, end) in enumerate(times):
+        payload = SlotCreate(
+            date=base_date.isoformat(),
+            start_time=start,
+            end_time=end,
+            description=f'Slot {i}',
+            is_active=True,
+        )
+        slot = await slot_crud.create(
+            payload,
+            session_fixture,
+            cafe_id=test_cafe.id
+        )
+        slots.append(slot)
+
+    return slots
+
+
+@pytest_asyncio.fixture
+async def another_user_token(client_fixture: AsyncClient, another_user: User):
+    """JWT-токен для второго пользователя."""
+    payload = {
+        'name': another_user.email,
+        'password': VALID_PASSWORD,
+    }
+    response = await client_fixture.post('/auth/login', json=payload)
+    assert response.status_code == 200, response.text
+    return response.json()['token']
