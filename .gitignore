@@ -173,7 +173,14 @@ fastapi.db
 
 # База данных
 fastapi.db
+fastapi_db
 /infra/pgdata/
+/infra/test-pgdata/
+
+# Резервные копии
+*.bac
+*.backup
+*~
 
 # Black
 pyproject.toml
