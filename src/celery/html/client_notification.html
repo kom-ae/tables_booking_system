@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Ваше бронирование подтверждено!</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height:1.6; color:#333; margin:0; padding:0; background-color:#f9f9f9;">
+
+  <div style="max-width:600px; margin:20px auto; background:#fff; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); overflow:hidden;">
+
+    <div style="background-color:#8B4513; color:#fff; padding:20px; text-align:center;">
+      <h1 style="margin:0;">🍽 Ваше бронирование</h1>
+    </div>
+
+    <div style="padding:25px;">
+      <table style="width:100%; border-collapse:collapse; margin:15px 0;">
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B4513;">Кафе:</td>
+          <td style="padding:10px;">{cafe_name}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B4513;">Адрес:</td>
+          <td style="padding:10px;">{cafe_address}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B4513;">Телефон:</td>
+          <td style="padding:10px;"><a href="tel:{cafe_phone}" style="color:#333;">{cafe_phone}</a></td>
+        </tr>
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B4513;">Столик:</td>
+          <td style="padding:10px;">{table_description} ({seats_number} мест)</td>
+        </tr>
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B4513;">Дата и время:</td>
+          <td style="padding:10px;">{slot_date} {slot_start} – {slot_end}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B4513;">Количество гостей:</td>
+          <td style="padding:10px;">{guests_number}</td>
+        </tr>
+      </table>
+
+      <div style="background:#fffaf0; padding:15px; border-radius:5px; margin:15px 0;">
+        <h3 style="margin-top:0;">🍴 Выбранное меню:</h3>
+        {menu_items}
+      </div>
+
+      <div style="background:#f0f8ff; padding:15px; border-radius:5px; margin:15px 0; border-left:4px solid #4682b4;">
+        <h3 style="margin-top:0;">💬 Ваш комментарий:</h3>
+        <p>{note}</p>
+      </div>
+    </div>
+
+    <div style="text-align:center; padding:15px; font-size:12px; color:#777; background:#f5f5f5;">
+      Это письмо сгенерировано автоматически. Пожалуйста, не отвечайте на него.
+    </div>
+  </div>
+</body>
+</html>
