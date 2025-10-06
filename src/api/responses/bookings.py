@@ -3,7 +3,6 @@ from fastapi import status
 from src.api.responses.constants import BOOKING_RESPONSES
 from src.schemas.bookings import Booking
 
-
 booking_list_responses = {
     status.HTTP_200_OK: {
         'description': 'Список бронирований',

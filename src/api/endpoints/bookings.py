@@ -16,11 +16,8 @@ from src.core.logger import log_endpoint, logger
 from src.crud.factory import get_booking_crud
 from src.exceptions.bookings import BookingNotFoundException
 from src.models import Booking, User
-from src.schemas.bookings import (
-    Booking as BookingDB,
-    BookingCreate,
-    BookingUpdate
-)
+from src.schemas.bookings import Booking as BookingDB
+from src.schemas.bookings import BookingCreate, BookingUpdate
 
 router = APIRouter()
 booking_crud = get_booking_crud()
@@ -105,7 +102,7 @@ async def create_booking(
         and booking_in.user_id != user.id
     ):
         raise BookingNotFoundException(
-            'Недостаточно прав для создания бронирования',)
+            'Недостаточно прав для создания бронирования')
     return await booking_crud.create_booking(
         obj_in=booking_in,
         session=session,

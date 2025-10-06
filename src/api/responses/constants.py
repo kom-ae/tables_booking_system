@@ -1,6 +1,6 @@
 from src.schemas.action import ActionDB
-from src.schemas.bookings import Booking
 from src.schemas.base import Error
+from src.schemas.bookings import Booking
 from src.schemas.cafes import CafeDB
 from src.schemas.dish import Dish
 

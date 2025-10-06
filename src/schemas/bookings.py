@@ -6,19 +6,18 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from src.constants import MIN_GUESTS_NUMBER
 from src.schemas.base import BaseSchema
-from src.schemas.users import UserShort
 from src.schemas.cafes import CafeShortDB
-from src.schemas.table import TableShort
 from src.schemas.dish import Dish
 from src.schemas.slots import SlotShortDB
-
+from src.schemas.table import TableShort
+from src.schemas.users import UserShort
 
 BOOKING_STATUS_SCHEMA = {
     'oneOf': [
         {'const': 0, 'title': 'booking', 'description': 'Забронировано'},
         {'const': 1, 'title': 'canceled', 'description': 'Отменено'},
         {'const': 2, 'title': 'active', 'description': 'Клиент подошел'},
-    ]
+    ],
 }
 
 
