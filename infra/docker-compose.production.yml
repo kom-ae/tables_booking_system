@@ -37,15 +37,6 @@ services:
       rabbit:
         condition: service_started
 
-  celery:
-    image: python5152plus/tables_booking_system
-    env_file: ../.env
-    depends_on:
-      - backend
-      - rabbit
-    command: celery -A src.celery.app.celery_app worker --loglevel=info
-    restart: unless-stopped
-
   flower:
     image: mher/flower
     env_file: ../.env
