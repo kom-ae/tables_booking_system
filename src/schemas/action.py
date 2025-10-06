@@ -2,7 +2,12 @@ from datetime import datetime
 from typing import Any, Optional, Type
 
 from pydantic import (
-    BaseModel, Field, ValidationInfo, field_validator, ConfigDict)
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+)
 
 from src.schemas.cafes import CafeShortDB
 

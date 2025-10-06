@@ -1,146 +1,71 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Новое бронирование</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-        }
-
-        .email-container {
-            max-width: 600px;
-            margin: 20px auto;
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .header {
-            background-color: #8B4513;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .content {
-            padding: 25px;
-        }
-
-        .detail-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-
-        .detail-table td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            vertical-align: top;
-        }
-
-        .detail-table .label {
-            font-weight: bold;
-            color: #8B4513;
-            width: 30%;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 15px;
-            font-size: 12px;
-            color: #777;
-            background-color: #f5f5f5;
-        }
-
-        .menu-section {
-            background-color: #fffaf0;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-
-        .menu-item {
-            margin-bottom: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px dashed #ddd;
-        }
-
-        .menu-item:last-child {
-            border-bottom: none;
-        }
-
-        .message-section {
-            background-color: #f0f8ff;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
-            border-left: 4px solid #4682b4;
-        }
-
-        .highlight {
-            color: #8B4513;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Новое бронирование!</title>
 </head>
+<body style="font-family: Arial, sans-serif; line-height:1.6; color:#333; margin:0; padding:0; background-color:#f9f9f9;">
 
-<body>
-    <div class="email-container">
-        <div class="header">
-            <h1>🍽️ Новое бронирование</h1>
-        </div>
+  <div style="max-width:600px; margin:20px auto; background:#fff; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); overflow:hidden;">
 
-        <div class="content">
-            <table class="detail-table">
-                <tr>
-                    <td class="label">Клиент:</td>
-                    <td class="highlight">{client_name}</td>
-                </tr>
-                <tr>
-                    <td class="label">Телефон:</td>
-                    <td><a href="tel:{phone}">{phone}</a></td>
-                </tr>
-                <tr>
-                    <td class="label">Email:</td>
-                    <td><a href="mailto:{email}">{email}</a></td>
-                </tr>
-                <tr>
-                    <td class="label">Стол на:</td>
-                    <td>{guests_count} человек</td>
-                </tr>
-                <tr>
-                    <td class="label">Время:</td>
-                    <td class="highlight">{time_slot_start} - {time_slot_end}</td>
-                </tr>
-            </table>
-
-        <div class="menu-section">
-            <h3>🍴 Выбранное меню:</h3>
-            <div class="menu-items">
-                {menu}
-            </div>
-        </div>
-
-
-        <div class="message-section">
-            <h3>💬 Сообщение от клиента:</h3>
-            <p>{message}</p>
-        </div>
-        </div>
-
-        <div class="footer">
-            <p>Это письмо сгенерировано автоматически. Пожалуйста, не отвечайте на него.</p>
-        </div>
+    <div style="background-color:#8B0000; color:#fff; padding:20px; text-align:center;">
+      <h1 style="margin:0;">📢 Новое бронирование</h1>
     </div>
-</body>
 
+    <div style="padding:25px;">
+      <h3 style="margin-top:0; color:#8B0000;">Информация о клиенте</h3>
+      <table style="width:100%; border-collapse:collapse; margin:15px 0;">
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B0000;">Имя (username):</td>
+          <td style="padding:10px;">{user_username}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B0000;">Email:</td>
+          <td style="padding:10px;"><a href="mailto:{user_email}" style="color:#333;">{user_email}</a></td>
+        </tr>
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B0000;">Телефон:</td>
+          <td style="padding:10px;"><a href="tel:{user_phone}" style="color:#333;">{user_phone}</a></td>
+        </tr>
+      </table>
+
+      <h3 style="margin-top:0; color:#8B0000;">Детали бронирования</h3>
+      <table style="width:100%; border-collapse:collapse; margin:15px 0;">
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B0000;">Кафе:</td>
+          <td style="padding:10px;">{cafe_name}, {cafe_address}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B0000;">Телефон кафе:</td>
+          <td style="padding:10px;">{cafe_phone}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B0000;">Столик:</td>
+          <td style="padding:10px;">{table_description} ({seats_number} мест)</td>
+        </tr>
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B0000;">Дата и время:</td>
+          <td style="padding:10px;">{slot_date} {slot_start} – {slot_end}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B0000;">Количество гостей:</td>
+          <td style="padding:10px;">{guests_number}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px; font-weight:bold; color:#8B0000;">Комментарий клиента:</td>
+          <td style="padding:10px;">{note}</td>
+        </tr>
+      </table>
+
+      <div style="background:#fffaf0; padding:15px; border-radius:5px; margin:15px 0;">
+        <h3 style="margin-top:0;">🍴 Заказанное меню:</h3>
+        {menu_items}
+      </div>
+    </div>
+
+    <div style="text-align:center; padding:15px; font-size:12px; color:#777; background:#f5f5f5;">
+      Это письмо сгенерировано автоматически.
+    </div>
+  </div>
+</body>
 </html>

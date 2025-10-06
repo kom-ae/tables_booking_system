@@ -6,6 +6,8 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from src.celery.notifications import send_notification
+from src.celery.types import NotificationType
 from src.core.logger import logger
 from src.crud.base import CRUDBase
 from src.exceptions.bookings import (
@@ -193,6 +195,9 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
             await self._commit(session, user)
             await session.refresh(db_obj)
             logger.info(f'Создано бронирование ID={db_obj.id}', user=user)
+            send_notification.delay(
+                db_obj.as_dict(), NotificationType.CREATE.value,
+            )
             return db_obj
         except AppException:
             await session.rollback()
@@ -253,10 +258,20 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
             await self._commit(session, user)
             await session.refresh(db_obj)
             logger.info(f'Обновлено бронирование ID={db_obj.id}', user=user)
+
+            is_active = getattr(obj_in, 'is_active', True)
+            notif_type = (
+                NotificationType.CANCEL.value if (
+                    is_active is False)
+                else NotificationType.UPDATE.value)
+            send_notification.delay(db_obj.as_dict(), notif_type)
+
             return db_obj
+
         except (DBIntegrityException, DBException):
             await session.rollback()
             raise
+
         except Exception as error:
             await session.rollback()
             logger.error(f'Ошибка при обновлении бронирования: {error}',
