@@ -1,0 +1,1 @@
+/usr/local/bin/postgres "-c" "max_connections=200" "-c" "shared_buffers=128MB" "-c" "effective_cache_size=256MB" "-c" "maintenance_work_mem=32MB" "-c" "checkpoint_completion_target=0.7" "-c" "wal_buffers=8MB" "-c" "default_statistics_target=100" "-c" "log_statement=none" "-c" "log_min_duration_statement=-1"

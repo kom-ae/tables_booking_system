@@ -1,0 +1,33 @@
+FROM python:3.11-slim
+
+# Устанавливаем системные зависимости
+RUN apt-get update && apt-get install -y \
+    gcc \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем файлы зависимостей
+COPY requirements.txt .
+COPY requirements_style.txt .
+
+# Устанавливаем Python зависимости
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements_style.txt
+
+# Копируем исходный код
+COPY . .
+
+# Устанавливаем переменные окружения для тестов
+ENV PYTHONPATH=/app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Создаем директорию для логов тестов
+RUN mkdir -p /app/logs
+
+# Команда по умолчанию для запуска тестов
+# Используем параллельное выполнение с количеством worker'ов равным количеству CPU
+CMD ["python", "-m", "pytest", "/app/tests", "-v", "--tb=short", "-n", "auto"]
