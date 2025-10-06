@@ -18,13 +18,15 @@ from src.core.dependencies import (
 from src.core.logger import logger
 from src.crud.action import actions_crud
 from src.crud.factory import get_cafe_crud, get_dish_crud, get_slot_crud
+from src.exceptions.cafe import InvalidNameCafeException
 from src.exceptions.db import DBException, DBIntegrityException
 from src.exceptions.slots import (
     CafeOrSlotNotFoundException,
     SlotNotFoundException,
 )
+from src.exceptions.user import InvalidPhoneException
 from src.models import Action, Cafe, Dishe, Slot, User
-from src.schemas.cafes import CafeCreate, CafeDB
+from src.schemas.cafes import CafeCreate, CafeDB, CafeUpdate
 from src.schemas.dish import Dish, DishCreate
 
 cafe_crud = get_cafe_crud()
@@ -33,7 +35,7 @@ dish_crud = get_dish_crud()
 
 
 async def check_duplicate_cafe(
-    cafe: CafeCreate,
+    cafe: Union[CafeCreate, CafeUpdate],
     session: AsyncSession,
     user: Optional[User] = None,
 ) -> None:
@@ -101,6 +103,22 @@ async def check_action_exist(
     return action
 
 
+async def handler_error(
+    msg_log: str,
+    func: Callable[..., Any],
+    err: Any,
+    session: AsyncSession,
+    user: User,
+) -> None:
+    """Пишет в лог ошибки. Откатывает изменения."""
+    logger.error(f'Операция "{msg_log}": '
+                 f'Ошибка выполнения функции {func.__name__} '
+                 f'в модуле {func.__module__}: {str(err)}',
+                 user=user,
+                 )
+    await session.rollback()
+
+
 async def handler_run_crud_cafe(
     func: Callable[..., Any],
     **kwargs: Any,
@@ -130,26 +148,20 @@ async def handler_run_crud_cafe(
             logger.info(msg_log_full, user=user)
 
         return obj
+    except (InvalidPhoneException, InvalidNameCafeException) as err:
+        await handler_error(msg_log, func, err, session, user)
+        raise InvalidPhoneException(str(err))
+    except InvalidNameCafeException as err:
+        await handler_error(msg_log, func, err, session, user)
+        raise InvalidNameCafeException(str(err))
     except (DBIntegrityException, DBException) as err:
-        await session.rollback()
-        logger.error(
-            f'Операция "{msg_log}": '
-            f'Ошибка выполнения функции {func.__name__} '
-            f'в модуле {func.__module__}: {str(err)}',
-            user=user,
-        )
+        # Лог пишется в базовом CRUD в _commit
         raise HTTPException(
             status_code=err.status_code,
             detail='Внутренняя ошибка сервера.',
         )
     except Exception as err:
-        await session.rollback()
-        logger.error(
-            f'Операция "{msg_log}": '
-            f'Ошибка выполнения функции {func.__name__} '
-            f'в модуле {func.__module__}: {str(err)}',
-            user=user,
-        )
+        await handler_error(msg_log, func, err, session, user)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail='Внутренняя ошибка сервера.',

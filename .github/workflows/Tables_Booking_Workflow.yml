@@ -36,6 +36,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r ./src/requirements.txt
       - name: run pytest
+        env:
+          DB_HOST: host
+          DB_PORT: 0000
+          DB_NAME: DB_NAME
+          DB_USER: DB_USER
+          DB_PASSWORD: DB_PASSWORD
+          SECRET: SECRET
+          JWT_ALGORITHM: HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES: 1
         run: python -m pytest tests/ -v -m "not skip" 
 
       - name: Send message
@@ -87,9 +96,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: 
       - build_backend_and_push_to_docker_hub
-      # - build_frontend_and_push_to_docker_hub
-      # - build_gateway_and_push_to_docker_hub
-    # environment: production
     steps:
     - name: Checkout repo
       uses: actions/checkout@v5
