@@ -166,10 +166,10 @@ cython_debug/
 fastapi.db
 
 #Tests
-Tests
-tests
-Test
-test
+# Tests
+# tests
+# Test
+# test
 
 # База данных
 fastapi.db
