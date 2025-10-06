@@ -183,3 +183,5 @@ app.log
 src.log
 app_temp.log
 logs
+
+TEST_COVERAGE_SUMMARY.md

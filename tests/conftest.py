@@ -5,7 +5,7 @@
 
 import os
 import uuid
-from datetime import date, time
+from datetime import time
 from types import SimpleNamespace
 from typing import Any, AsyncGenerator, Dict
 
@@ -236,7 +236,8 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
     Каждый тест выполняется в своей транзакции, которая автоматически
     откатывается в конце теста для обеспечения изоляции.
 
-    Поддерживает множественные commit через автоматическое создание новых savepoint.
+    Поддерживает множественные commit через автоматическое создание
+    новых savepoint.
     """
     # Создаем фабрику сессий
     session_factory = async_sessionmaker(
@@ -253,8 +254,14 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
             original_commit = session.commit
 
             async def savepoint_commit():
-                """Commit через savepoint для поддержки множественных commit в тестах."""
-                if session.in_transaction() and session.in_nested_transaction():
+                """
+                Commit через savepoint для поддержки множественных
+                commit в тестах.
+                """
+                if (
+                    session.in_transaction()
+                    and session.in_nested_transaction()
+                ):
                     # Если мы в savepoint, просто flush
                     await session.flush()
                 else:
@@ -526,6 +533,21 @@ async def user_token(
     return response.json()['token']
 
 
+@pytest_asyncio.fixture
+async def another_user_token(
+    client_fixture: AsyncClient,
+    another_user: User,
+) -> str:
+    """Возвращает токен авторизации второго пользователя."""
+    payload = Auth(
+        name=another_user.email,
+        password=VALID_PASSWORD,
+    ).model_dump()
+    response = await client_fixture.post('/auth/login', json=payload)
+    assert response.status_code == status.HTTP_200_OK
+    return response.json()['token']
+
+
 # -----------------------
 # Утилиты для тестов
 # -----------------------
@@ -613,9 +635,12 @@ async def test_time_slot(
 
     Использует транзакционную сессию для изоляции.
     """
+    from datetime import datetime, timedelta
     slot_crud = get_slot_crud()
+    # Используем дату в будущем, чтобы избежать ошибки "прошедшая дата"
+    future_date = (datetime.now() + timedelta(days=7)).date()
     payload = SlotCreate(
-        date=date(2025, 3, 10),
+        date=future_date,
         start_time=time(12, 0, 0),
         end_time=time(14, 0, 0),
         description=f"Fixture slot {uuid.uuid4().hex[:8]}",
@@ -644,7 +669,8 @@ async def test_action(db_session: AsyncSession, test_cafe: Cafe) -> Any:
     action_data = dict(TEST_ACTIONS['action1'])
 
     action_in = ActionCreate(
-        cafe=test_cafe.id, description=f"{action_data['description']} {unique_suffix}"
+        cafe=test_cafe.id,
+        description=f"{action_data['description']} {unique_suffix}",
     )
 
     action = await actions_crud.create_action(
@@ -660,10 +686,37 @@ async def test_booking(
     db_session: AsyncSession,
     normal_user: User,
     test_cafe: Cafe,
-) -> None:
-    """Фикстура для тестового бронирования (когда будет реализовано)."""
-    # TODO: Реализовать когда модель Booking будет готова
-    pass
+    test_table: Table,
+    test_time_slot: Any,
+):
+    """
+    Фикстура для тестового бронирования.
+
+    Создает реальное бронирование для использования в тестах.
+    """
+    from src.crud.bookings import CRUDBooking
+    from src.models.booking import Booking
+    from src.schemas.bookings import BookingCreate
+
+    bookings_crud = CRUDBooking(Booking)
+
+    booking_in = BookingCreate(
+        user_id=normal_user.id,
+        cafe_id=test_cafe.id,
+        tables=[test_table.id],
+        slots=[test_time_slot.id],
+        guests_number=4,
+        menu=[],
+        note='Test booking',
+    )
+
+    booking = await bookings_crud.create_booking(
+        obj_in=booking_in,
+        session=db_session,
+        user=normal_user,
+    )
+
+    return booking
 
 
 @pytest_asyncio.fixture
@@ -687,3 +740,68 @@ async def test_dish(db_session: AsyncSession, test_cafe: Cafe) -> Any:
     await db_session.flush()
     await db_session.refresh(dish)
     return dish
+
+
+@pytest_asyncio.fixture
+async def multiple_tables(
+    db_session: AsyncSession, test_cafe: Cafe
+) -> list[Table]:
+    """
+    Фикстура для создания нескольких тестовых столов.
+
+    Используется для тестирования множественного бронирования.
+    """
+    table_crud = get_table_crud()
+    tables = []
+    for i in range(2):
+        table_in = TableCreate(
+            seats_number=4,
+            description=f'Test table {i+1}',
+            is_active=True,
+        )
+        table = await table_crud.create_table(
+            cafe_id=test_cafe.id,
+            obj_in=table_in,
+            session=db_session,
+        )
+        tables.append(table)
+    return tables
+
+
+@pytest_asyncio.fixture
+async def multiple_slots(
+    db_session: AsyncSession, test_cafe: Cafe
+) -> list[Any]:
+    """
+    Фикстура для создания нескольких временных слотов.
+
+    Используется для тестирования множественного бронирования.
+    """
+    from datetime import datetime, timedelta
+
+    slot_crud = get_slot_crud()
+    slots = []
+    # Используем дату в будущем, чтобы избежать ошибки
+    # "прошедшая дата"
+    future_date = (datetime.now() + timedelta(days=7)).date()
+    for i in range(2):
+        payload = SlotCreate(
+            date=future_date,
+            start_time=time(12 + i * 2, 0, 0),
+            end_time=time(14 + i * 2, 0, 0),
+            description=f"Fixture slot {i+1} {uuid.uuid4().hex[:8]}",
+            is_active=True,
+        )
+        slot_obj = await slot_crud.create(
+            payload,
+            db_session,
+            cafe_id=test_cafe.id,
+        )
+        slots.append(
+            SimpleNamespace(
+                id=slot_obj.id,
+                start_time=slot_obj.start_time.strftime('%H:%M:%S'),
+                end_time=slot_obj.end_time.strftime('%H:%M:%S'),
+            )
+        )
+    return slots
