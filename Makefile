@@ -8,7 +8,7 @@ help: ## Показать справку
 
 test-docker: ## Запустить тесты в Docker с PostgreSQL
 	@echo "🚀 Запуск тестов в Docker с PostgreSQL..."
-	@./run_tests_docker.sh
+	@./run_tests.sh --docker-only
 
 test-local: ## Запустить тесты локально (требует локальную PostgreSQL)
 	@echo "🏃 Запуск тестов локально..."

@@ -180,17 +180,17 @@ INVALID_DATA = {
 def pytest_configure(config):
     """Настройка pytest перед запуском тестов."""
     # Получаем ID worker'а
-    worker_id = os.environ.get("PYTEST_XDIST_WORKER", "master")
-    if worker_id != "master":
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'master')
+    if worker_id != 'master':
         print(f"[Worker {worker_id}] Configuring pytest...")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope='session', autouse=True)
 def setup_test_database(request):
     """Настройка тестовой базы данных для worker'а (session scope)."""
     import asyncio
 
-    worker_id = os.environ.get("PYTEST_XDIST_WORKER", "master")
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'master')
     print(f"[{worker_id}] Setting up test database...")
 
     # Создаем базу данных для worker'а
@@ -224,7 +224,7 @@ def setup_test_database(request):
 @pytest_asyncio.fixture
 async def db_engine():
     """Движок базы данных для текущего worker'а."""
-    worker_id = os.environ.get("PYTEST_XDIST_WORKER", "master")
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'master')
     return db_manager.get_engine(worker_id)
 
 
@@ -235,7 +235,7 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
 
     Каждый тест выполняется в своей транзакции, которая автоматически
     откатывается в конце теста для обеспечения изоляции.
-    
+
     Поддерживает множественные commit через автоматическое создание новых savepoint.
     """
     # Создаем фабрику сессий
@@ -251,7 +251,7 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
         async with session.begin():
             # Переопределяем commit для использования savepoints
             original_commit = session.commit
-            
+
             async def savepoint_commit():
                 """Commit через savepoint для поддержки множественных commit в тестах."""
                 if session.in_transaction() and session.in_nested_transaction():
@@ -260,16 +260,16 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
                 else:
                     # Если нет активного savepoint, создаем новый
                     await session.flush()
-                    
+
             session.commit = savepoint_commit
-            
+
             # Создаем первый savepoint
             async with session.begin_nested():
                 yield session
-            
+
             # Восстанавливаем оригинальный commit
             session.commit = original_commit
-            
+
             # Автоматически откатываем транзакцию в конце теста
             await session.rollback()
 
@@ -324,14 +324,14 @@ async def admin_user(db_session: AsyncSession) -> User:
     unique_suffix = str(uuid.uuid4())[:8]
     # Генерируем уникальный телефон с 10 цифрами после +7
     phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
-    admin_data = TEST_USERS["admin"]
+    admin_data = TEST_USERS['admin']
     user = User(
         username=f"{admin_data['username']}_{unique_suffix}",
         email=f"{unique_suffix}_{admin_data['email']}",
         phone=f"+7{phone_suffix}",
-        password=PasswordService.hash_password(admin_data["password"]),
-        role=admin_data["role"],
-        tg_id=admin_data.get("tg_id"),
+        password=PasswordService.hash_password(admin_data['password']),
+        role=admin_data['role'],
+        tg_id=admin_data.get('tg_id'),
     )
     db_session.add(user)
     await db_session.flush()
@@ -350,14 +350,14 @@ async def manager_user(db_session: AsyncSession) -> User:
     unique_suffix = str(uuid.uuid4())[:8]
     # Генерируем уникальный телефон с 10 цифрами после +7
     phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
-    manager_data = TEST_USERS["manager"]
+    manager_data = TEST_USERS['manager']
     user = User(
         username=f"{manager_data['username']}_{unique_suffix}",
         email=f"{unique_suffix}_{manager_data['email']}",
         phone=f"+7{phone_suffix}",
-        password=PasswordService.hash_password(manager_data["password"]),
-        role=manager_data["role"],
-        tg_id=manager_data.get("tg_id"),
+        password=PasswordService.hash_password(manager_data['password']),
+        role=manager_data['role'],
+        tg_id=manager_data.get('tg_id'),
     )
     db_session.add(user)
     await db_session.flush()
@@ -376,14 +376,14 @@ async def normal_user(db_session: AsyncSession) -> User:
     unique_suffix = str(uuid.uuid4())[:8]
     # Генерируем уникальный телефон с 10 цифрами после +7
     phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
-    user_data = TEST_USERS["user"]
+    user_data = TEST_USERS['user']
     user = User(
         username=f"{user_data['username']}_{unique_suffix}",
         email=f"{unique_suffix}_{user_data['email']}",
         phone=f"+7{phone_suffix}",
-        password=PasswordService.hash_password(user_data["password"]),
-        role=user_data["role"],
-        tg_id=user_data.get("tg_id"),
+        password=PasswordService.hash_password(user_data['password']),
+        role=user_data['role'],
+        tg_id=user_data.get('tg_id'),
     )
     db_session.add(user)
     await db_session.flush()
@@ -402,14 +402,14 @@ async def another_user(db_session: AsyncSession) -> User:
     unique_suffix = str(uuid.uuid4())[:8]
     # Генерируем уникальный телефон с 10 цифрами после +7
     phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
-    user_data = TEST_USERS["user2"]
+    user_data = TEST_USERS['user2']
     user = User(
         username=f"{user_data['username']}_{unique_suffix}",
         email=f"{unique_suffix}_{user_data['email']}",
         phone=f"+7{phone_suffix}",
-        password=PasswordService.hash_password(user_data["password"]),
-        role=user_data["role"],
-        tg_id=user_data.get("tg_id"),
+        password=PasswordService.hash_password(user_data['password']),
+        role=user_data['role'],
+        tg_id=user_data.get('tg_id'),
     )
     db_session.add(user)
     await db_session.flush()
@@ -433,13 +433,13 @@ async def test_cafe(db_session: AsyncSession) -> Cafe:
     unique_suffix = str(uuid.uuid4())[:8]
     # Генерируем уникальный телефон с 10 цифрами после +7
     phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
-    cafe_data = dict(TEST_CAFES["cafe1"])
+    cafe_data = dict(TEST_CAFES['cafe1'])
     cafe_in = CafeCreate(
         name=f"{cafe_data['name']} {unique_suffix}",
         address=f"{cafe_data['address']} {unique_suffix}",
         phone=f"+7{phone_suffix}",
-        description=cafe_data["description"],
-        photo="",
+        description=cafe_data['description'],
+        photo='',
         managers=[],
     )
     cafe_db = await get_cafe_crud().create(cafe_in, db_session)
@@ -460,13 +460,13 @@ async def test_cafe2(db_session: AsyncSession) -> Cafe:
     unique_suffix = str(uuid.uuid4())[:8]
     # Генерируем уникальный телефон с 10 цифрами после +7
     phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
-    cafe_data = dict(TEST_CAFES["cafe2"])
+    cafe_data = dict(TEST_CAFES['cafe2'])
     cafe_in = CafeCreate(
         name=f"{cafe_data['name']} {unique_suffix}",
         address=f"{cafe_data['address']} {unique_suffix}",
         phone=f"+7{phone_suffix}",
-        description=cafe_data["description"],
-        photo="",
+        description=cafe_data['description'],
+        photo='',
         managers=[],
     )
     cafe_db = await get_cafe_crud().create(cafe_in, db_session)
@@ -491,9 +491,9 @@ async def admin_token(
         name=admin_user.email,
         password=VALID_PASSWORD,
     ).model_dump()
-    response = await client_fixture.post("/auth/login", json=payload)
+    response = await client_fixture.post('/auth/login', json=payload)
     assert response.status_code == status.HTTP_200_OK
-    return response.json()["token"]
+    return response.json()['token']
 
 
 @pytest_asyncio.fixture
@@ -506,9 +506,9 @@ async def manager_token(
         name=manager_user.email,
         password=VALID_PASSWORD,
     ).model_dump()
-    response = await client_fixture.post("/auth/login", json=payload)
+    response = await client_fixture.post('/auth/login', json=payload)
     assert response.status_code == status.HTTP_200_OK
-    return response.json()["token"]
+    return response.json()['token']
 
 
 @pytest_asyncio.fixture
@@ -521,9 +521,9 @@ async def user_token(
         name=normal_user.email,
         password=VALID_PASSWORD,
     ).model_dump()
-    response = await client_fixture.post("/auth/login", json=payload)
+    response = await client_fixture.post('/auth/login', json=payload)
     assert response.status_code == status.HTTP_200_OK
-    return response.json()["token"]
+    return response.json()['token']
 
 
 # -----------------------
@@ -545,7 +545,7 @@ def assert_error_response(
     assert response.status_code == expected_status
     if expected_message:
         data = response.json()
-        assert "message" in data or "error" in data
+        assert 'message' in data or 'error' in data
 
 
 def assert_success_response(
@@ -565,13 +565,13 @@ def get_endpoint_url(endpoint_type: str, action: str, **kwargs) -> str:
 
 def get_cafe_endpoint_url(action: str, cafe_id: int, **kwargs) -> str:
     """Возвращает URL эндпоинта кафе с подстановкой параметров."""
-    endpoint = ENDPOINTS["cafes"][action]
+    endpoint = ENDPOINTS['cafes'][action]
     return endpoint.format(cafe_id=cafe_id, **kwargs)
 
 
 def get_user_endpoint_url(action: str, user_id: int, **kwargs) -> str:
     """Возвращает URL эндпоинта пользователя с подстановкой параметров."""
-    endpoint = ENDPOINTS["users"][action]
+    endpoint = ENDPOINTS['users'][action]
     return endpoint.format(user_id=user_id, **kwargs)
 
 
@@ -591,7 +591,7 @@ async def test_table(db_session: AsyncSession, test_cafe: Cafe) -> Table:
     """
     table_in = TableCreate(
         seats_number=1,
-        description="Test table",
+        description='Test table',
         is_active=True,
     )
     table_crud = get_table_crud()
@@ -628,8 +628,8 @@ async def test_time_slot(
     )
     return SimpleNamespace(
         id=slot_obj.id,
-        start_time=slot_obj.start_time.strftime("%H:%M:%S"),
-        end_time=slot_obj.end_time.strftime("%H:%M:%S"),
+        start_time=slot_obj.start_time.strftime('%H:%M:%S'),
+        end_time=slot_obj.end_time.strftime('%H:%M:%S'),
     )
 
 
@@ -641,7 +641,7 @@ async def test_action(db_session: AsyncSession, test_cafe: Cafe) -> Any:
     Использует транзакционную сессию для изоляции.
     """
     unique_suffix = str(uuid.uuid4())[:8]
-    action_data = dict(TEST_ACTIONS["action1"])
+    action_data = dict(TEST_ACTIONS['action1'])
 
     action_in = ActionCreate(
         cafe=test_cafe.id, description=f"{action_data['description']} {unique_suffix}"
@@ -675,12 +675,12 @@ async def test_dish(db_session: AsyncSession, test_cafe: Cafe) -> Any:
     """
     unique_suffix = str(uuid.uuid4())[:8]
     dish_data = {
-        "cafe_id": test_cafe.id,
-        "name": f"Test Dish {unique_suffix}",
-        "description": "Test dish description",
-        "price": 100.00,
-        "photo": "test_photo.jpg",
-        "is_active": True,
+        'cafe_id': test_cafe.id,
+        'name': f'Test Dish {unique_suffix}',
+        'description': 'Test dish description',
+        'price': 100.00,
+        'photo': 'test_photo.jpg',
+        'is_active': True,
     }
     dish = Dishe(**dish_data)
     db_session.add(dish)
