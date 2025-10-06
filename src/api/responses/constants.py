@@ -1,4 +1,5 @@
 from src.schemas.action import ActionDB
+from src.schemas.bookings import Booking
 from src.schemas.base import Error
 from src.schemas.cafes import CafeDB
 from src.schemas.dish import Dish
@@ -70,6 +71,30 @@ DISH_RESPONSES = {
     },
     404: {
         'description': 'Блюдо не найдено',
+        'model': Error,
+    },
+}
+
+
+BOOKING_RESPONSES = {
+    200: {
+        'description': 'Данные бронирования',
+        'model': Booking,
+    },
+    201: {
+        'description': 'Данные созданного бронирования',
+        'model': Booking,
+    },
+    400: {
+        'description': 'Неверный формат запроса',
+        'model': Error,
+    },
+    401: {
+        'description': 'Необходима авторизация',
+        'model': Error,
+    },
+    404: {
+        'description': 'Бронирование не найдено',
         'model': Error,
     },
 }

@@ -5,3 +5,4 @@ from .dishes import router as dishes_router  # noqa
 from .slots import router as slots_router  # noqa
 from .tables import router as tables_router  # noqa
 from .users import router as users_router  # noqa
+from .bookings import router as bookings_router  # noqa

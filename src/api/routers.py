@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from src.api.endpoints import (
     actions_router,
     auth_router,
+    bookings_router,
     cafes_router,
     dishes_router,
     slots_router,
@@ -52,4 +53,10 @@ main_router.include_router(
     dishes_router,
     prefix='/dishes',
     tags=['Блюда'],
+)
+
+main_router.include_router(
+    bookings_router,
+    prefix='/booking',
+    tags=['Бронирования'],
 )
