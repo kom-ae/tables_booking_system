@@ -4,6 +4,7 @@ from src.constants import (
     EMAIL_MAX_LENGTH,
     EMAIL_MIN_LENGTH,
     EMAIL_REGEX,
+    NAME_REGEX,
     PASSWORD_REGEX,
     PHONE_REGEX,
     TG_ID_MAX_LENGTH,
@@ -14,6 +15,10 @@ from src.constants import (
     USERNAME_REGEX,
 )
 from src.core.logger import logger
+from src.exceptions.cafe import (
+    InvalidFieldsCafeException,
+    InvalidNameCafeException,
+)
 from src.exceptions.user import (
     AppException,
     InvalidEmailException,
@@ -137,5 +142,14 @@ def telegram_id_validator(
 def cafe_update_field_is_not_null(value: Any) -> Any:
     """Проверка полей на null."""
     if value is None:
-        raise ValueError('Поле не может быть null.')
-    return value
+        raise InvalidFieldsCafeException()
+    return value.strip() if isinstance(value, str) else value
+
+
+def cafe_name_validate(value: str) -> str:
+    """Проверка названия кафе."""
+    if value is None:
+        raise InvalidFieldsCafeException('Имя не может быть null.')
+    if not NAME_REGEX.match(value):
+        raise InvalidNameCafeException()
+    return value.strip()

@@ -13,6 +13,7 @@ from src.constants import (
 )
 from src.schemas.base import CafeBase
 from src.schemas.validators import (
+    cafe_name_validate,
     cafe_update_field_is_not_null,
     phone_validator,
 )
@@ -33,6 +34,7 @@ class CafeCreate(CafeBase):
     managers: Optional[list[int]] = Field([], title='ID менеджера')
 
     _validate_phone = field_validator('phone', mode='before')(phone_validator)
+    _validate_name = field_validator('name', mode='before')(cafe_name_validate)
 
 
 class CafeUpdate(BaseModel):
@@ -67,9 +69,7 @@ class CafeUpdate(BaseModel):
         extra = 'forbid'
 
     _validate_fields = field_validator(
-        'name',
         'address',
-        'phone',
         'is_active',
         'managers',
         'description',
@@ -78,6 +78,7 @@ class CafeUpdate(BaseModel):
     )(cafe_update_field_is_not_null)
 
     _validate_phone = field_validator('phone', mode='before')(phone_validator)
+    _validate_name = field_validator('name', mode='before')(cafe_name_validate)
 
 
 class CafeShortDB(CafeBase):
