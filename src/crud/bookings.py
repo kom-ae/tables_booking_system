@@ -1,7 +1,7 @@
+import asyncio
 from datetime import datetime
 from typing import List, Optional
 
-import asyncio
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -9,16 +9,15 @@ from sqlalchemy.orm import selectinload
 from src.core.logger import logger
 from src.crud.base import CRUDBase
 from src.exceptions.bookings import (
-    BookingNotFoundException,
     BookingDateException,
+    BookingNotFoundException,
     BookingOverlapException,
     BookingResourceNotFoundException,
     BookingUpdateForbiddenException,
 )
 from src.exceptions.db import AppException, DBException, DBIntegrityException
-from src.models import Booking, Cafe, Slot, Table, Dishe, User
-from src.models.booking import booking_slot
-from src.schemas.bookings import BookingCreate, BookingUpdate, BookingStatus
+from src.models import Booking, Cafe, Dishe, Slot, Table, User
+from src.schemas.bookings import BookingCreate, BookingStatus, BookingUpdate
 
 
 class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
@@ -68,14 +67,14 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
         bookings = result.scalars().all()
         logger.info(
             f'Получен список бронирований: {len(bookings)} записей '
-            f'(show_all={show_all}, cafe_id={cafe_id}, user_id={user_id})'
+            f'(show_all={show_all}, cafe_id={cafe_id}, user_id={user_id})',
         )
         return bookings
 
     async def _fetch_related_objects(
         self,
         session: AsyncSession,
-        model,
+        model: Optional[Table],
         ids: Optional[List[int]],
     ) -> list:
         """Загружает связанные объекты по списку ID."""
@@ -93,8 +92,7 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
         table_ids: List[int],
         exclude_booking_id: Optional[int] = None,
     ) -> None:
-        """
-        Проверяет, заняты ли выбранные слоты или столы в кафе.
+        """Проверяет, заняты ли выбранные слоты или столы в кафе.
 
         Параметр exclude_booking_id нужен, чтобы при обновлении
         не вызывать пересечение с самим собой.

@@ -21,7 +21,7 @@ from src.crud.factory import (
     get_booking_crud,
     get_cafe_crud,
     get_dish_crud,
-    get_slot_crud
+    get_slot_crud,
 )
 from src.exceptions.bookings import BookingNotFoundException
 from src.exceptions.db import DBException, DBIntegrityException
@@ -317,8 +317,7 @@ async def booking_exists(
     session: AsyncSession = Depends(get_async_session),
 ) -> Booking:
     """Возвращает бронирование по ID или ошибку 404."""
-    booking = await booking_crud.get_booking_id_or_404(booking_id, session)
-    return booking
+    return await booking_crud.get_booking_id_or_404(booking_id, session)
 
 
 async def visible_booking_for_user(

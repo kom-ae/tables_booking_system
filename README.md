@@ -1,6 +1,6 @@
 # 🍽 Tables Booking System
-Tables Booking System — это веб-приложение для онлайн-бронирования столиков в ресторанах.
-Система позволяет пользователям искать свободные столики, бронировать их на удобное время, а администраторам — управлять заведением и бронированиями.
+> Веб-приложение для онлайн-бронирования столиков в ресторанах.
+> Пользователи могут искать и бронировать столики, а администраторы — управлять заведениями и бронированиями.
 
 ## 🚀 Основной функционал
 
@@ -33,64 +33,85 @@ Email/Telegram-уведомления о создании и изменении 
 ### 📂 Структура проекта
 ```bash
 .
-├── alembic/                  # Миграции базы данных
+├── alembic/                     # Миграции БД
 │   ├── env.py
-│   ├── README
-│   ├── script.py.mako
 │   └── versions/
+│       ├── 75a4c3ca3d56_init_schema.py
+│       └── dd97e7701592_.py
 │
-├── infra/                    # Инфраструктура и докер
+├── infra/                       # Инфраструктура и деплой
 │   ├── docker-compose.local.yml
 │   ├── docker-compose.production.yml
-│   ├── docker-compose.prod.yml.bac
+│   ├── pgdata/                  # Данные PostgreSQL
 │   └── requirements.txt
 │
-├── logs/                     # Логи приложения
-│   └── app.log
-│
-├── nginx/                    # Конфигурация Nginx
+├── nginx/                       # Конфигурация Nginx
 │   ├── local.conf
 │   └── prod.conf
 │
-├── src/                          # Исходный код приложения
-│   ├── api/                      # Роуты (FastAPI endpoints)
-│   ├── constants.py
-│   ├── core/                     # Настройки, логгер, зависимости
-│   ├── crud/                     # CRUD-операции
-│   ├── exceptions/               # Кастомные исключения
-│   ├── models/                   # SQLAlchemy модели
-│   ├── schemas/                  # Pydantic-схемы
-│   ├── services/                 # Бизнес-логика
-│   ├── main.py                   # Точка входа FastAPI
-│   ├── Dockerfile.local          # Dockerfile для локалки
-│   ├── Dockerfile.prod           # Dockerfile для продакшена
-│   ├── create_superuser_cli.py   # Скрипт создания суперюзера на проде
-│   └── AuthJWT.md                # Документация по Auth/JWT
-└── requirements.txt              # Зависимости для src
+├── src/                         # Исходный код приложения
+│   ├── api/                     # Эндпоинты FastAPI
+│   │   ├── endpoints/
+│   │   ├── responses/
+│   │   ├── routers.py
+│   │   └── validators.py
+│   │
+│   ├── core/                    # Конфигурация, база данных, логирование
+│   │   ├── base.py
+│   │   ├── config.py
+│   │   ├── db.py
+│   │   ├── logger.py
+│   │   └── user.py
+│   │
+│   ├── crud/                    # CRUD-операции
+│   │   ├── cafes.py
+│   │   ├── dishes.py
+│   │   ├── tables.py
+│   │   ├── users.py
+│   │   └── factory.py
+│   │
+│   ├── exceptions/              # Кастомные исключения
+│   │   ├── auth.py
+│   │   ├── db.py
+│   │   └── user.py
+│   │
+│   ├── models/                  # SQLAlchemy-модели
+│   │   ├── booking.py
+│   │   ├── cafe.py
+│   │   ├── dish.py
+│   │   ├── table.py
+│   │   └── user.py
+│   │
+│   ├── schemas/                 # Pydantic-схемы
+│   │   ├── auth.py
+│   │   ├── cafes.py
+│   │   ├── dish.py
+│   │   ├── table.py
+│   │   ├── users.py
+│   │   └── validators.py
+│   │
+│   ├── services/                # Бизнес-логика
+│   │   ├── auth.py
+│   │   └── slot_rules.py
+│   │
+│   └── main.py                  # Точка входа в приложение
 │
-├── tests/                        # Тесты (pytest)
-│   ├── test_actions.py
+├── tests/                       # Тесты Pytest
+│   ├── conftest.py
 │   ├── test_auth.py
-│   ├── test_bookings.py
-│   ├── test_cafes.py
 │   ├── test_dishes.py
-│   ├── test_integration.py
 │   ├── test_tables.py
-│   ├── test_time_slots.py
 │   └── test_users.py
 │
-├── alembic.ini               # Конфиг Alembic
-├── Dockerfile                # Dockerfile для корневого уровня
-├── entrypoint.sh             # Скрипт запуска
-├── env.local                 # Переменные окружения (локально)
-├── env.prod                  # Переменные окружения (продакшн)
-├── fastapi.db                # SQLite база (для отладки)
-├── pytest.ini                # Конфиг Pytest
-├── requirements.txt          # Общие зависимости
-├── requirements_style.txt    # Зависимости для линтеров/стиля
-├── ruff.toml                 # Конфиг линтера Ruff
-├── README.md                 # Документация
-└── venv/
+├── create_superuser_cli.py       # CLI-скрипт для создания суперпользователя
+├── entrypoint.sh                 # Стартовый скрипт Docker
+├── Dockerfile                    # Docker-образ для backend
+├── requirements.txt              # Основные зависимости
+├── alembic.ini                   # Конфиг для Alembic
+├── ruff.toml                     # Настройки линтера Ruff
+├── pytest.ini                    # Конфиг для Pytest
+└── README.md
+
 ```
 ### ⚙️ Установка и запуск
 
@@ -104,15 +125,17 @@ cd tables_booking_system_team2
 ### Настройка окружения
 **Копируем файл окружения**
 ```bash
-cp env.local .env
+cd tables_booking_system_team2
+cp env.example .env
 ```
 ### Настройка базы данных
-- **Вариант A: SQLite (быстрый старт)**
+- **Вариант A: SQLite (быстрый старт)**<br>
 ***В файле .env установите:***
 ```bash
 DB_ENGINE=sqlite
 ```
-- **Вариант B: PostgreSQL (продакшен-готовый)**<br>
+
+- **Вариант B: PostgreSQL**<br>
 ***В файле .env установите:***
 ```
 DB_ENGINE=postgresql
@@ -151,41 +174,60 @@ alembic upgrade head
 ### Запуск сервера
 ```bash
 uvicorn src.main:app --reload
+
 ```
 ### Проверка работоспособности
 **После запуска приложение будет доступно:**
-- API: http://localhost:8000
-- Документация: http://localhost:8000/docs
-- Альтернативная документация: http://localhost:8000/redoc<br>
+- API: http://localhost
+- Документация: http://localhost/docs
+- Альтернативная документация: http://localhost/redoc<br>
 
-### Переменные окружения (.env)
- ***Для PostgreSQL:***
- ```bash
- POSTGRES_USER=postgres
- POSTGRES_PASSWORD=postgres
- POSTGRES_DB=booking
- DB_HOST=localhost
- DB_PORT=5432
- ```
- ***Для SQLite:***
- ```bash
- DATABASE_URL=sqlite+aiosqlite:///./booking.db
- ```
 **Приложение будет доступно по адресу:**<br>
 👉 http://localhost/api/v1
 
 **Документация API:**<br>
-👉 Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)<br>
-👉 ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+👉 Swagger UI: [http://localhost/docs](http://localhost/docs)<br>
+👉 ReDoc: [http://localhost/redoc](http://localhost/redoc)
 
-
+**🚀 Основные процессы CI/CD**<br>
 ### 🔄 CI/CD
-> ⚙️ Развертывание автоматизировано через GitHub Actions (добавить описание)
-> Тут какой-то текст .....
+Каждый коммит, push или pull request автоматически проверяется, тестируется и сопровождается уведомлением в Telegram.
+| Workflow | Описание | Событие |
+|-----------|-----------|---------|
+| 🧪 **tests.yml** | Запускает тесты (pytest) и проверяет корректность кода | push, pull_request |
+| 🧹 **style_check.yml** | Проверяет стиль кода (Ruff, Pre-commit) | push, pull_request |
+| 📩 **telegram_notify.yml** | Отправляет уведомления о результатах в Telegram | после завершения других workflow |
 
-🔑 **Создание суперпользователя**<br>
+
+**⚙️ Как это работает**<br>
+- Разработчик делает push или pull request в репозиторий.
+- GitHub Actions автоматически:
+- собирает проект в Docker;
+- прогоняет тесты;
+- проверяет стиль кода;
+- отправляет уведомление о результате в Telegram.
+ -При успешной проверке или ошибке высылается сообщение в Telegram-чат разработчиков.
+
+**📨 Пример уведомления в Telegram**
+```bash
+🍽 Сервис бронирования столиков<br>
+🔔 Новое обновление в репозитории:<br>
+Тип события: push<br>
+Бранч: develop<br>
+Коммит: 4dce9bd9edc6ad92ea1780c5428e3ad2df0ba109<br>
+Автор: warqone<br>
+Сообщение: Merge pull request #39 from Studio-Yandex-Practicum/features/crud_for_dishes<br>
+
+Fix update crud dish
+‼️ -- Подтяните к себе ветку develop -- ‼️
+```
+**📬 Если тесты или сборка не прошли — в Telegram отправляется<br>
+     сообщение с ❌ и описанием ошибки.**<br>
+Это позволяет команде оперативно реагировать и фиксить проблемы без необходимости проверять GitHub вручную.
+
+### 🔑 Создание суперпользователя
 Для создания суперпользователя, который будет иметь доступ ко всем
- административным функциям системы в продакшене, выполните следующие шаги:
+ административным функциям системы *в продакшене*, выполните следующие шаги:
 
 **Запустите контейнеры с приложением:**<br>
 Убедитесь, что ваше приложение запущено в Docker-контейнерах.
@@ -295,5 +337,25 @@ Content-Type: application/json
 ```
 
 ### 👥 Команда разработки
-Проект выполнен в рамках обучения в Яндекс Практикуме.
-> 🚧 Секция в разработке (будет дополнена)
+**Проект создан в рамках обучения в Яндекс Практикуме.**<br>
+
+**Наставник:**<br>
+🧭 Станислав Баринов<br>
+
+**Project Manager (PM):**<br>
+📋 Александр Аваков<br>
+
+**Тимлид:**<br>
+🧑‍💻 Вадим Каримов<br>
+
+**Разработчики:**<br>
+💡 Вадим Каримов<br>
+💡 Дмитрий Радюк<br>
+💡 Александр Лавер<br>
+💡 Игорь Могилин<br>
+💡 Вика Долгова<br>
+💡 Алексей Гасилин<br>
+💡 Александр Комаров<br>
+💡 Дмитрий Волков<br>
+💡 Исхак Мурзаев<br>
+💡 Михаил Яковенко<br>

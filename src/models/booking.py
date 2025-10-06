@@ -2,24 +2,26 @@ from enum import IntEnum
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import (
+    CheckConstraint,
     Column,
     ForeignKey,
     Integer,
     Text,
+)
+from sqlalchemy import (
     Table as SA_Table,
-    CheckConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.models.base import BaseModel
 from src.constants import MIN_GUESTS_NUMBER
+from src.models.base import BaseModel
 
 if TYPE_CHECKING:
-    from src.models.user import User
     from src.models.cafe import Cafe
-    from src.models.table import Table
-    from src.models.slot import Slot
     from src.models.dish import Dishe
+    from src.models.slot import Slot
+    from src.models.table import Table
+    from src.models.user import User
 
 
 booking_table = SA_Table(

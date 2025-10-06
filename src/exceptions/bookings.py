@@ -1,4 +1,5 @@
 from fastapi import status
+
 from src.exceptions.base import AppException
 
 
@@ -54,4 +55,5 @@ class BookingResourceNotFoundException(AppException):
 
     def __init__(
             self, message: str = 'ННеверные идентификаторы ресурсов') -> None:
+        """Исключение 400: ресурсы не найдены."""
         super().__init__(message, status.HTTP_400_BAD_REQUEST)
