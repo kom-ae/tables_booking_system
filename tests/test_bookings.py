@@ -20,7 +20,7 @@ from starlette import status
 from src.models.cafe import Cafe
 from src.models.user import User
 from tests.conftest import (assert_error_response, assert_success_response,
-                            get_auth_headers)
+                            get_auth_headers, another_user_token)
 
 # Эти тесты будут работать когда будут реализованы:
 # 1. Модель Booking в src/models/booking.py
@@ -30,7 +30,7 @@ from tests.conftest import (assert_error_response, assert_success_response,
 # 5. Все связанные модели: Table, TimeSlot, Dish
 
 # Пропускаем все тесты до реализации эндпоинтов
-pytestmark = pytest.mark.skip(reason='Bookings эндпоинты не реализованы')
+# pytestmark = pytest.mark.skip(reason='Bookings эндпоинты не реализованы')
 
 
 class TestBookingsList:
@@ -258,15 +258,17 @@ class TestBookingCreate:
         user_token: str,
         normal_user: User,
         test_cafe: Cafe,
-        # Нужны множественные фикстуры (когда будут реализованы)
+        multiple_tables,
+        multiple_slots,
     ) -> None:
         """Тест создания бронирования с несколькими столами и слотами."""
         headers = get_auth_headers(user_token)
+
         payload = {
             'user_id': normal_user.id,
             'cafe_id': test_cafe.id,
-            'tables': [1, 2],  # Несколько столов
-            'slots': [1, 2],  # Несколько слотов
+            'tables': [t.id for t in multiple_tables],
+            'slots': [s.id for s in multiple_slots],
             'guests_number': 8,
         }
 
@@ -280,6 +282,8 @@ class TestBookingCreate:
         data = response.json()
         assert len(data['tables']) == 2
         assert len(data['slots']) == 2
+        assert data['guests_number'] == 8
+        assert data['user']['id'] == normal_user.id
 
     @pytest.mark.asyncio
     async def test_create_booking_missing_required_fields(
@@ -411,9 +415,11 @@ class TestBookingCreate:
         """Тест создания бронирования с несуществующими ресурсами."""
         headers = get_auth_headers(user_token)
 
+        user_id = normal_user.id
+
         # Несуществующее кафе
         payload = {
-            'user_id': normal_user.id,
+            'user_id': user_id,
             'cafe_id': 99999,
             'tables': [1],
             'slots': [1],
@@ -428,7 +434,7 @@ class TestBookingCreate:
 
         # Несуществующий стол
         payload = {
-            'user_id': normal_user.id,
+            'user_id': user_id,
             'cafe_id': 1,
             'tables': [99999],
             'slots': [1],
@@ -804,16 +810,16 @@ class TestBookingIntegration:
         self,
         client_fixture: AsyncClient,
         user_token: str,
+        another_user_token: str,
         normal_user: User,
         another_user: User,
         test_cafe: Cafe,
-        test_table: Any,  # Фикстура из conftest.py (когда будет реализована)
-        test_time_slot: Any,  # Фикстура из conftest.py
+        test_table: Any,
+        test_time_slot: Any,
     ) -> None:
         """Тест обнаружения конфликтов бронирований."""
         headers = get_auth_headers(user_token)
-
-        # Первое бронирование
+        another_headers = get_auth_headers(another_user_token)
         payload1 = {
             'user_id': normal_user.id,
             'cafe_id': test_cafe.id,
@@ -821,27 +827,22 @@ class TestBookingIntegration:
             'slots': [test_time_slot.id],
             'guests_number': 4,
         }
-
         response1 = await client_fixture.post(
             '/booking',
             json=payload1,
             headers=headers,
         )
         assert_success_response(response1, status.HTTP_201_CREATED)
-
-        # Попытка создать конфликтующее бронирование
         payload2 = {
             'user_id': another_user.id,
             'cafe_id': test_cafe.id,
-            'tables': [test_table.id],  # Тот же стол
-            'slots': [test_time_slot.id],  # То же время
+            'tables': [test_table.id],
+            'slots': [test_time_slot.id],
             'guests_number': 2,
         }
-
         response2 = await client_fixture.post(
             '/booking',
             json=payload2,
-            headers=headers,
+            headers=another_headers,
         )
-        # Должно быть отклонено из-за конфликта
         assert_error_response(response2, status.HTTP_400_BAD_REQUEST)
