@@ -29,19 +29,30 @@ services:
   backend:
     image: python5152plus/tables_booking_system
     env_file: ../.env
+    command: backend
     ports:
-      - 8000:8000
+      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
       rabbit:
         condition: service_started
+    restart: unless-stopped
+
+  celery:
+    image: python5152plus/tables_booking_system
+    env_file: ../.env
+    command: celery
+    depends_on:
+      - rabbit
+    restart: unless-stopped
 
   flower:
-    image: mher/flower
+    image: python5152plus/tables_booking_system
     env_file: ../.env
-    command: celery --broker=${CELERY_BROKER_URL} flower --port=5555
+    command: flower
     ports:
       - "5555:5555"
     depends_on:
       - rabbit
+    restart: unless-stopped
