@@ -17,16 +17,23 @@ from src.core.dependencies import (
 )
 from src.core.logger import logger
 from src.crud.action import actions_crud
-from src.crud.factory import get_cafe_crud, get_dish_crud, get_slot_crud
+from src.crud.factory import (
+    get_booking_crud,
+    get_cafe_crud,
+    get_dish_crud,
+    get_slot_crud,
+)
+from src.exceptions.bookings import BookingNotFoundException
 from src.exceptions.db import DBException, DBIntegrityException
 from src.exceptions.slots import (
     CafeOrSlotNotFoundException,
     SlotNotFoundException,
 )
-from src.models import Action, Cafe, Dishe, Slot, User
+from src.models import Action, Booking, Cafe, Dishe, Slot, User
 from src.schemas.cafes import CafeCreate, CafeDB
 from src.schemas.dish import Dish, DishCreate
 
+booking_crud = get_booking_crud()
 cafe_crud = get_cafe_crud()
 slot_crud = get_slot_crud()
 dish_crud = get_dish_crud()
@@ -303,3 +310,28 @@ async def cafe_exists_404_for_slots(
         cafe_id=cafe_id,
         not_found_status=status.HTTP_404_NOT_FOUND,
     )
+
+
+async def booking_exists(
+    booking_id: int = Path(..., ge=ID_MIN, description='ID бронирования'),
+    session: AsyncSession = Depends(get_async_session),
+) -> Booking:
+    """Возвращает бронирование по ID или ошибку 404."""
+    return await booking_crud.get_booking_id_or_404(booking_id, session)
+
+
+async def visible_booking_for_user(
+    booking: Booking = Depends(booking_exists),
+    user: Optional[User] = current_user_or_none_dep,
+) -> Booking:
+    """Проверяет права доступа к бронированию."""
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Необходима авторизация для просмотра бронирования',
+        )
+    if user.is_manager() or user.is_admin():
+        return booking
+    if booking.user_id != user.id:
+        raise BookingNotFoundException('Бронирование не найдено')
+    return booking
