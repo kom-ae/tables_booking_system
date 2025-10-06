@@ -1,0 +1,140 @@
+name: Tables_Booking_Workflow
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+# Сообщение о коммите в ветку
+  send-telegram-message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram Message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_KOM_AE }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🎉 Новый коммит в репозитории ${{ github.repository }}!
+            - Автор: ${{ github.actor }}
+            - Бранч: ${{ github.ref_name }}
+            - Сообщение: ${{ github.event.head_commit.message }}
+            - Ссылка: ${{ github.server_url }}/${{ github.repository }}/commit/${{github.sha}}
+
+# Запуск тестов бэкэнда
+  backend_tests:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v5
+      - name: Set-up python
+        uses: actions/setup-python@v6
+        with: 
+          python-version: 3.11
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./src/requirements.txt
+      - name: run pytest
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: test
+          DB_USER: test
+          DB_PASSWORD: test
+          SECRET: test_secret
+          JWT_ALGORITHM: HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES: 1
+          DB_RETRY_MAX_ATTEMPTS: 3
+          DB_RETRY_DELAY_SECONDS: 0.1
+          
+        run: python -m pytest tests/ -v -m "not skip" 
+
+      - name: Send message
+        if: success() || failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_KOM_AE }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            Статус выполнения задачи Action:
+            - Задача: ${{ github.job }}
+            - Статус: ${{ job.status }}
+
+# Собрать образ бэкэнда и залить на DockerHub
+  build_backend_and_push_to_docker_hub:
+    name: Push Docker image to DockerHub
+    runs-on: ubuntu-latest
+    needs: 
+      - backend_tests
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker 
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKER_USERNAME }} 
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push to DockerHub
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${{ vars.DOCKER_USERNAME }}/tables_booking_system:latest
+# Отправить сообщение
+      - name: Send message
+        if: success() || failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_KOM_AE }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            Статус выполнения задачи Action:
+            - Задача: ${{ github.job }}
+            - Статус: ${{ job.status }}
+  
+# Деплой на сервер
+  deploy:
+    runs-on: ubuntu-latest
+    needs: 
+      - build_backend_and_push_to_docker_hub
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v5
+    - name: Copy docker-compose.production.yml via ssh
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ vars.HOST }}
+        username: ${{ vars.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        source: "./infra/docker-compose.production.yml"
+        target: "/opt/bron-2/"
+
+    - name: Executing remote ssh commands to deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ vars.HOST }}
+        username: ${{ vars.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        script: |
+          cd /opt/bron-2/
+          # Выполняет pull образов с Docker Hub
+          sudo docker compose -f infra/docker-compose.production.yml pull
+          # Перезапускает все контейнеры в Docker Compose
+          sudo docker compose -f infra/docker-compose.production.yml down
+          sudo docker compose -f infra/docker-compose.production.yml up -d
+
+# Отправить сообщение
+    - name: Send message
+      if: success() || failure()
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_KOM_AE }}
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        message: |
+          Статус выполнения задачи Action:
+          - Задача: ${{ github.job }}
+          - Статус: ${{ job.status }}
