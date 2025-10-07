@@ -6,8 +6,6 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.celery.notifications import send_notification
-from src.celery.types import NotificationType
 from src.core.logger import logger
 from src.crud.base import CRUDBase
 from src.exceptions.bookings import (
@@ -99,8 +97,6 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
         Параметр exclude_booking_id нужен, чтобы при обновлении
         не вызывать пересечение с самим собой.
         """
-        slots = await self._fetch_related_objects(session, Slot, slot_ids)
-        slot_dates = {s.date for s in slots}
         checks = [
             (Booking.slots, Slot.id, slot_ids,
              'Выбранные слоты уже заняты.'),
@@ -116,8 +112,8 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
                 Booking.status != BookingStatus.CANCELED,
             ]
             date_filter = relation is Booking.tables
-            if date_filter and slot_dates:
-                conditions.append(Slot.date.in_(slot_dates))
+            if date_filter:
+                conditions.append(Slot.id.in_(slot_ids))
             if exclude_booking_id is not None:
                 conditions.append(Booking.id != exclude_booking_id)
             stmt = select(Booking).join(relation)
@@ -165,6 +161,19 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
                 raise BookingResourceNotFoundException(error_msg)
         return db_tables, db_slots, db_menu
 
+    async def _can_update_booking(self, db_obj: Booking) -> None:
+        """Проверяет, можно ли изменять бронирование."""
+        if db_obj.status == BookingStatus.ACTIVE:
+            raise BookingUpdateForbiddenException(
+                'Нельзя изменить активное бронирование')
+        now = datetime.now()
+        if db_obj.slots and any(
+            datetime.combine(slot.date, slot.start_time) < now
+            for slot in db_obj.slots
+        ):
+            raise BookingUpdateForbiddenException(
+                'Нельзя изменить прошедшее бронирование')
+
     async def create_booking(
         self,
         obj_in: BookingCreate,
@@ -204,15 +213,14 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
             await self._commit(session, user)
             await session.refresh(db_obj)
             logger.info(f'Создано бронирование ID={db_obj.id}', user=user)
-            send_notification.delay(
-                db_obj.as_dict(), NotificationType.CREATE.value,
-            )
             return db_obj
         except AppException:
-            await session.rollback()
+            if session.is_active:
+                await session.rollback()
             raise
         except Exception as error:
-            await session.rollback()
+            if session.is_active:
+                await session.rollback()
             logger.error(f'Ошибка при создании бронирования: {error}',
                          user=user)
             raise DBException('Ошибка при создании бронирования')
@@ -224,32 +232,22 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
         session: AsyncSession,
         user: Optional[User] = None,
     ) -> Booking:
-        """Обновление бронирования с запретом изменять активные/прошедшие."""
+        """Обновление бронирования с проверками и сохранением логики."""
         try:
+            await self._can_update_booking(db_obj)
             update_data = obj_in.model_dump(exclude_unset=True)
-            if db_obj.status == BookingStatus.ACTIVE:
-                raise BookingUpdateForbiddenException(
-                    'Нельзя изменить активное бронирование')
-            now = datetime.now()
-            if db_obj.slots and any(
-                datetime.combine(slot.date, slot.start_time) < now
-                for slot in db_obj.slots
-            ):
-                raise BookingUpdateForbiddenException(
-                    'Нельзя изменить прошедшее бронирование')
             new_slot_ids = update_data.get('slots')
-            new_table_ids = update_data.get('tables')
-            new_menu_ids = update_data.get('menu')
             if new_slot_ids:
                 await self._validate_booking_date(session, new_slot_ids)
                 await self._check_booking_overlap(
                     session,
                     cafe_id=db_obj.cafe_id,
                     slot_ids=new_slot_ids,
-                    table_ids=new_table_ids or [],
+                    table_ids=update_data.get('tables') or [],
                     exclude_booking_id=db_obj.id)
                 db_obj.slots = await self._fetch_related_objects(
                     session, Slot, new_slot_ids)
+            new_table_ids = update_data.get('tables')
             if new_table_ids:
                 slot_ids_for_check = (
                     new_slot_ids or [s.id for s in db_obj.slots])
@@ -261,6 +259,7 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
                     exclude_booking_id=db_obj.id)
                 db_obj.tables = await self._fetch_related_objects(
                     session, Table, new_table_ids)
+            new_menu_ids = update_data.get('menu')
             if new_menu_ids:
                 db_obj.menu = await self._fetch_related_objects(
                     session, Dishe, new_menu_ids)
@@ -271,20 +270,14 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
             await self._commit(session, user)
             await session.refresh(db_obj)
             logger.info(f'Обновлено бронирование ID={db_obj.id}', user=user)
-
-            is_active = getattr(obj_in, 'is_active', True)
-            notif_type = (
-                NotificationType.CANCEL.value if (
-                    is_active is False)
-                else NotificationType.UPDATE.value)
-            send_notification.delay(db_obj.as_dict(), notif_type)
-
             return db_obj
         except (DBIntegrityException, DBException):
-            await session.rollback()
+            if session.is_active:
+                await session.rollback()
             raise
         except Exception as error:
-            await session.rollback()
+            if session.is_active:
+                await session.rollback()
             logger.error(f'Ошибка при обновлении бронирования: {error}',
                          user=user)
             raise DBException('Ошибка при обновлении бронирования')
