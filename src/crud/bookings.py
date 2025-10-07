@@ -99,6 +99,8 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
         Параметр exclude_booking_id нужен, чтобы при обновлении
         не вызывать пересечение с самим собой.
         """
+        slots = await self._fetch_related_objects(session, Slot, slot_ids)
+        slot_dates = {s.date for s in slots}
         checks = [
             (Booking.slots, Slot.id, slot_ids,
              'Выбранные слоты уже заняты.'),
@@ -113,9 +115,15 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
                 model_id.in_(ids),
                 Booking.status != BookingStatus.CANCELED,
             ]
+            date_filter = relation is Booking.tables
+            if date_filter and slot_dates:
+                conditions.append(Slot.date.in_(slot_dates))
             if exclude_booking_id is not None:
                 conditions.append(Booking.id != exclude_booking_id)
-            stmt = select(Booking).join(relation).where(and_(*conditions))
+            stmt = select(Booking).join(relation)
+            if date_filter:
+                stmt = stmt.join(Booking.slots)
+            stmt = stmt.where(and_(*conditions))
             result = await session.execute(stmt)
             if result.scalars().first():
                 raise BookingOverlapException(error_msg)
@@ -127,9 +135,10 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
     ) -> None:
         """Проверка даты брони на предшествующую текущей."""
         slots = await self._fetch_related_objects(session, Slot, slot_ids)
-        now = datetime.now().date()
+        now = datetime.now()
         for slot in slots:
-            if slot.date < now:
+            slot_start = datetime.combine(slot.date, slot.start_time)
+            if slot_start < now:
                 raise BookingDateException()
 
     async def _validate_related_resources(
@@ -221,36 +230,40 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
             if db_obj.status == BookingStatus.ACTIVE:
                 raise BookingUpdateForbiddenException(
                     'Нельзя изменить активное бронирование')
-            slots = db_obj.slots
-            if slots and any(
-                slot.date < datetime.now().date() for slot in slots
+            now = datetime.now()
+            if db_obj.slots and any(
+                datetime.combine(slot.date, slot.start_time) < now
+                for slot in db_obj.slots
             ):
                 raise BookingUpdateForbiddenException(
                     'Нельзя изменить прошедшее бронирование')
-            if 'slots' in update_data and update_data['slots']:
-                await self._validate_booking_date(
-                    session, update_data['slots'])
+            new_slot_ids = update_data.get('slots')
+            new_table_ids = update_data.get('tables')
+            new_menu_ids = update_data.get('menu')
+            if new_slot_ids:
+                await self._validate_booking_date(session, new_slot_ids)
                 await self._check_booking_overlap(
                     session,
                     cafe_id=db_obj.cafe_id,
-                    slot_ids=update_data['slots'],
-                    table_ids=update_data.get('tables', []),
-                    exclude_booking_id=db_obj.id,
-                )
+                    slot_ids=new_slot_ids,
+                    table_ids=new_table_ids or [],
+                    exclude_booking_id=db_obj.id)
                 db_obj.slots = await self._fetch_related_objects(
-                    session, Slot, update_data['slots'])
-            related_fields = {
-                'tables': Table,
-                'menu': Dishe,
-            }
-            for field, model in related_fields.items():
-                if field in update_data and update_data[field]:
-                    setattr(
-                        db_obj,
-                        field,
-                        await self._fetch_related_objects(
-                            session, model, update_data[field]),
-                    )
+                    session, Slot, new_slot_ids)
+            if new_table_ids:
+                slot_ids_for_check = (
+                    new_slot_ids or [s.id for s in db_obj.slots])
+                await self._check_booking_overlap(
+                    session,
+                    cafe_id=db_obj.cafe_id,
+                    slot_ids=slot_ids_for_check,
+                    table_ids=new_table_ids,
+                    exclude_booking_id=db_obj.id)
+                db_obj.tables = await self._fetch_related_objects(
+                    session, Table, new_table_ids)
+            if new_menu_ids:
+                db_obj.menu = await self._fetch_related_objects(
+                    session, Dishe, new_menu_ids)
             for field, value in update_data.items():
                 if field not in {'slots', 'tables', 'menu'}:
                     setattr(db_obj, field, value)
@@ -267,11 +280,9 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
             send_notification.delay(db_obj.as_dict(), notif_type)
 
             return db_obj
-
         except (DBIntegrityException, DBException):
             await session.rollback()
             raise
-
         except Exception as error:
             await session.rollback()
             logger.error(f'Ошибка при обновлении бронирования: {error}',
