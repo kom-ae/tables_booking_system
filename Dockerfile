@@ -15,6 +15,7 @@ COPY src/ ./src/
 COPY alembic/ ./alembic/
 COPY alembic.ini .
 COPY entrypoint.sh .
+COPY create_superuser_cli.py .
 
 ENV PYTHONUNBUFFERED=1
 

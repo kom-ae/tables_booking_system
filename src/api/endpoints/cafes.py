@@ -134,6 +134,8 @@ async def update_cafe(
     session: AsyncSession = Depends(get_async_session),
 ) -> CafeDB:
     """Обновление кафе по ID."""
+    if obj_in.address and obj_in.name:
+        await check_duplicate_cafe(cafe=obj_in, session=session, user=user)
     cafe = await handler_run_crud_cafe(
         cafe_crud.get,
         crud_args={'obj_id': cafe_id, 'session': session},

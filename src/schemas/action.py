@@ -1,7 +1,13 @@
 from datetime import datetime
 from typing import Any, Optional, Type
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+)
 
 from src.schemas.cafes import CafeShortDB
 
@@ -43,7 +49,4 @@ class ActionDB(BaseModel):
     created_at: datetime = Field(..., description='Дата создания')
     updated_at: datetime = Field(..., description='Дата обновления')
 
-    class Config:
-        """Конфиг класса."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

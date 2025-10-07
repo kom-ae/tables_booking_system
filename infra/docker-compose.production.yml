@@ -7,30 +7,52 @@ services:
     env_file: ../.env
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - pg_data:/var/lib/postgresql/data/pgdata
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fastapi_user -d fastapi.db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 10s
       retries: 5
 
+  rabbit:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
   backend:
     image: python5152plus/tables_booking_system
     env_file: ../.env
+    command: backend
     ports:
-      - 8000:8000
+      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
+      rabbit:
+        condition: service_started
+    restart: unless-stopped
 
-  # nginx:
-  #   image: nginx:latest
-  #   container_name: nginx
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - ./nginx/prod.conf:/etc/nginx/conf.d/default.conf
-  #   depends_on:
-  #     - backend
+  celery:
+    image: python5152plus/tables_booking_system
+    env_file: ../.env
+    command: celery
+    depends_on:
+      - backend
+      - rabbit
+    restart: unless-stopped
+
+  flower:
+    image: python5152plus/tables_booking_system
+    env_file: ../.env
+    command: flower
+    ports:
+      - "5555:5555"
+    depends_on:
+      - rabbit
