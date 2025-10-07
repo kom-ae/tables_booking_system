@@ -253,9 +253,9 @@ run_docker_tests() {
         docker-compose -f infra/docker-compose.test.yml rm -f
     fi
     
-    # Запуск тестовой базы данных
-    log "Запуск тестовой базы данных..."
-    docker-compose -f infra/docker-compose.test.yml up -d test-db
+    # Запуск тестовых сервисов
+    log "Запуск тестовых сервисов (PostgreSQL и Redis)..."
+    docker-compose -f infra/docker-compose.test.yml up -d test-db redis
     
     # Ждем готовности базы данных
     log "Ожидание готовности базы данных..."
