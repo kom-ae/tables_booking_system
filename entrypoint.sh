@@ -1,11 +1,11 @@
 set -e
 
-echo "Запуск миграций базы данных..."
-alembic upgrade head
-create_superuser || true  # если скрипта нет или уже создан, игнорируем ошибку
-
 case "$1" in
   backend)
+    echo "Запуск миграций базы данных..."
+    alembic upgrade head
+    create_superuser || true
+
     echo "Запуск backend (uvicorn)..."
     exec uvicorn src.main:app --host 0.0.0.0 --port 8000
     ;;

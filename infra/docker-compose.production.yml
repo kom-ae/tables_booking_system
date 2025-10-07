@@ -29,7 +29,7 @@ services:
   backend:
     image: python5152plus/tables_booking_system
     env_file: ../.env
-    command: backend   # <--- указываем, что в entrypoint запускать
+    command: backend
     ports:
       - "8000:8000"
     depends_on:
@@ -42,7 +42,7 @@ services:
   celery:
     image: python5152plus/tables_booking_system
     env_file: ../.env
-    command: celery   # <--- воркер Celery
+    command: celery
     depends_on:
       - backend
       - rabbit
@@ -51,7 +51,7 @@ services:
   flower:
     image: python5152plus/tables_booking_system
     env_file: ../.env
-    command: flower   # <--- тоже через entrypoint.sh
+    command: flower
     ports:
       - "5555:5555"
     depends_on:
