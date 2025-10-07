@@ -29,7 +29,7 @@ class PreBase:
 
 Base = declarative_base(cls=PreBase)
 
-engine = create_async_engine(settings.get_database_uri(), echo=True)
+engine = create_async_engine(settings.get_database_uri(), echo=False)
 
 AsyncSessionLocal = async_sessionmaker(
     engine,

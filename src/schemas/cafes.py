@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.constants import (
     MAX_ADDRESS,
@@ -13,6 +13,7 @@ from src.constants import (
 )
 from src.schemas.base import CafeBase
 from src.schemas.validators import (
+    cafe_name_validate,
     cafe_update_field_is_not_null,
     phone_validator,
 )
@@ -33,6 +34,7 @@ class CafeCreate(CafeBase):
     managers: Optional[list[int]] = Field([], title='ID менеджера')
 
     _validate_phone = field_validator('phone', mode='before')(phone_validator)
+    _validate_name = field_validator('name', mode='before')(cafe_name_validate)
 
 
 class CafeUpdate(BaseModel):
@@ -61,15 +63,10 @@ class CafeUpdate(BaseModel):
     managers: Optional[list[int]] = Field([], title='ID менеджера')
     is_active: Optional[bool] = Field(None, title='Объект активен?')
 
-    class Config:
-        """Конфиг класса."""
-
-        extra = 'forbid'
+    model_config = ConfigDict(extra='forbid')
 
     _validate_fields = field_validator(
-        'name',
         'address',
-        'phone',
         'is_active',
         'managers',
         'description',
@@ -78,6 +75,7 @@ class CafeUpdate(BaseModel):
     )(cafe_update_field_is_not_null)
 
     _validate_phone = field_validator('phone', mode='before')(phone_validator)
+    _validate_name = field_validator('name', mode='before')(cafe_name_validate)
 
 
 class CafeShortDB(CafeBase):
@@ -86,7 +84,4 @@ class CafeShortDB(CafeBase):
     id: int = Field(..., title='ID записи')
     is_active: bool = Field(..., title='Объект активен?')
 
-    class Config:
-        """Конфиг класса."""
-
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

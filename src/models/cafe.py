@@ -1,10 +1,25 @@
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Column, ForeignKey, String, Table, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
-from src.constants import MAX_ADDRESS, MAX_NAME_CAFE, MAX_TEL
+from src.constants import (
+    MAX_ADDRESS,
+    MAX_NAME_CAFE,
+    MAX_TEL,
+    NAME_REGEX,
+    PHONE_REGEX,
+)
 from src.core.db import Base
+from src.exceptions.cafe import InvalidNameCafeException
+from src.exceptions.user import InvalidPhoneException
 from src.models.base import BaseModel
 
 if TYPE_CHECKING:
@@ -62,3 +77,21 @@ class Cafe(BaseModel):
         lazy='selectin',
         cascade='all, delete-orphan',
     )
+
+    __table_args__ = (
+        UniqueConstraint('name', 'address', name='uix_name_address'),
+    )
+
+    @validates('phone')
+    def validate_phone(self, key: str, phone: str) -> str:
+        """Проверить номер телефона."""
+        if not PHONE_REGEX.match(phone):
+            raise InvalidPhoneException(f'Некорректный номер телефона {phone}')
+        return phone
+
+    @validates('name')
+    def validate_name(self, key: str, name: str) -> str:
+        """Проверить название кафе."""
+        if not NAME_REGEX.match(name):
+            raise InvalidNameCafeException()
+        return name

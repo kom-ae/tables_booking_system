@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import IntEnum
-from typing import Optional
+from typing import Any, Callable, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -12,14 +12,6 @@ from src.schemas.slots import SlotShortDB
 from src.schemas.table import TableShort
 from src.schemas.users import UserShort
 
-BOOKING_STATUS_SCHEMA = {
-    'oneOf': [
-        {'const': 0, 'title': 'booking', 'description': 'Забронировано'},
-        {'const': 1, 'title': 'canceled', 'description': 'Отменено'},
-        {'const': 2, 'title': 'active', 'description': 'Клиент подошел'},
-    ],
-}
-
 
 class BookingStatus(IntEnum):
     """Статусы бронирования."""
@@ -27,6 +19,38 @@ class BookingStatus(IntEnum):
     BOOKING = 0
     CANCELED = 1
     ACTIVE = 2
+
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls,
+        core_schema: Any,
+        handler: Callable[..., dict],
+    ) -> dict:
+        """Добавляет описание Enum."""
+        schema = handler(core_schema)
+        schema.update({
+            'description': (
+                '0 — забронировано, 1 — отменено, 2 — клиент подошёл'
+            ),
+            'oneOf': [
+                {
+                    'const': 0,
+                    'title': 'booking',
+                    'description': 'Забронировано',
+                },
+                {
+                    'const': 1,
+                    'title': 'canceled',
+                    'description': 'Отменено',
+                },
+                {
+                    'const': 2,
+                    'title': 'active',
+                    'description': 'Клиент подошёл',
+                },
+            ],
+        })
+        return schema
 
 
 class BookingBase(BaseModel):
@@ -65,7 +89,6 @@ class BookingUpdate(BookingBase):
     status: Optional[BookingStatus] = Field(
         None,
         description='Статус бронирования',
-        json_schema_extra=BOOKING_STATUS_SCHEMA,
     )
     is_active: Optional[bool] = Field(None, description='Объект активен?')
 
@@ -87,7 +110,6 @@ class Booking(BookingBase, BaseSchema):
     status: BookingStatus = Field(
         ...,
         description='Статус бронирования',
-        json_schema_extra=BOOKING_STATUS_SCHEMA,
     )
     is_active: bool = Field(..., description='Объект активен?')
     created_at: datetime = Field(..., description='Дата создания')

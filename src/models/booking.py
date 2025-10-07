@@ -114,3 +114,48 @@ class Booking(BaseModel):
         secondary='booking_dish',
         lazy='selectin',
     )
+
+    def as_dict(self) -> dict:
+        """Возвращает Booking в формате dict."""
+        return {
+            'id': self.id,
+            'guests_number': self.guests_number,
+            'note': self.note,
+            'status': self.status,
+            'user': {
+                'id': self.user.id,
+                'username': self.user.username,
+                'email': self.user.email,
+                'phone': self.user.phone,
+            } if self.user else None,
+            'cafe': {
+                'id': self.cafe.id,
+                'name': self.cafe.name,
+                'address': self.cafe.address,
+                'phone': self.cafe.phone,
+                'managers': [
+                    {
+                        'id': m.id,
+                        'username': m.username,
+                        'email': m.email,
+                        'phone': m.phone,
+                    }
+                    for m in self.cafe.managers
+                ],
+            } if self.cafe else None,
+            'tables': [
+                {'id': t.id, 'description': t.description,
+                 'seats_number': t.seats_number}
+                for t in self.tables
+            ],
+            'slots': [
+                {'id': s.id, 'date': s.date.isoformat(),
+                 'start_time': str(s.start_time), 'end_time': str(s.end_time)}
+                for s in self.slots
+            ],
+            'menu': [
+                {'id': m.id, 'name': m.name,
+                 'description': m.description, 'price': str(m.price)}
+                for m in self.menu
+            ],
+        }
