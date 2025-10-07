@@ -192,3 +192,17 @@ app_temp.log
 logs
 
 TEST_COVERAGE_SUMMARY.md
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*~
