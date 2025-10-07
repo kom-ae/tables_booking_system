@@ -2,8 +2,11 @@ FROM python:3.11-alpine
 
 WORKDIR /app
 
+# Ставим runtime-библиотеки и build-зависимости
 RUN apk add --no-cache \
     postgresql-libs \
+    libffi \
+    openssl \
  && apk add --no-cache --virtual .build-deps \
     gcc \
     musl-dev \
@@ -16,7 +19,7 @@ RUN apk add --no-cache \
 
 COPY src/requirements.txt ./requirements.txt
 
-RUN python -m pip install --upgrade pip \
+RUN python -m pip install --upgrade pip setuptools wheel \
  && pip install --no-cache-dir -r requirements.txt
 
 RUN apk del .build-deps
