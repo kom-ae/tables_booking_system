@@ -62,7 +62,14 @@ Email/Telegram-уведомления о создании и изменении 
 │   │   ├── db.py
 │   │   ├── logger.py
 │   │   └── user.py
-│   │
+|   |
+|   ├── celery/                  # Система очередей задач
+│   │   ├── html/
+|   |   ├── app.py
+|   |   ├── formatters.py
+|   |   ├── notifications.py
+|   |   ├── types.py
+|   |
 │   ├── crud/                    # CRUD-операции
 │   │   ├── cafes.py
 │   │   ├── dishes.py

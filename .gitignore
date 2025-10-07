@@ -192,3 +192,4 @@ app_temp.log
 logs
 
 TEST_COVERAGE_SUMMARY.md
+.ruff_cache
