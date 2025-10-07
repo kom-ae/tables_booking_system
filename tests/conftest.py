@@ -308,7 +308,7 @@ async def client_fixture(
 
     async with AsyncClient(
         transport=transport,
-        base_url='http://testserver',
+        base_url='http://testserver/api/v1',
     ) as client:
         app.dependency_overrides[get_async_session] = get_test_session
         yield client
