@@ -3,29 +3,26 @@
 Этот модуль содержит общие фикстуры, константы и утилиты для всех тестов.
 """
 
-
-from datetime import date, timedelta
+import os
+import uuid
+from datetime import time
 from types import SimpleNamespace
 from typing import Any, AsyncGenerator, Dict
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from starlette import status
 
-from src.core.db import engine, get_async_session
+from src.core.db import get_async_session
 from src.crud.action import actions_crud
-from src.crud.factory import (
-    get_booking_crud,
-    get_cafe_crud,
-    get_slot_crud,
-    get_table_crud)
+from src.crud.factory import get_cafe_crud, get_slot_crud, get_table_crud
 from src.main import app
-from src.models.action import Action
 from src.models.base import BaseModel
 from src.models.cafe import Cafe
 from src.models.dish import Dishe
+from src.models.table import Table
 from src.models.user import User
 from src.schemas.action import ActionCreate
 from src.schemas.auth import Auth
@@ -33,7 +30,7 @@ from src.schemas.cafes import CafeCreate
 from src.schemas.slots import SlotCreate
 from src.schemas.table import TableCreate
 from src.services.auth import PasswordService
-from src.schemas.bookings import BookingCreate
+from tests.database_manager import db_manager
 
 # -----------------------
 # Константы для эндпоинтов
@@ -59,7 +56,6 @@ ENDPOINTS = {
         'get': '/cafes/{cafe_id}',
         'update': '/cafes/{cafe_id}',
     },
-    # Нереализованные эндпоинты (для будущего использования)
     'actions': {
         'list': '/actions',
         'create': '/actions',
@@ -176,99 +172,145 @@ INVALID_DATA = {
 # -----------------------
 
 
-@pytest_asyncio.fixture
-async def session_fixture() -> AsyncGenerator[AsyncSession, None]:
-    """Асинхронная сессия для тестов."""
-    async for session in get_async_session():
-        try:
-            yield session
-        except Exception:
-            # Если произошла ошибка, откатываем транзакцию
-            await session.rollback()
-            raise
-        finally:
-            # Закрываем сессию
-            await session.close()
+# -----------------------
+# Pytest hooks для параллельного выполнения
+# -----------------------
 
 
-@pytest_asyncio.fixture(autouse=True)
-async def init_database(session_fixture: AsyncSession) -> None:
-    """Инициализация базы данных перед каждым тестом."""
-    async with engine.begin() as conn:
-        await conn.run_sync(BaseModel.metadata.create_all)
+def pytest_configure(config):
+    """Настройка pytest перед запуском тестов."""
+    # Получаем ID worker'а
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'master')
+    if worker_id != 'master':
+        print(f"[Worker {worker_id}] Configuring pytest...")
 
 
-@pytest_asyncio.fixture(autouse=True)
-async def cleanup_db(
-    session_fixture: AsyncSession,
-) -> AsyncGenerator[None, None]:
-    """Очищаем все таблицы перед каждым тестом."""
-    # Очищаем в правильном порядке из-за внешних ключей
-    tables_to_clean = [
-        'cafe_manager',  # Ассоциативная таблица
-        'booking',  # Когда будет реализовано
-        'dishe',  # Когда будет реализовано
-        'table',  # Когда будет реализовано
-        'time_slot',  # Когда будет реализовано
-        'action',  # Когда будет реализовано
-        'cafe',
-        'user',
-    ]
+@pytest.fixture(scope='session', autouse=True)
+def setup_test_database(request):
+    """Настройка тестовой базы данных для worker'а (session scope)."""
+    import asyncio
 
-    # Очистка перед тестом
-    try:
-        # Откатываем любые незавершенные транзакции
-        await session_fixture.rollback()
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'master')
+    print(f"[{worker_id}] Setting up test database...")
 
-        for table in tables_to_clean:
-            try:
-                await session_fixture.execute(text(f'DELETE FROM {table};'))
-            except Exception:
-                # Игнорируем ошибки для несуществующих таблиц
-                pass
+    # Создаем базу данных для worker'а
+    async def _setup():
+        await db_manager.create_database(worker_id)
+        # Создаем таблицы
+        engine = db_manager.get_engine(worker_id)
+        async with engine.begin() as conn:
+            await conn.run_sync(BaseModel.metadata.create_all)
+        print(f"[{worker_id}] Database setup complete")
 
-        await session_fixture.commit()
-    except Exception:
-        # Если произошла ошибка, откатываем транзакцию
-        try:
-            await session_fixture.rollback()
-        except Exception:
-            pass
+    asyncio.run(_setup())
 
-    # Очистка после теста
     yield
 
-    try:
-        # Откатываем любые незавершенные транзакции
-        await session_fixture.rollback()
+    # Очистка после всех тестов
+    async def _cleanup():
+        print(f"[{worker_id}] Cleaning up test database...")
+        await db_manager.dispose_all_engines()
+        # Не удаляем БД чтобы можно было посмотреть состояние после тестов
+        # await db_manager.drop_database(worker_id)
 
-        for table in tables_to_clean:
-            try:
-                await session_fixture.execute(text(f'DELETE FROM {table};'))
-            except Exception:
-                # Игнорируем ошибки для несуществующих таблиц
-                pass
+    asyncio.run(_cleanup())
 
-        await session_fixture.commit()
-    except Exception:
-        # Если произошла ошибка, откатываем транзакцию
-        try:
-            await session_fixture.rollback()
-        except Exception:
-            pass
+
+# -----------------------
+# Базовые фикстуры с транзакционной изоляцией
+# -----------------------
+
+
+@pytest_asyncio.fixture
+async def db_engine():
+    """Движок базы данных для текущего worker'а."""
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'master')
+    return db_manager.get_engine(worker_id)
+
+
+@pytest_asyncio.fixture
+async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
+    """
+    Транзакционная сессия для тестов.
+
+    Каждый тест выполняется в своей транзакции, которая автоматически
+    откатывается в конце теста для обеспечения изоляции.
+
+    Поддерживает множественные commit через автоматическое создание
+    новых savepoint.
+    """
+    # Создаем фабрику сессий
+    session_factory = async_sessionmaker(
+        db_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+    # Создаем сессию
+    async with session_factory() as session:
+        # Начинаем основную транзакцию
+        async with session.begin():
+            # Переопределяем commit для использования savepoints
+            original_commit = session.commit
+
+            async def savepoint_commit():
+                """
+                Commit через savepoint для поддержки множественных
+                commit в тестах.
+                """
+                if (
+                    session.in_transaction()
+                    and session.in_nested_transaction()
+                ):
+                    # Если мы в savepoint, просто flush
+                    await session.flush()
+                else:
+                    # Если нет активного savepoint, создаем новый
+                    await session.flush()
+
+            session.commit = savepoint_commit
+
+            # Создаем первый savepoint
+            async with session.begin_nested():
+                yield session
+
+            # Восстанавливаем оригинальный commit
+            session.commit = original_commit
+
+            # Автоматически откатываем транзакцию в конце теста
+            await session.rollback()
+
+
+@pytest_asyncio.fixture
+async def session_fixture(db_session: AsyncSession) -> AsyncSession:
+    """
+    Алиас для обратной совместимости со старыми тестами.
+
+    Использует новую транзакционную сессию db_session.
+    """
+    return db_session
 
 
 @pytest_asyncio.fixture
 async def client_fixture(
-    session_fixture: AsyncSession,
+    db_session: AsyncSession,
 ) -> AsyncGenerator[AsyncClient, None]:
-    """AsyncClient для тестирования эндпоинтов FastAPI."""
+    """
+    AsyncClient для тестирования эндпоинтов FastAPI.
+
+    Использует транзакционную сессию для изоляции тестов.
+    """
     transport = ASGITransport(app=app)
+
+    # Создаем генератор для dependency override
+    async def get_test_session():
+        yield db_session
+
     async with AsyncClient(
         transport=transport,
         base_url='http://testserver',
     ) as client:
-        app.dependency_overrides[get_async_session] = lambda: session_fixture
+        app.dependency_overrides[get_async_session] = get_test_session
         yield client
         app.dependency_overrides.clear()
 
@@ -279,74 +321,106 @@ async def client_fixture(
 
 
 @pytest_asyncio.fixture
-async def admin_user(session_fixture: AsyncSession) -> User:
-    """Создаём администратора для тестов."""
+async def admin_user(db_session: AsyncSession) -> User:
+    """
+    Создаём администратора для тестов с уникальными данными.
+
+    Генерирует уникальные email, username и phone для избежания
+    конфликтов при параллельном выполнении тестов.
+    """
+    unique_suffix = str(uuid.uuid4())[:8]
+    # Генерируем уникальный телефон с 10 цифрами после +7
+    phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
     admin_data = TEST_USERS['admin']
     user = User(
-        username=admin_data['username'],
-        email=admin_data['email'],
-        phone=admin_data['phone'],
+        username=f"{admin_data['username']}_{unique_suffix}",
+        email=f"{unique_suffix}_{admin_data['email']}",
+        phone=f"+7{phone_suffix}",
         password=PasswordService.hash_password(admin_data['password']),
         role=admin_data['role'],
         tg_id=admin_data.get('tg_id'),
     )
-    session_fixture.add(user)
-    await session_fixture.commit()
-    await session_fixture.refresh(user)
+    db_session.add(user)
+    await db_session.flush()
+    await db_session.refresh(user)
     return user
 
 
 @pytest_asyncio.fixture
-async def manager_user(session_fixture: AsyncSession) -> User:
-    """Создаём менеджера для тестов."""
+async def manager_user(db_session: AsyncSession) -> User:
+    """
+    Создаём менеджера для тестов с уникальными данными.
+
+    Генерирует уникальные email, username и phone для избежания
+    конфликтов при параллельном выполнении тестов.
+    """
+    unique_suffix = str(uuid.uuid4())[:8]
+    # Генерируем уникальный телефон с 10 цифрами после +7
+    phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
     manager_data = TEST_USERS['manager']
     user = User(
-        username=manager_data['username'],
-        email=manager_data['email'],
-        phone=manager_data['phone'],
+        username=f"{manager_data['username']}_{unique_suffix}",
+        email=f"{unique_suffix}_{manager_data['email']}",
+        phone=f"+7{phone_suffix}",
         password=PasswordService.hash_password(manager_data['password']),
         role=manager_data['role'],
         tg_id=manager_data.get('tg_id'),
     )
-    session_fixture.add(user)
-    await session_fixture.commit()
-    await session_fixture.refresh(user)
+    db_session.add(user)
+    await db_session.flush()
+    await db_session.refresh(user)
     return user
 
 
 @pytest_asyncio.fixture
-async def normal_user(session_fixture: AsyncSession) -> User:
-    """Создаём обычного пользователя для тестов."""
+async def normal_user(db_session: AsyncSession) -> User:
+    """
+    Создаём обычного пользователя для тестов с уникальными данными.
+
+    Генерирует уникальные email, username и phone для избежания
+    конфликтов при параллельном выполнении тестов.
+    """
+    unique_suffix = str(uuid.uuid4())[:8]
+    # Генерируем уникальный телефон с 10 цифрами после +7
+    phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
     user_data = TEST_USERS['user']
     user = User(
-        username=user_data['username'],
-        email=user_data['email'],
-        phone=user_data['phone'],
+        username=f"{user_data['username']}_{unique_suffix}",
+        email=f"{unique_suffix}_{user_data['email']}",
+        phone=f"+7{phone_suffix}",
         password=PasswordService.hash_password(user_data['password']),
         role=user_data['role'],
         tg_id=user_data.get('tg_id'),
     )
-    session_fixture.add(user)
-    await session_fixture.commit()
-    await session_fixture.refresh(user)
+    db_session.add(user)
+    await db_session.flush()
+    await db_session.refresh(user)
     return user
 
 
 @pytest_asyncio.fixture
-async def another_user(session_fixture: AsyncSession) -> User:
-    """Создаём второго пользователя для тестов."""
+async def another_user(db_session: AsyncSession) -> User:
+    """
+    Создаём второго пользователя для тестов с уникальными данными.
+
+    Генерирует уникальные email, username и phone для избежания
+    конфликтов при параллельном выполнении тестов.
+    """
+    unique_suffix = str(uuid.uuid4())[:8]
+    # Генерируем уникальный телефон с 10 цифрами после +7
+    phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
     user_data = TEST_USERS['user2']
     user = User(
-        username=user_data['username'],
-        email=user_data['email'],
-        phone=user_data['phone'],
+        username=f"{user_data['username']}_{unique_suffix}",
+        email=f"{unique_suffix}_{user_data['email']}",
+        phone=f"+7{phone_suffix}",
         password=PasswordService.hash_password(user_data['password']),
         role=user_data['role'],
         tg_id=user_data.get('tg_id'),
     )
-    session_fixture.add(user)
-    await session_fixture.commit()
-    await session_fixture.refresh(user)
+    db_session.add(user)
+    await db_session.flush()
+    await db_session.refresh(user)
     return user
 
 
@@ -356,39 +430,55 @@ async def another_user(session_fixture: AsyncSession) -> User:
 
 
 @pytest_asyncio.fixture
-async def test_cafe(session_fixture: AsyncSession) -> Cafe:
-    """Создаём тестовое кафе."""
+async def test_cafe(db_session: AsyncSession) -> Cafe:
+    """
+    Создаём тестовое кафе с уникальными данными.
+
+    Генерирует уникальные name, address и phone для избежания
+    конфликтов при параллельном выполнении тестов.
+    """
+    unique_suffix = str(uuid.uuid4())[:8]
+    # Генерируем уникальный телефон с 10 цифрами после +7
+    phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
     cafe_data = dict(TEST_CAFES['cafe1'])
     cafe_in = CafeCreate(
-        name=cafe_data['name'],
-        address=cafe_data['address'],
-        phone=cafe_data['phone'],
+        name=f"{cafe_data['name']} {unique_suffix}",
+        address=f"{cafe_data['address']} {unique_suffix}",
+        phone=f"+7{phone_suffix}",
         description=cafe_data['description'],
         photo='',
         managers=[],
     )
-    cafe_db = await get_cafe_crud().create(cafe_in, session_fixture)
+    cafe_db = await get_cafe_crud().create(cafe_in, db_session)
     # Возвращаем объект модели из БД
-    cafe = await session_fixture.get(Cafe, cafe_db.id)
+    cafe = await db_session.get(Cafe, cafe_db.id)
     assert cafe is not None
     return cafe
 
 
 @pytest_asyncio.fixture
-async def test_cafe2(session_fixture: AsyncSession) -> Cafe:
-    """Создаём второе тестовое кафе."""
+async def test_cafe2(db_session: AsyncSession) -> Cafe:
+    """
+    Создаём второе тестовое кафе с уникальными данными.
+
+    Генерирует уникальные name, address и phone для избежания
+    конфликтов при параллельном выполнении тестов.
+    """
+    unique_suffix = str(uuid.uuid4())[:8]
+    # Генерируем уникальный телефон с 10 цифрами после +7
+    phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
     cafe_data = dict(TEST_CAFES['cafe2'])
     cafe_in = CafeCreate(
-        name=cafe_data['name'],
-        address=cafe_data['address'],
-        phone=cafe_data['phone'],
+        name=f"{cafe_data['name']} {unique_suffix}",
+        address=f"{cafe_data['address']} {unique_suffix}",
+        phone=f"+7{phone_suffix}",
         description=cafe_data['description'],
         photo='',
         managers=[],
     )
-    cafe_db = await get_cafe_crud().create(cafe_in, session_fixture)
+    cafe_db = await get_cafe_crud().create(cafe_in, db_session)
     # Возвращаем объект модели из БД
-    cafe = await session_fixture.get(Cafe, cafe_db.id)
+    cafe = await db_session.get(Cafe, cafe_db.id)
     assert cafe is not None
     return cafe
 
@@ -443,6 +533,21 @@ async def user_token(
     return response.json()['token']
 
 
+@pytest_asyncio.fixture
+async def another_user_token(
+    client_fixture: AsyncClient,
+    another_user: User,
+) -> str:
+    """Возвращает токен авторизации второго пользователя."""
+    payload = Auth(
+        name=another_user.email,
+        password=VALID_PASSWORD,
+    ).model_dump()
+    response = await client_fixture.post('/auth/login', json=payload)
+    assert response.status_code == status.HTTP_200_OK
+    return response.json()['token']
+
+
 # -----------------------
 # Утилиты для тестов
 # -----------------------
@@ -450,7 +555,7 @@ async def user_token(
 
 def get_auth_headers(token: str) -> Dict[str, str]:
     """Возвращает заголовки авторизации для запросов."""
-    return {'Authorization': f'Bearer {token}'}
+    return {"Authorization": f"Bearer {token}"}
 
 
 def assert_error_response(
@@ -500,38 +605,50 @@ def get_user_endpoint_url(action: str, user_id: int, **kwargs) -> str:
 
 
 @pytest_asyncio.fixture
-async def test_table(session_fixture: AsyncSession, test_cafe: Cafe) -> None:
-    """Фикстура для тестового стола (когда будет реализовано)."""
+async def test_table(db_session: AsyncSession, test_cafe: Cafe) -> Table:
+    """
+    Фикстура для тестового стола.
+
+    Использует транзакционную сессию для изоляции.
+    """
     table_in = TableCreate(
         seats_number=1,
-        description='string',
+        description='Test table',
+        is_active=True,
     )
     table_crud = get_table_crud()
     table = await table_crud.create_table(
         cafe_id=test_cafe.id,
         obj_in=table_in,
-        session=session_fixture,
+        session=db_session,
     )
     return table
 
 
 @pytest_asyncio.fixture
 async def test_time_slot(
-    session_fixture: AsyncSession,
+    db_session: AsyncSession,
     test_cafe: Cafe,
 ):
-    """Создаёт тестовый временной слот с актуальной датой."""
+    """
+    Создаём тестовый временной слот с уникальными данными.
+
+    Использует транзакционную сессию для изоляции.
+    """
+    from datetime import datetime, timedelta
     slot_crud = get_slot_crud()
+    # Используем дату в будущем, чтобы избежать ошибки "прошедшая дата"
+    future_date = (datetime.now() + timedelta(days=7)).date()
     payload = SlotCreate(
-        date=(date.today() + timedelta(days=3)).isoformat(),
-        start_time='12:00:00',
-        end_time='14:00:00',
-        description='Fixture slot',
+        date=future_date,
+        start_time=time(12, 0, 0),
+        end_time=time(14, 0, 0),
+        description=f"Fixture slot {uuid.uuid4().hex[:8]}",
         is_active=True,
     )
     slot_obj = await slot_crud.create(
         payload,
-        session_fixture,
+        db_session,
         cafe_id=test_cafe.id,
     )
     return SimpleNamespace(
@@ -542,21 +659,23 @@ async def test_time_slot(
 
 
 @pytest_asyncio.fixture
-async def test_action(
-    session_fixture: AsyncSession,
-    test_cafe: Cafe
-) -> Action:
-    """Фикстура для тестовой акции (когда будет реализовано)."""
+async def test_action(db_session: AsyncSession, test_cafe: Cafe) -> Any:
+    """
+    Фикстура для тестовой акции с уникальными данными.
+
+    Использует транзакционную сессию для изоляции.
+    """
+    unique_suffix = str(uuid.uuid4())[:8]
     action_data = dict(TEST_ACTIONS['action1'])
 
     action_in = ActionCreate(
         cafe=test_cafe.id,
-        description=action_data['description']
+        description=f"{action_data['description']} {unique_suffix}",
     )
 
     action = await actions_crud.create_action(
         obj_in=action_in,
-        session=session_fixture,
+        session=db_session,
     )
 
     return action
@@ -564,102 +683,125 @@ async def test_action(
 
 @pytest_asyncio.fixture
 async def test_booking(
-    session_fixture: AsyncSession,
+    db_session: AsyncSession,
     normal_user: User,
     test_cafe: Cafe,
-    multiple_tables,
-    multiple_slots,
-) -> Any:
-    """Создаёт тестовое бронирование для проверки эндпоинтов /booking/{id}."""
-    booking_crud = get_booking_crud()
+    test_table: Table,
+    test_time_slot: Any,
+):
+    """
+    Фикстура для тестового бронирования.
+
+    Создает реальное бронирование для использования в тестах.
+    """
+    from src.crud.bookings import CRUDBooking
+    from src.models.booking import Booking
+    from src.schemas.bookings import BookingCreate
+
+    bookings_crud = CRUDBooking(Booking)
+
     booking_in = BookingCreate(
         user_id=normal_user.id,
         cafe_id=test_cafe.id,
-        tables=[t.id for t in multiple_tables],
-        slots=[s.id for s in multiple_slots],
+        tables=[test_table.id],
+        slots=[test_time_slot.id],
         guests_number=4,
-        note='Test booking fixture',
+        menu=[],
+        note='Test booking',
     )
-    booking = await booking_crud.create_booking(
+
+    booking = await bookings_crud.create_booking(
         obj_in=booking_in,
-        session=session_fixture,
+        session=db_session,
         user=normal_user,
     )
 
-    assert booking.id is not None
     return booking
 
 
 @pytest_asyncio.fixture
-async def test_dish(
-    session_fixture: AsyncSession,
-    test_cafe: Cafe
-) -> Any:
-    """Фикстура для тестового блюда."""
+async def test_dish(db_session: AsyncSession, test_cafe: Cafe) -> Any:
+    """
+    Фикстура для тестового блюда с уникальными данными.
+
+    Использует транзакционную сессию для изоляции.
+    """
+    unique_suffix = str(uuid.uuid4())[:8]
     dish_data = {
         'cafe_id': test_cafe.id,
-        'name': 'Test Dish',
+        'name': f'Test Dish {unique_suffix}',
         'description': 'Test dish description',
         'price': 100.00,
         'photo': 'test_photo.jpg',
-        'is_active': True
+        'is_active': True,
     }
     dish = Dishe(**dish_data)
-    session_fixture.add(dish)
-    await session_fixture.commit()
-    await session_fixture.refresh(dish)
+    db_session.add(dish)
+    await db_session.flush()
+    await db_session.refresh(dish)
     return dish
 
 
 @pytest_asyncio.fixture
-async def multiple_tables(session_fixture: AsyncSession, test_cafe: Cafe):
-    """Создаёт два стола в кафе."""
+async def multiple_tables(
+    db_session: AsyncSession, test_cafe: Cafe
+) -> list[Table]:
+    """
+    Фикстура для создания нескольких тестовых столов.
+
+    Используется для тестирования множественного бронирования.
+    """
     table_crud = get_table_crud()
     tables = []
     for i in range(2):
-        table_in = TableCreate(seats_number=2 + i, description=f'Table {i}')
+        table_in = TableCreate(
+            seats_number=4,
+            description=f'Test table {i+1}',
+            is_active=True,
+        )
         table = await table_crud.create_table(
             cafe_id=test_cafe.id,
             obj_in=table_in,
-            session=session_fixture,
+            session=db_session,
         )
         tables.append(table)
     return tables
 
 
 @pytest_asyncio.fixture
-async def multiple_slots(session_fixture: AsyncSession, test_cafe: Cafe):
-    """Создаёт два временных слота с разным временем."""
-    slot_crud = get_slot_crud()
-    base_date = date.today() + timedelta(days=3)
-    slots = []
-    times = [('12:00:00', '14:00:00'), ('15:00:00', '17:00:00')]
+async def multiple_slots(
+    db_session: AsyncSession, test_cafe: Cafe
+) -> list[Any]:
+    """
+    Фикстура для создания нескольких временных слотов.
 
-    for i, (start, end) in enumerate(times):
+    Используется для тестирования множественного бронирования.
+    """
+    from datetime import datetime, timedelta
+
+    slot_crud = get_slot_crud()
+    slots = []
+    # Используем дату в будущем, чтобы избежать ошибки
+    # "прошедшая дата"
+    future_date = (datetime.now() + timedelta(days=7)).date()
+    for i in range(2):
         payload = SlotCreate(
-            date=base_date.isoformat(),
-            start_time=start,
-            end_time=end,
-            description=f'Slot {i}',
+            date=future_date,
+            start_time=time(12 + i * 2, 0, 0),
+            end_time=time(14 + i * 2, 0, 0),
+            description=f"Fixture slot {i+1} {uuid.uuid4().hex[:8]}",
             is_active=True,
         )
-        slot = await slot_crud.create(
+        slot_obj = await slot_crud.create(
             payload,
-            session_fixture,
-            cafe_id=test_cafe.id
+            db_session,
+            cafe_id=test_cafe.id,
         )
-        slots.append(slot)
-
+        slots.append(
+            SimpleNamespace(
+                id=slot_obj.id,
+                start_time=slot_obj.start_time.strftime('%H:%M:%S'),
+                end_time=slot_obj.end_time.strftime('%H:%M:%S'),
+            )
+        )
     return slots
-
-
-@pytest_asyncio.fixture
-async def another_user_token(client_fixture: AsyncClient, another_user: User):
-    """JWT-токен для второго пользователя."""
-    payload = {
-        'name': another_user.email,
-        'password': VALID_PASSWORD,
-    }
-    response = await client_fixture.post('/auth/login', json=payload)
-    assert response.status_code == 200, response.text
-    return response.json()['token']

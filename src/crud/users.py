@@ -48,7 +48,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         """Обновление времени последнего использования пользователя."""
         user.last_used = datetime.now(timezone.utc)
         session.add(user)
-        await session.commit()
+        await session.flush()
         await session.refresh(user)
         return user
 

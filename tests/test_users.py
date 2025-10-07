@@ -136,10 +136,15 @@ class TestUserCreate:
         client_fixture: AsyncClient,
     ) -> None:
         """Тест успешного создания пользователя."""
+        import uuid
+
+        unique_suffix = str(uuid.uuid4())[:8]
+        phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
+
         payload = {
-            'username': 'newuser',
-            'email': 'newuser@example.com',
-            'phone': '+70000000099',
+            'username': f'newuser_{unique_suffix}',
+            'email': f'{unique_suffix}_newuser@example.com',
+            'phone': f'+7{phone_suffix}',
             'password': VALID_PASSWORD,
         }
 
@@ -147,9 +152,9 @@ class TestUserCreate:
 
         assert_success_response(response, status.HTTP_201_CREATED)
         data = response.json()
-        assert data['username'] == 'newuser'
-        assert data['email'] == 'newuser@example.com'
-        assert data['phone'] == '+70000000099'
+        assert data['username'] == f'newuser_{unique_suffix}'
+        assert data['email'] == f'{unique_suffix}_newuser@example.com'
+        assert data['phone'] == f'+7{phone_suffix}'
         assert 'id' in data
         assert 'created_at' in data
         assert 'updated_at' in data

@@ -166,14 +166,21 @@ cython_debug/
 fastapi.db
 
 #Tests
-Tests
-tests
-Test
-test
+# Tests
+# tests
+# Test
+# test
 
 # База данных
 fastapi.db
+fastapi_db
 /infra/pgdata/
+/infra/test-pgdata/
+
+# Резервные копии
+*.bac
+*.backup
+*~
 
 # Black
 pyproject.toml
@@ -183,3 +190,5 @@ app.log
 src.log
 app_temp.log
 logs
+
+TEST_COVERAGE_SUMMARY.md

@@ -22,11 +22,16 @@ class TestUserRegistrationFlow:
         client_fixture: AsyncClient,
     ) -> None:
         """Тест полного цикла: регистрация -> логин -> использование API."""
+        import uuid
+
+        unique_suffix = str(uuid.uuid4())[:8]
+        phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
+
         # 1. Регистрация нового пользователя
         registration_payload = {
-            'username': 'newuser',
-            'email': 'newuser@example.com',
-            'phone': '+70000000050',
+            'username': f'newuser_{unique_suffix}',
+            'email': f'{unique_suffix}_newuser@example.com',
+            'phone': f'+7{phone_suffix}',
             'password': VALID_PASSWORD,
         }
 
@@ -41,7 +46,7 @@ class TestUserRegistrationFlow:
 
         # 2. Логин с email
         login_payload = {
-            'name': 'newuser@example.com',
+            'name': f'{unique_suffix}_newuser@example.com',
             'password': VALID_PASSWORD,
         }
 
@@ -60,13 +65,14 @@ class TestUserRegistrationFlow:
 
         me_data = me_response.json()
         assert me_data['id'] == user_id
-        assert me_data['username'] == 'newuser'
-        assert me_data['email'] == 'newuser@example.com'
+        assert me_data['username'] == f'newuser_{unique_suffix}'
+        assert me_data['email'] == f'{unique_suffix}_newuser@example.com'
 
         # 4. Обновление данных пользователя
+        updated_suffix = str(uuid.uuid4())[:8]
         update_payload = {
-            'username': 'updated_user',
-            'email': 'updated@example.com',
+            'username': f'updated_user_{updated_suffix}',
+            'email': f'{updated_suffix}_updated@example.com',
         }
 
         update_response = await client_fixture.patch(
@@ -77,12 +83,12 @@ class TestUserRegistrationFlow:
         assert_success_response(update_response)
 
         updated_data = update_response.json()
-        assert updated_data['username'] == 'updated_user'
-        assert updated_data['email'] == 'updated@example.com'
+        assert updated_data['username'] == f'updated_user_{updated_suffix}'
+        assert updated_data['email'] == f'{updated_suffix}_updated@example.com'
 
         # 5. Логин с обновленным email
         new_login_payload = {
-            'name': 'updated@example.com',
+            'name': f'{updated_suffix}_updated@example.com',
             'password': VALID_PASSWORD,
         }
 
@@ -105,11 +111,16 @@ class TestUserRegistrationFlow:
         client_fixture: AsyncClient,
     ) -> None:
         """Тест логина пользователя по телефону и email."""
+        import uuid
+
+        unique_suffix = str(uuid.uuid4())[:8]
+        phone_suffix = str(uuid.uuid4().int)[:10].zfill(10)
+
         # Создаем пользователя
         registration_payload = {
-            'username': 'multilogin_user',
-            'email': 'multilogin@example.com',
-            'phone': '+70000000049',
+            'username': f'multilogin_user_{unique_suffix}',
+            'email': f'{unique_suffix}_multilogin@example.com',
+            'phone': f'+7{phone_suffix}',
             'password': VALID_PASSWORD,
         }
 
@@ -117,7 +128,7 @@ class TestUserRegistrationFlow:
 
         # Логин по email
         email_login = {
-            'name': 'multilogin@example.com',
+            'name': f'{unique_suffix}_multilogin@example.com',
             'password': VALID_PASSWORD,
         }
 
@@ -130,7 +141,7 @@ class TestUserRegistrationFlow:
 
         # Логин по телефону
         phone_login = {
-            'name': '+70000000049',
+            'name': f'+7{phone_suffix}',
             'password': VALID_PASSWORD,
         }
 

@@ -258,11 +258,124 @@ docker-compose exec <имя контейнера backend> sh python /app/create_
   Теперь вы можете использовать его для доступа
    к административной панели вашего приложения.
 
-### 🧪 Тестирование
-**Запуск тестов локально с использованием базы данных SQLite**<br>
-Из корня проекта выполнить команду:
-```sh
-python -m pytest
+### Тестирование
+
+Проект настроен для параллельного выполнения тестов с транзакционной изоляцией на PostgreSQL в Docker контейнере.
+
+#### Быстрый старт
+
+**1. Запуск тестовой базы данных**
+```bash
+# Запуск PostgreSQL контейнера
+docker-compose -f infra/docker-compose.test.yml up -d test-db
+
+# Проверка готовности
+docker-compose -f infra/docker-compose.test.yml exec test-db pg_isready -U test_user -d test_db
+```
+
+**2. Запуск тестов**
+```bash
+# Параллельное выполнение (рекомендуется)
+make test-parallel
+
+# Последовательное выполнение
+make test-serial
+
+# С покрытием кода
+make test-coverage
+```
+
+#### Параллельное выполнение
+
+Система поддерживает параллельное выполнение тестов с отдельными базами данных для каждого worker'а:
+- **Master worker**: `test_db`
+- **Worker gw0**: `test_db_gw0`
+- **Worker gw1**: `test_db_gw1`
+- И т.д.
+
+Каждый тест выполняется в своей транзакции, которая автоматически откатывается.
+
+#### Фильтрация тестов
+
+```bash
+# Только unit тесты
+make test-fast
+
+# Только интеграционные тесты
+make test-integration
+
+# Конкретные категории
+make test-auth
+make test-users
+make test-cafes
+
+# Конкретный файл
+./run_tests.sh tests/test_auth.py
+
+# Конкретный тест
+./run_tests.sh tests/test_auth.py::TestAuth::test_login
+```
+
+#### Настройка окружения
+
+Конфигурация в файле `env.test`:
+```bash
+# Основные настройки
+DB_ENGINE=postgres
+DB_HOST=localhost
+DB_PORT=5433
+DB_NAME=test_db
+DB_USER=test_user
+DB_PASSWORD=test_password
+
+# JWT
+SECRET=test_secret_key_for_testing_only
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+
+#### Написание тестов
+
+```python
+import pytest
+from tests.test_utils import parallel_test, unit_test
+
+class TestExample:
+    @unit_test
+    @parallel_test
+    @pytest.mark.asyncio
+    async def test_example(self, db_session: AsyncSession):
+        # Тест с транзакционной изоляцией
+        user = User(username='test', email='test@example.com', ...)
+        db_session.add(user)
+        await db_session.flush()  # НЕ commit!
+        # Транзакция автоматически откатится в конце теста
+```
+
+#### Очистка тестовых данных
+
+```bash
+# Показать тестовые базы данных
+./cleanup_test_databases.sh --dry-run
+
+# Удалить все тестовые базы данных
+./cleanup_test_databases.sh --all --force
+
+# Очистка Docker volumes
+make clean-docker
+```
+
+#### Отладка
+
+```bash
+# Последовательный режим для отладки
+./run_tests.sh --serial --verbose
+
+# Просмотр логов
+tail -f test.log
+
+# Подключение к тестовой БД
+PGPASSWORD=test_password psql -h localhost -p 5433 -U test_user -d test_db
 ```
 
 ### 🌐 Деплой
