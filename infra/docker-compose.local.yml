@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   db:
     image: postgres:17-alpine
@@ -5,11 +7,11 @@ services:
       - ../.env
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "${DB_PORT}:${DB_PORT}"
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
       - "./pgdata:/var/lib/postgresql/data/pgdata"
     command: >
@@ -21,10 +23,22 @@ services:
                -c wal_buffers=16MB
                -c default_statistics_target=100
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
+
+  rabbit:
+    image: rabbitmq:3-management
+    container_name: rabbit
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5672:5672"
+      - "15672:15672"
     networks:
       - app-network
 
@@ -41,6 +55,35 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - app-network
+
+  celery:
+    build:
+      context: ../
+      dockerfile: src/Dockerfile.local
+    container_name: celery_worker
+    command: >
+      sh -c "celery -A src.celery.app.celery_app worker --loglevel=info"
+    volumes:
+      - ../:/app
+    depends_on:
+      rabbit:
+        condition: service_started
+    env_file:
+      - ../.env
+    networks:
+      - app-network
+
+  flower:
+    image: mher/flower
+    env_file: ../.env
+    command: celery --broker=${CELERY_BROKER_URL} flower --port=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      rabbit:
+        condition: service_started
     networks:
       - app-network
 
