@@ -2,16 +2,27 @@ FROM python:3.11-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache postgresql-libs && \
-    apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev
+# системные зависимости для сборки
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    python3-dev \
+    libffi-dev \
+    openssl-dev \
+    cargo \
+    postgresql-dev \
+    postgresql-libs \
+    build-base
 
-COPY src/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY src/requirements.txt ./requirements.txt
 
-RUN apk del .build-deps
+RUN python -m pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
+
+RUN apk del gcc musl-dev python3-dev libffi-dev openssl-dev cargo postgresql-dev build-base || true
 
 COPY . .
 
 ENV PYTHONUNBUFFERED=1
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
