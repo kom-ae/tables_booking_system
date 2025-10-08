@@ -1,0 +1,38 @@
+name: Telegram_Group_Notifications
+
+on:
+  push:
+    branches:
+      # - main
+      - develop
+      # - feature/CI_CD_workflow
+  pull_request:
+    types: [opened,]
+
+jobs:
+  send-notification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Задать текст сообщения если открыли пул реквест
+        if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
+        run: |
+            echo "TG_MESSAGE=‼️--Нужно ревью--‼️" >> $GITHUB_ENV
+            echo "EVENT_MESSAGE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
+      - name: Задать текст сообщения если push
+        if: ${{ github.event_name == 'push'}}
+        run: |
+            echo "TG_MESSAGE=‼️--Подтяните к себе ветку develop--‼️" >> $GITHUB_ENV
+            echo "EVENT_MESSAGE=${{ github.event.head_commit.message }}" >> $GITHUB_ENV
+      - name: Send Telegram Message to Group
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_KOM_AE }}, ${{ secrets.TELEGRAM_GROUP_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🔔 Новое обновление в репозитории:
+            - Тип события: ${{ github.event_name }}: ${{ github.event.action  }}
+            - Бранч: ${{ github.ref_name }}
+            - Коммит: ${{ github.sha }}
+            - Автор: ${{ github.actor }}
+            - Сообщение: ${{ env.EVENT_MESSAGE }}
+            ${{ env.TG_MESSAGE }}

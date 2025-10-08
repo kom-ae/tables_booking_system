@@ -1,0 +1,83 @@
+from typing import Optional
+
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.crud.base import CRUDBase
+from src.models import Cafe, User
+from src.schemas.cafes import CafeCreate, CafeUpdate
+
+
+class CRUDCafe(CRUDBase[Cafe, CafeCreate, CafeUpdate]):
+    """CRUD для кафе."""
+
+    async def _create_impl(
+        self,
+        obj_in: CafeCreate,
+        session: AsyncSession,
+        user: Optional[User] = None,
+    ) -> Cafe:
+        """Создание кафе."""
+        in_managers = obj_in.model_dump(include='managers').get('managers')
+        obj_in_data = obj_in.model_dump(exclude='managers')
+
+        db_obj_managers = (
+            await session.scalars(
+                select(User).where(User.id.in_(in_managers)),
+            )
+        ).all()
+
+        db_obj = Cafe(**obj_in_data)
+        db_obj.managers = db_obj_managers
+        session.add(db_obj)
+        await self._commit(session, user)
+        await session.refresh(db_obj)
+        return db_obj
+
+    async def _update_impl(
+        self,
+        db_obj: Cafe,
+        obj_in: CafeUpdate,
+        session: AsyncSession,
+        user: Optional[User] = None,
+    ) -> Cafe:
+        """Внутренняя реализация обновления кафе."""
+        obj_data = jsonable_encoder(db_obj, exclude={'managers'})
+        update_data = obj_in.model_dump(exclude_unset=True, exclude='managers')
+        in_managers = obj_in.model_dump(include='managers').get('managers')
+
+        for field in obj_data:
+            if field in update_data:
+                setattr(db_obj, field, update_data[field])
+
+        db_obj_managers = (
+            await session.scalars(
+                select(User).where(User.id.in_(in_managers)),
+            )
+        ).all()
+
+        db_obj.managers = db_obj_managers
+
+        session.add(db_obj)
+        await self._commit(session, user)
+        await session.refresh(db_obj)
+        return db_obj
+
+    async def get_by_name_address(
+        self,
+        name: str,
+        address: str,
+        session: AsyncSession,
+    ) -> Optional[Cafe]:
+        """Поиск кафе по имени и адресу."""
+        return (
+            await session.scalars(
+                select(Cafe).where(
+                    and_(
+                        Cafe.name == name,
+                        Cafe.address == address,
+                    ),
+                ),
+            )
+        ).first()

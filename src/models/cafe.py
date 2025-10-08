@@ -1,0 +1,97 @@
+from typing import TYPE_CHECKING, Optional
+
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+
+from src.constants import (
+    MAX_ADDRESS,
+    MAX_NAME_CAFE,
+    MAX_TEL,
+    NAME_REGEX,
+    PHONE_REGEX,
+)
+from src.core.db import Base
+from src.exceptions.cafe import InvalidNameCafeException
+from src.exceptions.user import InvalidPhoneException
+from src.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from src.models.action import Action
+    from src.models.dish import Dishe
+    from src.models.slot import Slot
+    from src.models.table import Table as Table_model
+    from src.models.user import User
+
+
+cafe_manager = Table(
+    'cafe_manager',
+    Base.metadata,
+    Column('cafe_id', ForeignKey('cafe.id'), primary_key=True),
+    Column('user_id', ForeignKey('user.id'), primary_key=True),
+)
+
+
+class Cafe(BaseModel):
+    """Модель кафе."""
+
+    name: Mapped[str] = mapped_column(String(MAX_NAME_CAFE), nullable=False)
+    address: Mapped[str] = mapped_column(String(MAX_ADDRESS), nullable=False)
+    phone: Mapped[str] = mapped_column(String(MAX_TEL), nullable=False)
+    description: Mapped[str] = mapped_column(Text)
+    photo: Mapped[Optional[str]] = mapped_column(Text)
+    managers: Mapped[list['User']] = relationship(
+        'User',
+        secondary='cafe_manager',
+        back_populates='managed_cafes',
+        lazy='selectin',
+    )
+    dishes: Mapped[list['Dishe']] = relationship(
+        'Dishe',
+        back_populates='cafe',
+        lazy='selectin',
+        cascade='all, delete-orphan',
+    )
+    actions: Mapped[list['Action']] = relationship(
+        'Action',
+        back_populates='cafe',
+        lazy='selectin',
+        cascade='all, delete-orphan',
+    )
+    slots: Mapped[list['Slot']] = relationship(
+        'Slot',
+        back_populates='cafe',
+        lazy='selectin',
+        cascade='all, delete-orphan',
+        passive_deletes=True,
+    )
+    tables: Mapped[list['Table_model']] = relationship(
+        'Table',
+        back_populates='cafe',
+        lazy='selectin',
+        cascade='all, delete-orphan',
+    )
+
+    __table_args__ = (
+        UniqueConstraint('name', 'address', name='uix_name_address'),
+    )
+
+    @validates('phone')
+    def validate_phone(self, key: str, phone: str) -> str:
+        """Проверить номер телефона."""
+        if not PHONE_REGEX.match(phone):
+            raise InvalidPhoneException(f'Некорректный номер телефона {phone}')
+        return phone
+
+    @validates('name')
+    def validate_name(self, key: str, name: str) -> str:
+        """Проверить название кафе."""
+        if not NAME_REGEX.match(name):
+            raise InvalidNameCafeException()
+        return name

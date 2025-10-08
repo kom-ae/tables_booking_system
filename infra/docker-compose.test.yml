@@ -1,0 +1,77 @@
+services:
+  test-db:
+    image: postgres:17-alpine
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: ${POSTGRES_USER:-test_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-test_password}
+      POSTGRES_DB: ${POSTGRES_DB:-test_db}
+    ports:
+      - "5433:5432"  # Используем другой порт чтобы не конфликтовать с основной БД
+    volumes:
+      - "./test-pgdata:/var/lib/postgresql/data/pgdata"
+    command: >
+      postgres -c max_connections=200
+               -c shared_buffers=128MB
+               -c effective_cache_size=256MB
+               -c maintenance_work_mem=32MB
+               -c checkpoint_completion_target=0.7
+               -c wal_buffers=8MB
+               -c default_statistics_target=100
+               -c log_statement=none
+               -c log_min_duration_statement=-1
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-test_user} -d ${POSTGRES_DB:-test_db}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - test-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - test-network
+
+  test-runner:
+    build:
+      context: ../
+      dockerfile: src/Dockerfile.test
+    volumes:
+      - ../:/app
+    environment:
+      PYTHONUNBUFFERED: 1
+      DB_ENGINE: postgres
+      DB_HOST: ${POSTGRES_HOST:-test-db}
+      DB_PORT: ${POSTGRES_PORT:-5432}
+      DB_NAME: ${POSTGRES_DB:-test_db}
+      DB_USER: ${POSTGRES_USER:-test_user}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-test_password}
+      SECRET: test_secret_key_for_testing_only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      LOG_FILE: test.log
+      MAX_BYTES: 1048576  # 1 MB
+      BACKUP_COUNT: 1
+      # Celery и email настройки для тестов
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_BACKEND_URL: redis://redis:6379/1
+      EMAIL_SSL: "true"
+      EMAIL_LOGIN: test@example.com
+      EMAIL_PASSWORD: testpass
+      DB_RETRY_MAX_ATTEMPTS: 3
+      DB_RETRY_DELAY_SECONDS: 1.0
+    depends_on:
+      test-db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - test-network
+    command: ["python", "-m", "pytest", "/app/tests", "-v", "--tb=short", "-n", "auto"]
+
+networks:
+  test-network:
+    driver: bridge
