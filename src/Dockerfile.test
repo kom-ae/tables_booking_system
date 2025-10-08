@@ -10,12 +10,12 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Копируем файлы зависимостей
-COPY requirements.txt .
-COPY requirements_style.txt .
+COPY src/requirements.txt .
+COPY /requirements_dev.txt .
 
 # Устанавливаем Python зависимости
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir -r requirements_style.txt
+RUN pip install --no-cache-dir -r requirements_dev.txt
 
 # Копируем исходный код
 COPY . .
