@@ -6,6 +6,8 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from src.celery.notifications import send_notification
+from src.celery.types import NotificationType
 from src.core.logger import logger
 from src.crud.base import CRUDBase
 from src.exceptions.bookings import (
