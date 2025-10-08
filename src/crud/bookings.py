@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from sqlalchemy import and_, select
@@ -215,6 +215,16 @@ class CRUDBooking(CRUDBase[Booking, BookingCreate, BookingUpdate]):
             await self._commit(session, user)
             await session.refresh(db_obj)
             logger.info(f'Создано бронирование ID={db_obj.id}', user=user)
+            slot_starts = [
+                datetime.combine(slot.date, slot.start_time)
+                for slot in db_obj.slots
+            ]
+            if slot_starts:
+                alarm_time = min(slot_starts) - timedelta(hours=3)
+                send_notification.apply_async(
+                    args=[db_obj.as_dict(), NotificationType.REMINDER.value],
+                    eta=alarm_time,
+                )
             send_notification.delay(
                 db_obj.as_dict(), NotificationType.CREATE.value,
             )

@@ -7,3 +7,5 @@ celery_app = Celery(
     backend=settings.celery_backend_url,
     include=['src.celery.notifications'],
 )
+
+celery_app.conf.timezone = 'Europe/Moscow'

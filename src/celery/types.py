@@ -9,6 +9,7 @@ class NotificationType(Enum):
     CREATE = 'create'
     UPDATE = 'update'
     CANCEL = 'cancel'
+    REMINDER = 'reminder'
 
 
 SUBJECTS = {
@@ -23,6 +24,10 @@ SUBJECTS = {
     NotificationType.CANCEL: (
         'Ваше бронирование отменено',
         'Бронирование отменено',
+    ),
+    NotificationType.REMINDER: (
+        'За вами забронирован столик!',
+        'Напоминание о бронировании',
     ),
 }
 
@@ -39,6 +44,10 @@ TEMPLATES = {
         'client_cancel_notification.html',
         'manager_cancel_notification.html',
     ),
+    NotificationType.REMINDER: (
+        'client_notification.html',
+        'manager_notification.html',
+    ),
 }
 
 FORMATTERS = {
@@ -53,5 +62,9 @@ FORMATTERS = {
     NotificationType.CANCEL: (
         formatters.client_cancel_formatter,
         formatters.manager_cancel_formatter,
+    ),
+    NotificationType.REMINDER: (
+        formatters.client_template_formatter,
+        formatters.manager_template_formatter,
     ),
 }

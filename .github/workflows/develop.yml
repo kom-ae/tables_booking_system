@@ -36,7 +36,7 @@ jobs:
         if: success() || failure()
         uses: appleboy/telegram-action@master
         with:
-          to: ${{ secrets.TELEGRAM_GROUP_ID }}
+          to: ${{ secrets.TELEGRAM_GROUP_ID }}, ${{ secrets.TELEGRAM_KOM_AE }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
             📢 Статус тестов (develop):
