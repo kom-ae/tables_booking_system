@@ -18,7 +18,7 @@
 - Управление временем работы
 
 ### 🔔 Уведомления
-Email/Telegram-уведомления о создании и изменении брони (Поправить тимлиду)
+Email уведомления о создании и изменении брони, напоминание о бронировании.
 
 ### 🛠️ Технологии
 - Язык: Python 3.11
@@ -26,6 +26,7 @@ Email/Telegram-уведомления о создании и изменении 
 - База данных: PostgreSQL + SQLAlchemy + Alembic
 - Аутентификация: JWT
 - Контейнеризация: Docker, Docker Compose
+- Очереди и их мониторинг: Celery, Flower, RabbitMQ
 - Тестирование: Pytest
 - CI/CD: GitHub Actions
 - Инфраструктура: Nginx, Gunicorn/Uvicorn
@@ -36,19 +37,21 @@ Email/Telegram-уведомления о создании и изменении 
 ├── alembic/                     # Миграции БД
 │   ├── env.py
 │   └── versions/
-│       ├── 75a4c3ca3d56_init_schema.py
-│       └── dd97e7701592_.py
-│
+│       └── migration.py
+|   |
 ├── infra/                       # Инфраструктура и деплой
-│   ├── docker-compose.local.yml
-│   ├── docker-compose.production.yml
-│   ├── pgdata/                  # Данные PostgreSQL
-│   └── requirements.txt
+│   ├── docker-compose.local.yml - для локального запуска.
+│   ├── docker-compose.production.yml - для запуска на сервере (образы DockerHub).
+│   ├── docker-compose.test.yml - для запуска тестов.
+│   └── pgdata/                  # Данные PostgreSQL
 │
 ├── nginx/                       # Конфигурация Nginx
 │   ├── local.conf
 │   └── prod.conf
 │
+├── logs/                        # Логи проекта
+|   └── app.log
+|
 ├── src/                         # Исходный код приложения
 │   ├── api/                     # Эндпоинты FastAPI
 │   │   ├── endpoints/
@@ -68,31 +71,47 @@ Email/Telegram-уведомления о создании и изменении 
 |   |   ├── app.py
 |   |   ├── formatters.py
 |   |   ├── notifications.py
-|   |   ├── types.py
+|   |   └── types.py
 |   |
 │   ├── crud/                    # CRUD-операции
+|   |   ├── actions.py  - акции
+|   |   ├── base.py - базовый
+|   |   ├── bookings.py - бронирования
 │   │   ├── cafes.py
 │   │   ├── dishes.py
 │   │   ├── tables.py
 │   │   ├── users.py
+|   |   ├── slots.py
 │   │   └── factory.py
 │   │
 │   ├── exceptions/              # Кастомные исключения
+|   |   ├── base.py
+|   |   ├── bookings.py
+|   |   ├── cafe.py
+|   |   ├── handlers.py
+|   |   ├── slots.py
 │   │   ├── auth.py
 │   │   ├── db.py
 │   │   └── user.py
 │   │
 │   ├── models/                  # SQLAlchemy-модели
+|   |   ├── action.py
+|   |   ├── base.py
 │   │   ├── booking.py
 │   │   ├── cafe.py
 │   │   ├── dish.py
+|   |   ├── slot.py
 │   │   ├── table.py
 │   │   └── user.py
 │   │
 │   ├── schemas/                 # Pydantic-схемы
+|   |   ├── action.py
 │   │   ├── auth.py
+|   |   ├── base.py
+|   |   ├── bookings.py
 │   │   ├── cafes.py
 │   │   ├── dish.py
+|   |   ├── slots.py
 │   │   ├── table.py
 │   │   ├── users.py
 │   │   └── validators.py
@@ -105,11 +124,23 @@ Email/Telegram-уведомления о создании и изменении 
 │
 ├── tests/                       # Тесты Pytest
 │   ├── conftest.py
+│   ├── database_manager.py
+│   ├── test_actions.py
+│   ├── test_bookings.py
+│   ├── test_cafes.py
+│   ├── test_config.py
+│   ├── test_integration.py
 │   ├── test_auth.py
 │   ├── test_dishes.py
 │   ├── test_tables.py
+│   ├── test_time_slots.py
+│   ├── test_transactional_example.py
+│   ├── test_utils.py
 │   └── test_users.py
 │
+├── AuthJWT.md                    # Инструкция по авторизации и схема работы
+├── env.example                   # Образец для переменных окружения
+├── env.test                      # Переменные окружения для тестирования
 ├── create_superuser_cli.py       # CLI-скрипт для создания суперпользователя
 ├── entrypoint.sh                 # Стартовый скрипт Docker
 ├── Dockerfile                    # Docker-образ для backend
@@ -135,25 +166,8 @@ cd tables_booking_system_team2
 cd tables_booking_system_team2
 cp env.example .env
 ```
-### Настройка базы данных
-- **Вариант A: SQLite (быстрый старт)**<br>
-***В файле .env установите:***
-```bash
-DB_ENGINE=sqlite
-```
 
-- **Вариант B: PostgreSQL**<br>
-***В файле .env установите:***
-```
-DB_ENGINE=postgresql
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_NAME=booking
-DB_HOST=localhost
-DB_PORT=5432
-SECRET=your_secret_key_here
-```
-### Запуск приложения
+### Запуск приложения локально
 **С Docker (рекомендуется)**<br>
 **Копируем .env в директорию infra**
 ```bash
@@ -201,9 +215,10 @@ uvicorn src.main:app --reload
 Каждый коммит, push или pull request автоматически проверяется, тестируется и сопровождается уведомлением в Telegram.
 | Workflow | Описание | Событие |
 |-----------|-----------|---------|
-| 🧪 **tests.yml** | Запускает тесты (pytest) и проверяет корректность кода | push, pull_request |
-| 🧹 **style_check.yml** | Проверяет стиль кода (Ruff, Pre-commit) | push, pull_request |
-| 📩 **telegram_notify.yml** | Отправляет уведомления о результатах в Telegram | после завершения других workflow |
+| **develop.yml** | Запускает тесты посредством контейнера docker-compose.test.yml и проверяет корректность кода | push (branch - develop) |
+| **main.yml** | Запускает тесты, отправляет уведомления в Telegram, выполняет деплой на сервер | push (branch - main) |
+| **style_check.yml** | Проверяет стиль кода (Ruff, Pre-commit) | push, pull_request |
+| **TelegramNotifications.yml** | Отправляет уведомления в Telegram об открытии Pull Request | pull request (branch - develop) |
 
 
 **⚙️ Как это работает**<br>
@@ -212,6 +227,7 @@ uvicorn src.main:app --reload
 - собирает проект в Docker;
 - прогоняет тесты;
 - проверяет стиль кода;
+- выполняет деплой на сервер (опционально)
 - отправляет уведомление о результате в Telegram.
  -При успешной проверке или ошибке высылается сообщение в Telegram-чат разработчиков.
 
@@ -464,4 +480,4 @@ Content-Type: application/json
 💡 [Александр Комаров](https://github.com/kom-ae) - Cafes (/cafes) – CRUD кафе (после Users)<br>
 💡 [Дмитрий Волков](https://github.com/Divo190722) - Tables (/cafe/tables) – CRUD столов конкретного кафе<br>
 💡 [Исхак Мурзаев](https://github.com/IskhakM) - Actions (/actions) – CRUD акций, привязка к кафе<br>
-💡 [Михаил Яковенко](https://github.com/MikhailYakovenko) - Тесты, автотестирование<br>
+💡 [Михаил Яковенко](https://github.com/MikhailYakovenko) - Тесты, автотестирование, Docker-compose для тестирования<br>

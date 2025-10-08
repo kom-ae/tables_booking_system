@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-test_password}
       POSTGRES_DB: ${POSTGRES_DB:-test_db}
     ports:
-      - "5433:5432"  # Используем другой порт чтобы не конфликтовать с основной БД
+      - "5433:5432"
     volumes:
       - "./test-pgdata:/var/lib/postgresql/data/pgdata"
     command: >
@@ -55,7 +55,6 @@ services:
       LOG_FILE: test.log
       MAX_BYTES: 1048576  # 1 MB
       BACKUP_COUNT: 1
-      # Celery и email настройки для тестов
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_BACKEND_URL: redis://redis:6379/1
       EMAIL_SSL: "true"
