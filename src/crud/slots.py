@@ -133,12 +133,3 @@ class CRUDSlot(CRUDBase[Slot, SlotCreate, SlotUpdate]):
             )
 
         return await super().update(db_obj, obj_in, session, user=user)
-
-    # async def delete_soft(self, db_obj: Slot, session: AsyncSession) -> None:
-    #   """Мягко помечает слот как неактивный (soft delete)."""
-    #   await session.execute(
-    #       sa_update(Slot)
-    #       .where(Slot.id == db_obj.id)
-    #       .values(is_active=False),
-    #   )
-    #   await session.commit()
