@@ -261,13 +261,10 @@ async def cafe_existence(
 ) -> None:
     """Проверяет наличие кафе по его ID (контракт для actions: 400)."""
     if cafe_id is None:
-        # Этот кейс обычно не встречается для path-параметров,
-        # оставим как было.
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Нет такого кафе',
         )
-    # Для actions тесты ожидают 400 при отсутствии кафе.
     await _ensure_cafe_exists(
         session=session,
         cafe_id=cafe_id,
