@@ -163,3 +163,47 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 .vscode/
+fastapi.db
+
+#Tests
+# Tests
+# tests
+# Test
+# test
+
+# База данных
+fastapi.db
+fastapi_db
+/infra/pgdata/
+/infra/test-pgdata/
+
+# Резервные копии
+*.bac
+*.backup
+*~
+
+# Black
+pyproject.toml
+
+# Логирование
+app.log
+src.log
+app_temp.log
+logs
+
+TEST_COVERAGE_SUMMARY.md
+.ruff_cache
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*~
