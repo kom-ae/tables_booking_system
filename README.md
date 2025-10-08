@@ -274,23 +274,9 @@ docker-compose exec <имя контейнера backend> sh python /app/create_
 **1. Запуск тестовой базы данных**
 ```bash
 # Запуск PostgreSQL контейнера
-docker-compose -f infra/docker-compose.test.yml up -d test-db
-
-# Проверка готовности
-docker-compose -f infra/docker-compose.test.yml exec test-db pg_isready -U test_user -d test_db
+docker-compose -f infra/docker-compose.test.yml up --build -d
 ```
-
-**2. Запуск тестов**
-```bash
-# Параллельное выполнение (рекомендуется)
-make test-parallel
-
-# Последовательное выполнение
-make test-serial
-
-# С покрытием кода
-make test-coverage
-```
+После того как контейнер поднимется, тесты будут произведены автоматически.
 
 #### Параллельное выполнение
 
@@ -460,22 +446,22 @@ Content-Type: application/json
 **Проект создан в рамках обучения в Яндекс Практикуме.**<br>
 
 **Наставник:**<br>
-🧭 Станислав Баринов<br>
+🧭 [Станислав Баринов](https://github.com/hixwizard")<br>
 
 **Project Manager (PM):**<br>
 📋 Александр Аваков<br>
 
 **Тимлид:**<br>
-🧑‍💻 Вадим Каримов<br>
+🧑‍💻 [Вадим Каримов](https://github.com/warqone)<br>
 
 **Разработчики:**<br>
-💡 Вадим Каримов<br>
-💡 Дмитрий Радюк<br>
-💡 Александр Лавер<br>
-💡 Игорь Могилин<br>
-💡 Вика Долгова<br>
-💡 Алексей Гасилин<br>
-💡 Александр Комаров<br>
-💡 Дмитрий Волков<br>
-💡 Исхак Мурзаев<br>
-💡 Михаил Яковенко<br>
+💡 [Вадим Каримов](https://github.com/warqone) - Общая архитектура, ревью, Celery задачи (напоминания, уведомления), RabbitMQ, Flower<br>
+💡 [Дмитрий Радюк](https://github.com/Dzmitry-Radziuk) - Auth (/auth) – логин/регистрация, JWT токены, Docker-compose, конфиги<br>
+💡 [Александр Лавер](https://github.com/XanterXAlexandr) - Users (/users) – CRUD пользователей<br>
+💡 [Игорь Могилин](https://github.com/IgorMogilin) - Dishes (/dishes) – CRUD блюд, привязка к кафе<br>
+💡 [Вика Долгова](https://github.com/VikaDroffa) - Bookings (/bookings) – бронирование столов/слотов, проверка пересечений, статусов, отмена, выбор блюд<br>
+💡 [Алексей Гасилин](https://github.com/GasilinAlexei) - Slots (/cafe/slots) – CRUD слотов бронирования<br>
+💡 [Александр Комаров](https://github.com/kom-ae) - Cafes (/cafes) – CRUD кафе (после Users)<br>
+💡 [Дмитрий Волков](https://github.com/Divo190722) - Tables (/cafe/tables) – CRUD столов конкретного кафе<br>
+💡 [Исхак Мурзаев](https://github.com/IskhakM) - Actions (/actions) – CRUD акций, привязка к кафе<br>
+💡 [Михаил Яковенко](https://github.com/MikhailYakovenko) - Тесты, автотестирование<br>

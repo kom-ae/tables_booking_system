@@ -1,0 +1,46 @@
+name: Tables_Booking_Develop_Workflow
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  backend_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run tests with docker-compose
+        run: |
+          docker compose -f infra/docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from test-runner
+
+      - name: Copy test.log from container
+        if: always()
+        run: |
+          docker cp $(docker ps -aqf "name=test-runner"):/app/test.log ./test.log || echo "No test.log found"
+
+      - name: Upload test log artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-log
+          path: ./test.log
+          retention-days: 7
+
+      - name: Clean up
+        if: always()
+        run: docker compose -f infra/docker-compose.test.yml down -v
+
+      - name: Send Telegram message
+        if: success() || failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_KOM_AE }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            📢 Статус тестов (develop):
+            - Репозиторий: ${{ github.repository }}
+            - Бранч: ${{ github.ref_name }}
+            - Коммит: ${{ github.sha }}
+            - Статус: ${{ job.status }}
