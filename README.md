@@ -120,6 +120,7 @@ Email уведомления о создании и изменении брон�
 │   │   ├── auth.py
 │   │   └── slot_rules.py
 │   │
+|   ├── requirements.txt         # Основные зависимости
 │   └── main.py                  # Точка входа в приложение
 │
 ├── tests/                       # Тесты Pytest
@@ -144,7 +145,7 @@ Email уведомления о создании и изменении брон�
 ├── create_superuser_cli.py       # CLI-скрипт для создания суперпользователя
 ├── entrypoint.sh                 # Стартовый скрипт Docker
 ├── Dockerfile                    # Docker-образ для backend
-├── requirements.txt              # Основные зависимости
+├── requirements_dev.txt          # Основные зависимости для разработки
 ├── alembic.ini                   # Конфиг для Alembic
 ├── ruff.toml                     # Настройки линтера Ruff
 ├── pytest.ini                    # Конфиг для Pytest
@@ -287,12 +288,16 @@ docker-compose exec <имя контейнера backend> sh python /app/create_
 
 #### Быстрый старт
 
-**1. Запуск тестовой базы данных**
+**1. Запуск тестов**
 ```bash
-# Запуск PostgreSQL контейнера
+# Запуск контейнера для тестов
 docker-compose -f infra/docker-compose.test.yml up --build -d
 ```
 После того как контейнер поднимется, тесты будут произведены автоматически.
+в /logs появляется файл с логами тестов - test.log, либо можно просмотреть результаты тестов с помощью
+```docker
+docker compose -f infra/docker-compose.test.yml backend logs
+```
 
 #### Параллельное выполнение
 
