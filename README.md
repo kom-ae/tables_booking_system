@@ -464,25 +464,18 @@ Content-Type: application/json
 ```
 
 ### 👥 Команда разработки
-**Проект создан в рамках обучения в Яндекс Практикуме.**<br>
-
-**Наставник:**<br>
-🧭 [Станислав Баринов](https://github.com/hixwizard")<br>
-
-**Project Manager (PM):**<br>
-📋 Александр Аваков<br>
 
 **Тимлид:**<br>
-🧑‍💻 [Вадим Каримов](https://github.com/warqone)<br>
+🧑‍💻 [Вадим Каримов]()<br>
 
 **Разработчики:**<br>
-💡 [Вадим Каримов](https://github.com/warqone) - Общая архитектура, ревью, Celery задачи (напоминания, уведомления), RabbitMQ, Flower<br>
-💡 [Дмитрий Радюк](https://github.com/Dzmitry-Radziuk) - Auth (/auth) – логин/регистрация, JWT токены, Docker-compose, конфиги<br>
-💡 [Александр Лавер](https://github.com/XanterXAlexandr) - Users (/users) – CRUD пользователей<br>
+💡 [Вадим Каримов]() - Общая архитектура, ревью, Celery задачи (напоминания, уведомления), RabbitMQ, Flower<br>
+💡 [Дмитрий Радюк]() - Auth (/auth) – логин/регистрация, JWT токены, Docker-compose, конфиги<br>
+💡 [Александр Лавер]() - Users (/users) – CRUD пользователей<br>
 💡 [Александр Комаров](https://github.com/kom-ae) - Cafes (/cafes) – CRUD кафе, GitHub Actions, уведомления в группу ТГ при запросах на Pull Request и обновлениях в ветке develop<br>
-💡 [Игорь Могилин](https://github.com/IgorMogilin) - Dishes (/dishes) – CRUD блюд, привязка к кафе<br>
-💡 [Вика Долгова](https://github.com/VikaDroffa) - Bookings (/bookings) – бронирование столов/слотов, проверка пересечений, статусов, отмена, выбор блюд<br>
-💡 [Алексей Гасилин](https://github.com/GasilinAlexei) - Slots (/cafe/slots) – CRUD слотов бронирования<br>
-💡 [Дмитрий Волков](https://github.com/Divo190722) - Tables (/cafe/tables) – CRUD столов конкретного кафе<br>
-💡 [Исхак Мурзаев](https://github.com/IskhakM) - Actions (/actions) – CRUD акций, привязка к кафе<br>
-💡 [Михаил Яковенко](https://github.com/MikhailYakovenko) - Тесты, автотестирование, Docker-compose для тестирования<br>
+💡 [Игорь Могилин]() - Dishes (/dishes) – CRUD блюд, привязка к кафе<br>
+💡 [Вика Долгова]() - Bookings (/bookings) – бронирование столов/слотов, проверка пересечений, статусов, отмена, выбор блюд<br>
+💡 [Алексей Гасилин]() - Slots (/cafe/slots) – CRUD слотов бронирования<br>
+💡 [Дмитрий Волков]() - Tables (/cafe/tables) – CRUD столов конкретного кафе<br>
+💡 [Исхак Мурзаев]() - Actions (/actions) – CRUD акций, привязка к кафе<br>
+💡 [Михаил Яковенко]() - Тесты, автотестирование, Docker-compose для тестирования<br>
