@@ -479,10 +479,10 @@ Content-Type: application/json
 💡 [Вадим Каримов](https://github.com/warqone) - Общая архитектура, ревью, Celery задачи (напоминания, уведомления), RabbitMQ, Flower<br>
 💡 [Дмитрий Радюк](https://github.com/Dzmitry-Radziuk) - Auth (/auth) – логин/регистрация, JWT токены, Docker-compose, конфиги<br>
 💡 [Александр Лавер](https://github.com/XanterXAlexandr) - Users (/users) – CRUD пользователей<br>
+💡 [Александр Комаров](https://github.com/kom-ae) - Cafes (/cafes) – CRUD кафе, GitHub Actions, уведомления в группу ТГ при запросах на Pull Request и обновлениях в ветке develop<br>
 💡 [Игорь Могилин](https://github.com/IgorMogilin) - Dishes (/dishes) – CRUD блюд, привязка к кафе<br>
 💡 [Вика Долгова](https://github.com/VikaDroffa) - Bookings (/bookings) – бронирование столов/слотов, проверка пересечений, статусов, отмена, выбор блюд<br>
 💡 [Алексей Гасилин](https://github.com/GasilinAlexei) - Slots (/cafe/slots) – CRUD слотов бронирования<br>
-💡 [Александр Комаров](https://github.com/kom-ae) - Cafes (/cafes) – CRUD кафе (после Users)<br>
 💡 [Дмитрий Волков](https://github.com/Divo190722) - Tables (/cafe/tables) – CRUD столов конкретного кафе<br>
 💡 [Исхак Мурзаев](https://github.com/IskhakM) - Actions (/actions) – CRUD акций, привязка к кафе<br>
 💡 [Михаил Яковенко](https://github.com/MikhailYakovenko) - Тесты, автотестирование, Docker-compose для тестирования<br>
